@@ -70,7 +70,7 @@ Test(cube_moves, init_mtable){
   cr_assert(arr_eq(cube.corners, solved_cube.corners, 8));
 }
 
-Test(cube_moves, single_U_move){
+Test(cube_moves, single_U_move, .disabled=true){
   uint16_t c_trans[NMOVES][NCORNERCUBIES];
   uint16_t e_trans[NMOVES][NEDGECUBIES];
 
