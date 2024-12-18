@@ -105,7 +105,10 @@ void gen_move_tables(uint16_t corner_trans[NMOVES][NCORNERCUBIES], uint16_t edge
                             int new_co_lr = (is_quarter_move) ? (co_lr + corner_orient_change[LR][f][p]) % 3 : co_lr;
                             int new_co_ud = (is_quarter_move) ? (co_ud + corner_orient_change[UD][f][p]) % 3 : co_ud;
 
-                            corner_trans[move][build_corner(cp, co_fb, co_lr, co_ud)] = build_corner(new_cp, new_co_fb, new_co_lr, new_co_ud);
+                            uint16_t old_c = build_corner(cp, co_fb, co_lr, co_ud);
+                            uint16_t new_c = build_corner(new_cp, new_co_fb, new_co_lr, new_co_ud);
+
+                            corner_trans[move][old_c] = new_c;
                         }
                     }
                 }
@@ -120,7 +123,10 @@ void gen_move_tables(uint16_t corner_trans[NMOVES][NCORNERCUBIES], uint16_t edge
                             int new_eo_lr = (is_quarter_move) ? (edge_orient_change[LR][f] ^ eo_lr) : eo_lr;
                             int new_eo_ud = (is_quarter_move) ? (edge_orient_change[UD][f] ^ eo_ud) : eo_ud;
 
-                            edge_trans[move][build_edge(ep, eo_fb, eo_lr, eo_ud)] = build_edge(new_ep, new_eo_fb, new_eo_lr, new_eo_ud);
+                            uint16_t old_e = build_edge(ep, eo_fb, eo_lr, eo_ud);
+                            uint16_t new_e = build_edge(new_ep, new_eo_fb, new_eo_lr, new_eo_ud);
+
+                            edge_trans[move][old_e] = new_e;
                         }
                     }
                 }
