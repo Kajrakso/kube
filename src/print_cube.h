@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "cube.h"
-#include "moves.h"
+#include "move.h"
 
 void print_cube(cube_t* cube);
 

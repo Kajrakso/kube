@@ -73,30 +73,24 @@ void print_cube(cube_t* cube){
 
 
 int main(int argc, char** argv){
-  // gen mtables
   initialize_move_tables();
   gen_move_tables();
+  
+  save_move_tables("mtables.dat");
+  load_move_tables("mtables.dat");
 
   // do a T-perm: R U R' U' R' F R2 U' R' U' R U R' F'
+  const int length_T_perm = 14;
+  move moves[] = {
+    R1, U1, R3, U3, R3, F1, R2, U3, R3, U3, R1, U1, R3, F3,
+  };
+
   cube_t cube = cube_create_new_cube();
   printf("initial state:\n");
   print_cube(&cube);
 
-  make_move(&cube, 3*R + 0);
-  make_move(&cube, 3*U + 0);
-  make_move(&cube, 3*R + 2);
-  make_move(&cube, 3*U + 2);
-  make_move(&cube, 3*R + 2);
-  make_move(&cube, 3*F + 0);
-  make_move(&cube, 3*R + 1);
-  make_move(&cube, 3*U + 2);
-  make_move(&cube, 3*R + 2);
-  make_move(&cube, 3*U + 2);
-  make_move(&cube, 3*R + 0);
-  make_move(&cube, 3*U + 0);
-  make_move(&cube, 3*R + 2);
-  make_move(&cube, 3*F + 2);
-  
-  printf("T-perm:\n");
+  make_mult_moves(&cube, moves, length_T_perm);
+
+  printf("After T-perm:\n");
   print_cube(&cube);
 }
