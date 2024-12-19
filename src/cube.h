@@ -7,8 +7,8 @@
 
 #define NMOVES 18
 #define NAXES 3
-#define NEDGECUBIES 128  // edges: 3 for eo, 4 for ep -> 2**7
-#define NCORNERCUBIES 512  // corners: 6 for co, 3 for cp -> 2**9
+#define NEDGECUBIES 128  // edges: 3 bits for eo, 4 bits for ep -> 2**7
+#define NCORNERCUBIES 512  // corners: 6 bits for co, 3 bits for cp -> 2**9
 #define NCORNERS 8
 #define NEDGES 12
 #define NFACES 6
