@@ -13,10 +13,39 @@ static const char* edges_str_repr[NEDGES] = {
     "BL", "BR", "FR", "FL",
 };
 
-// todo: ugly function. need to rewrite.
+static inline void fill_corner_strings(cube_t* cube, char cs[NCORNERS][3]) {
+  for (int i = 0; i < NCORNERS; i++){
+    int c = -1;
+
+    for (int k = 0; k < NCORNERS; k++){
+      if (extract_corner_perm(cube->corners[k]) == i) c = k;
+    }
+    
+    int co = extract_corner_orien(cube->corners[c], UD);
+
+    cs[i][0] = corners_str_repr[c][(0 + 3 - co) % 3];
+    cs[i][1] = corners_str_repr[c][(1 + 3 - co) % 3];
+    cs[i][2] = corners_str_repr[c][(2 + 3 - co) % 3];
+  }
+}
+
+static inline void fill_edge_strings(cube_t* cube, char es[NEDGES][2]) {
+  for (int i = 0; i < NEDGES; i++){
+    int e = -1;
+
+    for (int k = 0; k < NEDGES; k++){
+      if (extract_edge_perm(cube->edges[k]) == i) e = k;
+    }
+
+    for (int j = 0; j < 2; j++){
+      es[i][j] = edges_str_repr[e][(extract_edge_orien(cube->edges[e], FB) + j) % 2];
+    }
+  }
+}
+
+// TODO: Improve the readability and efficiency of this function.
 void print_cube(cube_t* cube){
-  char* cube_str_pattern =
-    "      -------\n"
+  const char* cube_str_pattern =
     "      |%c %c %c|\n"
     "      |%c   %c|\n"
     "      |%c %c %c|\n"
@@ -32,31 +61,8 @@ void print_cube(cube_t* cube){
   char cs[NCORNERS][3];
   char es[NEDGES][2];
 
-  for (int i = 0; i < NCORNERS; i++){
-    int c;
-
-    for (int k = 0; k < NCORNERS; k++){
-      if (extract_corner_perm(cube->corners[k]) == i) c = k;
-    }
-    
-    int co = extract_corner_orien(cube->corners[c], UD);
-
-    cs[i][0] = corners_str_repr[c][(0 + 3 - co) % 3];
-    cs[i][1] = corners_str_repr[c][(1 + 3 - co) % 3];
-    cs[i][2] = corners_str_repr[c][(2 + 3 - co) % 3];
-  }
-
-  for (int i = 0; i < NEDGES; i++){
-    int e;
-
-    for (int k = 0; k < NEDGES; k++){
-      if (extract_edge_perm(cube->edges[k]) == i) e = k;
-    }
-
-    for (int j = 0; j < 2; j++){
-      es[i][j] = edges_str_repr[e][(extract_edge_orien(cube->edges[e], FB) + j) % 2];
-    }
-  }
+  fill_corner_strings(cube, cs);
+  fill_edge_strings(cube, es);
 
   printf(cube_str_pattern,
                                    cs[0][0], es[0][0], cs[1][0],
@@ -69,28 +75,4 @@ void print_cube(cube_t* cube){
                                    es[7][0],           es[5][0],
                                    cs[7][0], es[6][0], cs[6][0]
   );
-}
-
-
-int main(int argc, char** argv){
-  initialize_move_tables();
-  gen_move_tables();
-  
-  save_move_tables("mtables.dat");
-  load_move_tables("mtables.dat");
-
-  // do a T-perm: R U R' U' R' F R2 U' R' U' R U R' F'
-  const int length_T_perm = 14;
-  move moves[] = {
-    R1, U1, R3, U3, R3, F1, R2, U3, R3, U3, R1, U1, R3, F3,
-  };
-
-  cube_t cube = cube_create_new_cube();
-  printf("initial state:\n");
-  print_cube(&cube);
-
-  make_mult_moves(&cube, moves, length_T_perm);
-
-  printf("After T-perm:\n");
-  print_cube(&cube);
 }

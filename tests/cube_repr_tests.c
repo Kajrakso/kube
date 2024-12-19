@@ -1,5 +1,4 @@
-#include "../src/cube.h"
-#include "../src/utilities.h"
+#include "../src/libcube.h"
 #include "criterion/criterion.h"
 #include "criterion/redirect.h"
 #include <stdint.h>

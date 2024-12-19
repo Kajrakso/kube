@@ -14,7 +14,7 @@ typedef enum {
     B1, B2, B3,
 } move;
 
-void make_move(cube_t* cube, move move);
-void make_mult_moves(cube_t* cube, move* moves_ptr, int number_of_moves);
+void make_move(cube_t* cube, move m);
+void make_multiple_moves(cube_t* cube, move* moves_ptr, int number_of_moves);
 
 #endif /* _MOVE_H_ */
