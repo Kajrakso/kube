@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-inline void util_cycle_elems_arr(uint16_t* arr, int* indeces, int num_indeces);
+void util_cycle_elems_arr(uint16_t* arr, int* indeces, int num_indeces);
 bool arr_eq(uint16_t* arr_a, uint16_t* arr_b, int n);
 
-#endif
+#endif /* _UTILITIES_H_ */

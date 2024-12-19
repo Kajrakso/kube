@@ -36,43 +36,60 @@ I've used https://cube20.org/src/ and https://nissy.tronto.net/ for inspiration.
 
 todo
 
-// Representing the Rubik's cube as permutations of corners and edges:
-//
-//                    +--------------+
-//                    |              |
-//                    |  1    1    2 |
-//                    |              |
-//                    |  4  top    2 |
-//                    |              |
-//                    |  4    3    3 |
-//                    |              |
-//     +--------------+--------------+--------------+--------------+
-//     |              |              |              |              |
-//     |              |              |              |              |
-//     |              |              |              |              |
-//     | 9   left  12 |    front     | 11 right  10 |     rear     |
-//     |              |              |              |              |
-//     |              |              |              |              |
-//     |              |              |              |              |
-//     +--------------+--------------+--------------+--------------+
-//                    |              |
-//                    |  5    5    6 |
-//                    |              |
-//                    |  8 bottom  6 |
-//                    |              |
-//                    |  8    7    7 |
-//                    |              |
-//                    +--------------+
-// and orientation of corners and edges:
-//
-// cofb: 0, 1, 2. co is invariant under <U, D, R2 L2>.
-//      0: oriented
-//      1: clockwise
-//      2: counter clockwise.
-// eofb: 0, 1. eo is invariant under <U, D, R, L, F2, B2>.
-//      0: oriented
-//      1: misoriented.
-// 
-// similar for lr and ud.
+Representing the Rubik's cube as permutations and orientations of corners and edges:
 
+```
+                   +--------------+
+                   |              |
+                   |  0    0    1 |
+                   |              |
+                   |  3    U    1 |
+                   |              |
+                   |  3    2    2 |
+                   |              |
+    +--------------+--------------+--------------+--------------+
+    |              |              |              |              |
+    |              |              |              |              |
+    |              |              |              |              |
+    | 8     L   11 |      F       | 10    R    9 |       B      |
+    |              |              |              |              |
+    |              |              |              |              |
+    |              |              |              |              |
+    +--------------+--------------+--------------+--------------+
+                   |              |
+                   |  4    4    5 |
+                   |              |
+                   |  7    B    5 |
+                   |              |
+                   |  7    6    6 |
+                   |              |
+                   +--------------+
+```
+
+
+
+### Permutation of corners and edges:
+
+- corners: 0 to 7
+- edges: 0 to 11
+
+### Orientation of corners and edges:bottom
+
+- corners:
+    0: oriented
+    1: clockwise
+    2: counter clockwise.
+    - three axis:
+        - cofb: invariant under <U2, D2, R2, L2,  F,  B>.
+        - colr: invariant under <U2, D2,  R,  L, F2, B2>.
+        - coud: invariant under < U,  D, R2, L2, F2, F2>.
+
+
+- edges:
+    0: oriented
+    1: misoriented
+    - three axis:
+        - eofb: invariant under < U,  D,  R,  L, F2, B2>.
+        - eolr: invariant under < U,  D, R2, L2,  F,  B>.
+        - eoud: invariant under <U2, D2,  R,  L,  F,  B>.
 

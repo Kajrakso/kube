@@ -12,4 +12,4 @@ typedef enum {
     BL, BR, FR, FL,
 } edge;
 
-#endif
+#endif /* _CUBE_PIECES_H */
