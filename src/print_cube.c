@@ -1,20 +1,17 @@
 #include "print_cube.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 // todo: where to put these?
 
-char* corners_str_repr[NCORNERS] = {
+static const char* corners_str_repr[NCORNERS] = {
   "ULB", "UBR", "URF", "UFL",
   "DLF", "DFR", "DRB", "DBL",
 };
 
-char* edges_str_repr[NEDGES] = {
+static const char* edges_str_repr[NEDGES] = {
     "UB", "UR", "UF", "UL",
     "DF", "DR", "DB", "DL",
     "BL", "BR", "FR", "FL",
 };
-
 
 // todo: ugly function. need to rewrite.
 void print_cube(cube_t* cube){
@@ -42,7 +39,7 @@ void print_cube(cube_t* cube){
       if (extract_corner_perm(cube->corners[k]) == i) c = k;
     }
     
-    int co = extract_corner_orien(cube->corners[c], FB);
+    int co = extract_corner_orien(cube->corners[c], UD);
 
     cs[i][0] = corners_str_repr[c][(0 + 3 - co) % 3];
     cs[i][1] = corners_str_repr[c][(1 + 3 - co) % 3];
@@ -77,31 +74,28 @@ void print_cube(cube_t* cube){
 
 int main(int argc, char** argv){
   // gen mtables
-  uint16_t c_trans[NMOVES][NCORNERCUBIES];
-  uint16_t e_trans[NMOVES][NEDGECUBIES];
-
-  initialize_move_tables(c_trans, e_trans);
-  gen_move_tables(c_trans, e_trans);
+  initialize_move_tables();
+  gen_move_tables();
 
   // do a T-perm: R U R' U' R' F R2 U' R' U' R U R' F'
   cube_t cube = cube_create_new_cube();
   printf("initial state:\n");
   print_cube(&cube);
 
-  make_move(&cube, R, 0, c_trans, e_trans);
-  make_move(&cube, U, 0, c_trans, e_trans);
-  make_move(&cube, R, 2, c_trans, e_trans);
-  make_move(&cube, U, 2, c_trans, e_trans);
-  make_move(&cube, R, 2, c_trans, e_trans);
-  make_move(&cube, F, 0, c_trans, e_trans);
-  make_move(&cube, R, 1, c_trans, e_trans);
-  make_move(&cube, U, 2, c_trans, e_trans);
-  make_move(&cube, R, 2, c_trans, e_trans);
-  make_move(&cube, U, 2, c_trans, e_trans);
-  make_move(&cube, R, 0, c_trans, e_trans);
-  make_move(&cube, U, 0, c_trans, e_trans);
-  make_move(&cube, R, 2, c_trans, e_trans);
-  make_move(&cube, F, 2, c_trans, e_trans);
+  make_move(&cube, 3*R + 0);
+  make_move(&cube, 3*U + 0);
+  make_move(&cube, 3*R + 2);
+  make_move(&cube, 3*U + 2);
+  make_move(&cube, 3*R + 2);
+  make_move(&cube, 3*F + 0);
+  make_move(&cube, 3*R + 1);
+  make_move(&cube, 3*U + 2);
+  make_move(&cube, 3*R + 2);
+  make_move(&cube, 3*U + 2);
+  make_move(&cube, 3*R + 0);
+  make_move(&cube, 3*U + 0);
+  make_move(&cube, 3*R + 2);
+  make_move(&cube, 3*F + 2);
   
   printf("T-perm:\n");
   print_cube(&cube);

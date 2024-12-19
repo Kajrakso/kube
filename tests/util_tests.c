@@ -5,8 +5,8 @@
 
 // suites
 
-TestSuite(util_tests, .disabled=true);
-TestSuite(mod_arithmetic, .disabled=true);
+TestSuite(util_tests);
+TestSuite(mod_arithmetic);
 
 
 // tests
@@ -27,12 +27,4 @@ Test(util_tests, cycle_elems2){
 
   util_cycle_elems_arr(arr2, indeces2, 4);
   cr_assert(arr_eq(arr2, expected_arr2, 8));
-}
-
-Test(mod_arithmetic, add_mod2){
-  
-}
-
-Test(mod_arithmetic, add_mod3){
-  
 }

@@ -1,8 +1,9 @@
 #include "moves.h"
 
-// todo: make there arrays constants. 
+uint16_t corner_trans[NMOVES][NCORNERCUBIES];
+uint16_t edge_trans[NMOVES][NEDGECUBIES];
 
-int edge_perm_cycles[NFACES][4] = {
+static const int edge_perm_cycles[NFACES][4] = {
     [U] = {UB, UR, UF, UL},
     [D] = {DF, DR, DB, DL},
     [L] = {UL, FL, DL, BL},
@@ -11,7 +12,7 @@ int edge_perm_cycles[NFACES][4] = {
     [B] = {UB, BL, DB, BR},
 };
 
-int edge_orient_change[NAXES][NFACES] = {
+static const int edge_orient_change[NAXES][NFACES] = {
     [FB] = {
         /* U, D, L, R, F, B*/
         0, 0, 0, 0, 1, 1
@@ -26,7 +27,7 @@ int edge_orient_change[NAXES][NFACES] = {
     },
 };
 
-int corner_perm_cycles[NFACES][4] = {
+static const int corner_perm_cycles[NFACES][4] = {
     [U] = {UBL, UBR, UFR, UFL},
     [D] = {DFL, DFR, DBR, DBL},
     [L] = {UBL, UFL, DFL, DBL},
@@ -35,24 +36,8 @@ int corner_perm_cycles[NFACES][4] = {
     [B] = {UBR, UBL, DBL, DBR},
 };
 
-int corner_orient_change[NAXES][NFACES][4] = {
+static const int corner_orient_change[NAXES][NFACES][4] = {
     [FB] = {
-        [U] = {0, 0, 0, 0},
-        [D] = {0, 0, 0, 0},
-        [L] = {1, 2, 1, 2},
-        [R] = {1, 2, 1, 2},
-        [F] = {1, 2, 1, 2},
-        [B] = {1, 2, 1, 2},
-    },
-    [LR] = {
-        [U] = {0, 0, 0, 0},
-        [D] = {0, 0, 0, 0},
-        [L] = {1, 2, 1, 2},
-        [R] = {1, 2, 1, 2},
-        [F] = {1, 2, 1, 2},
-        [B] = {1, 2, 1, 2},
-    },
-    [UD] = {
         [U] = {1, 2, 1, 2},
         [D] = {1, 2, 1, 2},
         [L] = {2, 1, 2, 1},
@@ -60,11 +45,28 @@ int corner_orient_change[NAXES][NFACES][4] = {
         [F] = {0, 0, 0, 0},
         [B] = {0, 0, 0, 0},
     },
+    [LR] = {
+        [U] = {2, 1, 2, 1},
+        [D] = {2, 1, 2, 1},
+        [L] = {0, 0, 0, 0},
+        [R] = {0, 0, 0, 0},
+        [F] = {2, 1, 2, 1},
+        [B] = {2, 1, 2, 1},
+    },
+    [UD] = {
+        [U] = {0, 0, 0, 0},
+        [D] = {0, 0, 0, 0},
+        [L] = {1, 2, 1, 2},
+        [R] = {1, 2, 1, 2},
+        [F] = {1, 2, 1, 2},
+        [B] = {1, 2, 1, 2},
+    },
 };
 
-/* fills the tables with default values */
-void initialize_move_tables(uint16_t corner_trans[NMOVES][NCORNERCUBIES], uint16_t edge_trans[NMOVES][NEDGECUBIES]){
-    /* initialize the arrays: */
+/* Fills the tables with default values.
+This have to be done before we generate the
+actual moves. */
+void initialize_move_tables(){
     for (int m = 0; m < NMOVES; m++){
         for (int c = 0; c < NCORNERCUBIES; c++){
             corner_trans[m][c] = c;
@@ -75,72 +77,83 @@ void initialize_move_tables(uint16_t corner_trans[NMOVES][NCORNERCUBIES], uint16
     }
 }
 
+/* NB: we gen moves for states that are impossible.
+ as a first try this is probably ok, but should be thought about. */
+static inline void gen_moves_corners(int face, int turns, int piece){
+    int move = NTWISTS * face + turns - 1;
+    bool is_quarter_move = (turns == 1 || turns == 3);
+
+    for (int co_fb = 0; co_fb < 3; co_fb++){
+        for (int co_lr = 0; co_lr < 3; co_lr++){
+            for (int co_ud = 0; co_ud < 3; co_ud++){
+                int cp = corner_perm_cycles[face][piece];
+                
+                int new_cp = corner_perm_cycles[face][(piece + turns) % 4];
+                int new_co_fb = (is_quarter_move) ? (co_fb + corner_orient_change[FB][face][piece]) % 3 : co_fb;
+                int new_co_lr = (is_quarter_move) ? (co_lr + corner_orient_change[LR][face][piece]) % 3 : co_lr;
+                int new_co_ud = (is_quarter_move) ? (co_ud + corner_orient_change[UD][face][piece]) % 3 : co_ud;
+
+                uint16_t old_c = build_corner(cp, co_fb, co_lr, co_ud);
+                uint16_t new_c = build_corner(new_cp, new_co_fb, new_co_lr, new_co_ud);
+
+                corner_trans[move][old_c] = new_c;
+            }
+        }
+    }
+}
+
+/* NB: we gen moves for states that are impossible.
+ as a first try this is probably ok, but should be thought about. */
+static inline void gen_moves_edges(int face, int turns, int piece){
+    int move = NTWISTS * face + turns - 1;
+    bool is_quarter_move = (turns == 1 || turns == 3);
+
+    for (int eo_fb = 0; eo_fb < 2; eo_fb++){
+        for (int eo_lr = 0; eo_lr < 2; eo_lr++){
+            for (int eo_ud = 0; eo_ud < 2; eo_ud++){
+                int ep = edge_perm_cycles[face][piece];
+
+                int new_ep = edge_perm_cycles[face][(piece + turns) % 4];
+                int new_eo_fb = (is_quarter_move) ? (edge_orient_change[FB][face] ^ eo_fb) : eo_fb;
+                int new_eo_lr = (is_quarter_move) ? (edge_orient_change[LR][face] ^ eo_lr) : eo_lr;
+                int new_eo_ud = (is_quarter_move) ? (edge_orient_change[UD][face] ^ eo_ud) : eo_ud;
+
+                uint16_t old_e = build_edge(ep, eo_fb, eo_lr, eo_ud);
+                uint16_t new_e = build_edge(new_ep, new_eo_fb, new_eo_lr, new_eo_ud);
+
+                edge_trans[move][old_e] = new_e;
+            }
+        }
+    }
+}
+
 /* Basically just does moves so that we can look them up later.
-
- uint16_t corner_trans[NMOVES][NCORNERCUBIES]
- uint16_t edge_trans[NMOVES][NEDGECUBIES]
- */
-// todo: should split this into two functions.
-void gen_move_tables(uint16_t corner_trans[NMOVES][NCORNERCUBIES], uint16_t edge_trans[NMOVES][NEDGECUBIES]){
-    /* Now update the elements that
-    change when we do a move */
-    // faces
+ You have to run `initialize_move_tables` first,
+ because this function only updates the values
+ of pieces that *actually* move under a twist. */
+void gen_move_tables(){
+    // faces: F, B, R, L, U, D.
     for (int f = 0; f < NFACES; f++){
-        // moves: i.e. R, R2, R3
-        for (int m = 0; m < NTWISTS; m++){
-            int move = NTWISTS*f + m;
-            bool is_quarter_move = (m == 0 || m == 2);
-
-            // each piece on the face f
+        // number of twists: i.e. R1, R2, R3
+        for (int t = 1; t <= NTWISTS; t++){
+            // four pieces on a face. i.e: UBL, UBR, UFR, UFL
             for (int p = 0; p < 4; p++){
-                // corners 
-                // NB: we gen moves for states that are impossible.
-                // as a first try this is probably ok, but should be thought about.
-                for (int co_fb = 0; co_fb < 3; co_fb++){
-                    for (int co_lr = 0; co_lr < 3; co_lr++){
-                        for (int co_ud = 0; co_ud < 3; co_ud++){
-                            int cp = corner_perm_cycles[f][p];
-                            int new_cp = corner_perm_cycles[f][(p + m + 1) % 4];
-                            int new_co_fb = (is_quarter_move) ? (co_fb + corner_orient_change[FB][f][p]) % 3 : co_fb;
-                            int new_co_lr = (is_quarter_move) ? (co_lr + corner_orient_change[LR][f][p]) % 3 : co_lr;
-                            int new_co_ud = (is_quarter_move) ? (co_ud + corner_orient_change[UD][f][p]) % 3 : co_ud;
-
-                            uint16_t old_c = build_corner(cp, co_fb, co_lr, co_ud);
-                            uint16_t new_c = build_corner(new_cp, new_co_fb, new_co_lr, new_co_ud);
-
-                            corner_trans[move][old_c] = new_c;
-                        }
-                    }
-                }
-
-                // edges
-                for (int eo_fb = 0; eo_fb < 2; eo_fb++){
-                    for (int eo_lr = 0; eo_lr < 2; eo_lr++){
-                        for (int eo_ud = 0; eo_ud < 2; eo_ud++){
-                            int ep = edge_perm_cycles[f][p];
-                            int new_ep = edge_perm_cycles[f][(p + m + 1) % 4];
-                            int new_eo_fb = (is_quarter_move) ? (edge_orient_change[FB][f] ^ eo_fb) : eo_fb;
-                            int new_eo_lr = (is_quarter_move) ? (edge_orient_change[LR][f] ^ eo_lr) : eo_lr;
-                            int new_eo_ud = (is_quarter_move) ? (edge_orient_change[UD][f] ^ eo_ud) : eo_ud;
-
-                            uint16_t old_e = build_edge(ep, eo_fb, eo_lr, eo_ud);
-                            uint16_t new_e = build_edge(new_ep, new_eo_fb, new_eo_lr, new_eo_ud);
-
-                            edge_trans[move][old_e] = new_e;
-                        }
-                    }
-                }
+                gen_moves_corners(f, t, p);
+                gen_moves_edges(f, t, p);
             }
         }
     }
 }
 
 
-// todo: look into making the mtables global variables.
-// todo: use *move* instead of a *facemove* enum.
-// todo: 
-void make_move(cube_t* cube, facemove move, int turns, uint16_t corner_trans[NMOVES][NCORNERCUBIES], uint16_t edge_trans[NMOVES][NEDGECUBIES]){
-    uint16_t* p = corner_trans[3*move + turns];
+/* makes a move to the cube.
+move is a number 0,...,18. where
+(move // 3) is the move, and
+(move % 3) is the number of twists.*/
+void make_move(cube_t* cube, int move){
+    uint16_t* p;
+    
+    p = corner_trans[move];
     
     cube->corners[0] = p[cube->corners[0]];
     cube->corners[1] = p[cube->corners[1]];
@@ -151,7 +164,7 @@ void make_move(cube_t* cube, facemove move, int turns, uint16_t corner_trans[NMO
     cube->corners[6] = p[cube->corners[6]];
     cube->corners[7] = p[cube->corners[7]];
     
-    p = edge_trans[3*move + turns];
+    p = edge_trans[move];
 
     cube->edges[0] = p[cube->edges[0]];
     cube->edges[1] = p[cube->edges[1]];
@@ -165,4 +178,46 @@ void make_move(cube_t* cube, facemove move, int turns, uint16_t corner_trans[NMO
     cube->edges[9] = p[cube->edges[9]];
     cube->edges[10] = p[cube->edges[10]];
     cube->edges[11] = p[cube->edges[11]];
+}
+
+// todo: test this function.
+bool save_move_tables(const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) return false;
+
+    // Save the corner_trans array
+    if (fwrite(corner_trans, sizeof(corner_trans), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Save the edge_trans array
+    if (fwrite(edge_trans, sizeof(edge_trans), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    fclose(file);
+    return true;
+}
+
+// todo: test this function.
+bool load_move_tables(const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) return false;
+
+    // Load the corner_trans array
+    if (fread(corner_trans, sizeof(corner_trans), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Load the edge_trans array
+    if (fread(edge_trans, sizeof(edge_trans), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    fclose(file);
+    return true;
 }

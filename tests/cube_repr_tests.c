@@ -7,7 +7,7 @@
 
 // suites
 
-TestSuite(cube_repr, .disabled=false);
+TestSuite(cube_repr);
 
 /// tests
 
@@ -76,8 +76,8 @@ Test(cube_repr, extract_cp){
 }
 
 Test(cube_repr, update_eo){
-  int16_t edge1 = 0b0000000;
-  int16_t edge2 = 0b1111000;
+  uint16_t edge1 = 0b0000000;
+  uint16_t edge2 = 0b1111000;
 
   update_edge_orien(&edge1, 1, 1, 1);
   cr_assert_eq(edge1, 0b0000111);
@@ -122,8 +122,8 @@ Test(cube_repr, update_ep){
 }
 
 Test(cube_repr, update_co){
-  int16_t corner1 = 0b000000000;
-  int16_t corner2 = 0b000000111;
+  uint16_t corner1 = 0b000000000;
+  uint16_t corner2 = 0b000000111;
 
   update_corner_orien(&corner1, 1, 1, 1);
   cr_assert_eq(corner1, 0b010101000);
