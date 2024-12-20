@@ -82,7 +82,7 @@ Representing the Rubik's cube as permutations and orientations of corners and ed
     - three axis:
         - cofb: invariant under <U2, D2, R2, L2,  F,  B>.
         - colr: invariant under <U2, D2,  R,  L, F2, B2>.
-        - coud: invariant under < U,  D, R2, L2, F2, F2>.
+        - coud: invariant under < U,  D, R2, L2, F2, B2>.
 
 
 - edges:

@@ -3,11 +3,11 @@
 uint16_t corner_trans[NMOVES][NCORNERCUBIES];
 uint16_t edge_trans[NMOVES][NEDGECUBIES];
 
-typedef enum {
+enum facemove {
   U, D,
   L, R,
   F, B,
-} facemove;
+};
 
 static const int edge_perm_cycles[NFACES][4] = {
     [U] = {UB, UR, UF, UL},

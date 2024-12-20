@@ -14,16 +14,16 @@
 #define NFACES 6
 #define NTWISTS 3
 
-typedef enum {
+enum corner {
     UBL, UBR, UFR, UFL,
     DFL, DFR, DBR, DBL,
-} corner;
+};
 
-typedef enum {
+enum edge {
     UB, UR, UF, UL,
     DF, DR, DB, DL,
     BL, BR, FR, FL,
-} edge;
+};
 
 typedef enum {
   FB, LR, UD,
