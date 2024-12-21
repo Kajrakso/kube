@@ -75,3 +75,81 @@ void cube_print_cube(cube_t* cube){
                                    cs[7][0], es[6][0], cs[6][0]
   );
 }
+
+int* parse_move_string(size_t* out_length, const char* move_string){
+    // Mapping from Singmaster notation to enum move values
+    const struct {
+        const char* notation;
+        enum move value;
+    } move_map[] = {
+        {"U", U1}, {"U2", U2}, {"U'", U3},
+        {"D", D1}, {"D2", D2}, {"D'", D3},
+        {"L", L1}, {"L2", L2}, {"L'", L3},
+        {"R", R1}, {"R2", R2}, {"R'", R3},
+        {"F", F1}, {"F2", F2}, {"F'", F3},
+        {"B", B1}, {"B2", B2}, {"B'", B3},
+    };
+
+    const size_t map_size = sizeof(move_map) / sizeof(move_map[0]);
+
+    // Split the input string into tokens
+    size_t len = strlen(move_string) + 1; // +1 for the null terminator
+    char* input_copy = malloc(len);
+    if (input_copy) {
+        memcpy(input_copy, move_string, len);
+    }
+    else{
+      perror("Failed to allocate memory");
+      return NULL;
+    }
+
+    char* token = strtok(input_copy, " ");
+    
+    // Allocate an initial array to store results (resize if needed)
+    size_t capacity = 16; // Initial capacity
+    size_t length = 0;    // Actual number of moves
+    int* result = malloc(capacity * sizeof(int));
+    if (!result) {
+        perror("Failed to allocate memory");
+        free(input_copy);
+        return NULL;
+    }
+
+    // Process each token
+    while (token != NULL) {
+        // Find the corresponding enum value
+        int found = 0;
+        for (size_t i = 0; i < map_size; i++) {
+            if (strcmp(token, move_map[i].notation) == 0) {
+                // Add to result array
+                if (length >= capacity) {
+                    // Resize the array
+                    capacity *= 2;
+                    result = realloc(result, capacity * sizeof(int));
+                    if (!result) {
+                        perror("Failed to reallocate memory");
+                        free(input_copy);
+                        return NULL;
+                    }
+                }
+                result[length++] = move_map[i].value;
+                found = 1;
+                break;
+            }
+        }
+
+        // Handle invalid move
+        if (!found) {
+            fprintf(stderr, "Invalid move: %s\n", token);
+            free(result);
+            return NULL;
+        }
+
+        // Get the next token
+        token = strtok(NULL, " ");
+    }
+
+    // Clean up and set output length
+    *out_length = length;
+    return result;
+}

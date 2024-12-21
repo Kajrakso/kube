@@ -30,7 +30,7 @@ Test(cube_moves, single_U_move){
     build_corner(4, 0, 0, 0), build_corner(5, 0, 0, 0), build_corner(6, 0, 0, 0), build_corner(7, 0, 0, 0), 
   };
 
-  cube_apply_move(&cube, U1);
+  cube_move_apply_move(&cube, U1);
 
   cr_assert(arr_eq(cube.edges, edges_after_U, NEDGES));
   cr_assert(arr_eq(cube.corners, corners_after_U, NCORNERS));
@@ -54,7 +54,7 @@ Test(cube_moves, single_D_move){
     build_corner(5, 1, 2, 0), build_corner(6, 2, 1, 0), build_corner(7, 1, 2, 0), build_corner(4, 2, 1, 0), 
   };
 
-  cube_apply_move(&cube, D1);
+  cube_move_apply_move(&cube, D1);
 
   cr_assert(arr_eq(cube.edges, edges_after_D, NEDGES));
   cr_assert(arr_eq(cube.corners, corners_after_D, NCORNERS));
@@ -78,7 +78,7 @@ Test(cube_moves, single_R_move){
     build_corner(4, 0, 0, 0), build_corner(2, 1, 0, 2), build_corner(5, 2, 0, 1), build_corner(7, 0, 0, 0),
   };
 
-  cube_apply_move(&cube, R1);
+  cube_move_apply_move(&cube, R1);
 
   cr_assert(arr_eq(cube.edges, edges_after_R, NEDGES));
   cr_assert(arr_eq(cube.corners, corners_after_R, NCORNERS));
@@ -102,7 +102,7 @@ Test(cube_moves, single_L_move){
     build_corner(7, 2, 0, 1), build_corner(5, 0, 0, 0), build_corner(6, 0, 0, 0), build_corner(0, 1, 0, 2),
   };
 
-  cube_apply_move(&cube, L1);
+  cube_move_apply_move(&cube, L1);
 
   cr_assert(arr_eq(cube.edges, edges_after_L, NEDGES));
   cr_assert(arr_eq(cube.corners, corners_after_L, NCORNERS));
@@ -126,7 +126,7 @@ Test(cube_moves, single_F_move){
     build_corner(3, 0, 1, 2), build_corner(4, 0, 2, 1), build_corner(6, 0, 0, 0), build_corner(7, 0, 0, 0),
   };
 
-  cube_apply_move(&cube, F1);
+  cube_move_apply_move(&cube, F1);
 
   cr_assert(arr_eq(cube.edges, edges_after_F, NEDGES));
   cr_assert(arr_eq(cube.corners, corners_after_F, NCORNERS));
@@ -150,7 +150,7 @@ Test(cube_moves, single_B_move){
     build_corner(4, 0, 0, 0), build_corner(5, 0, 0, 0), build_corner(1, 0, 1, 2), build_corner(6, 0, 2, 1),
   };
 
-  cube_apply_move(&cube, B1);
+  cube_move_apply_move(&cube, B1);
 
   cr_assert(arr_eq(cube.edges, edges_after_B, NEDGES));
   cr_assert(arr_eq(cube.corners, corners_after_B, NCORNERS));

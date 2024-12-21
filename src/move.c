@@ -1,7 +1,8 @@
 #include "../include/core/move.h"
 #include "_move_tables.h"
+#include "_print_cube.h"
 
-void cube_apply_move(cube_t* cube, int move){
+void cube_move_apply_move(cube_t* cube, int move){
     uint16_t* p;
     
     p = move_table_corner_transformation[move];
@@ -31,8 +32,17 @@ void cube_apply_move(cube_t* cube, int move){
     cube->edges[11] = p[cube->edges[11]];
 }
 
-void cube_apply_multiple_moves(cube_t* cube, int* moves_arr, int number_of_moves){
-    for (int i = 0; i < number_of_moves; i++){
-        cube_apply_move(cube, moves_arr[i]);
+void cube_move_apply_multiple_moves(cube_t* cube, int* moves_arr, size_t number_of_moves){
+    for (size_t i = 0; i < number_of_moves; i++){
+        cube_move_apply_move(cube, moves_arr[i]);
+    }
+}
+
+void cube_move_apply_move_string(cube_t* cube, const char* moves){
+    size_t length;
+    int* parsed_moves = parse_move_string(&length, moves);
+    if (parsed_moves){
+        cube_move_apply_multiple_moves(cube, parsed_moves, length);
+        free(parsed_moves);
     }
 }

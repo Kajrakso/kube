@@ -2,7 +2,9 @@
 #define _MOVE_H_
 
 #include "cube.h"
-#include <stdbool.h>
+#include "movetables.h"
+
+#include <stddef.h>
 
 /* These moves correspond to standard Singmaster notation as follows:
     
@@ -20,24 +22,28 @@ enum move {
     B1, B2, B3,
 };
 
-/* Initializes the move tables.
-You have to call this function before applying moves to the cube.*/
-void cube_movetables_generate();
-
-/* Saves the move tables to disk. */
-bool cube_movetables_save(const char *filename);
-
-/* Loads the move tables from a file. */
-bool cube_movetables_load(const char *filename);
-
-
 /* Applies a move to a cube.
-See the enum move for the possible moves. */
-void cube_apply_move(cube_t* cube, int move);
+See the enum move for the possible moves.
 
+Example usage:
+
+```C
+cube_move_apply_move(&cube, R1);
+```*/
+void cube_move_apply_move(cube_t* cube, int move);
 
 /* Applies multiple moves to a cube.
 See the enum move for the possible moves. */
-void cube_apply_multiple_moves(cube_t* cube, int* moves_arr, int number_of_moves);
+void cube_move_apply_multiple_moves(cube_t* cube, int* moves_arr, size_t number_of_moves);
+
+/* Use `cube_move_apply_move` or `cube_move_apply_multiple_moves` directly if performance is critical.
+
+Example usage: 
+
+```C
+const char* moves = "R U R' U' R' F R2 U' R' U' R U R' F'";
+cube_move_apply_move_string(&cube, moves);
+```*/
+void cube_move_apply_move_string(cube_t* cube, const char* moves);
 
 #endif /* _MOVE_H_ */
