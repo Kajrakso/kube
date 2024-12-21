@@ -22,13 +22,13 @@ enum move {
 
 /* Initializes the move tables.
 You have to call this function before applying moves to the cube.*/
-void generate_move_tables();
+void cube_movetables_generate();
 
 /* Saves the move tables to disk. */
-bool save_move_tables(const char *filename);
+bool cube_movetables_save(const char *filename);
 
 /* Loads the move tables from a file. */
-bool load_move_tables(const char *filename);
+bool cube_movetables_load(const char *filename);
 
 
 /* Applies a move to a cube.

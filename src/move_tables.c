@@ -152,13 +152,13 @@ void gen_move_tables(){
 }
 
 
-void generate_move_tables(){
+void cube_movetables_generate(){
     initialize_move_tables();
     gen_move_tables();
 }
 
 
-bool save_move_tables(const char *filename) {
+bool cube_movetables_save(const char *filename) {
     FILE *file = fopen(filename, "wb");
     if (!file) return false;
 
@@ -178,7 +178,7 @@ bool save_move_tables(const char *filename) {
     return true;
 }
 
-bool load_move_tables(const char *filename) {
+bool cube_movetables_load(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) return false;
 

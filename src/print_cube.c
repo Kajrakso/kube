@@ -1,7 +1,5 @@
 #include "_print_cube.h"
 
-// todo: where to put these?
-
 static const char* corners_str_repr[NCORNERS] = {
   "ULB", "UBR", "URF", "UFL",
   "DLF", "DFR", "DRB", "DBL",
@@ -44,7 +42,7 @@ static inline void fill_edge_strings(cube_t* cube, char es[NEDGES][2]) {
 }
 
 // TODO: Improve the readability and efficiency of this function.
-void print_cube(cube_t* cube){
+void cube_print_cube(cube_t* cube){
   const char* cube_str_pattern =
     "      -------\n"
     "      |%c %c %c|\n"

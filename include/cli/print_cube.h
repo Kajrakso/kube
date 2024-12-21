@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "../core/cube.h"
 
-void print_cube(cube_t* cube);
+void cube_print_cube(cube_t* cube);
 
 #endif /* _PRINT_CUBE_H_ */
