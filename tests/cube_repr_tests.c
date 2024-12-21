@@ -1,4 +1,6 @@
-#include "../src/libcube.h"
+#include "../include/libcube.h"
+#include "../src/utils.h"
+#include "../src/_cube.h"
 #include "criterion/criterion.h"
 #include "criterion/redirect.h"
 #include <stdint.h>
@@ -8,7 +10,7 @@
 
 TestSuite(cube_repr);
 
-/// tests
+// tests
 
 Test(cube_repr, extract_eo){
   uint16_t edge1 = 0b1011001;

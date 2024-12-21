@@ -1,7 +1,7 @@
-#include "move_tables.h"
+#include "_move_tables.h"
 
-uint16_t corner_trans[NMOVES][NCORNERCUBIES];
-uint16_t edge_trans[NMOVES][NEDGECUBIES];
+uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
+uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
 
 enum facemove {
   U, D,
@@ -75,10 +75,10 @@ actual moves. */
 void initialize_move_tables(){
     for (int m = 0; m < NMOVES; m++){
         for (int c = 0; c < NCORNERCUBIES; c++){
-            corner_trans[m][c] = c;
+            move_table_corner_transformation[m][c] = c;
         }
         for (int c = 0; c < NEDGECUBIES; c++){
-            edge_trans[m][c] = c;
+            move_table_edge_transformation[m][c] = c;
         }
     }
 }
@@ -102,7 +102,7 @@ static inline void gen_moves_corners(int face, int turns, int piece){
                 uint16_t old_c = build_corner(cp, co_fb, co_lr, co_ud);
                 uint16_t new_c = build_corner(new_cp, new_co_fb, new_co_lr, new_co_ud);
 
-                corner_trans[move][old_c] = new_c;
+                move_table_corner_transformation[move][old_c] = new_c;
             }
         }
     }
@@ -127,7 +127,7 @@ static inline void gen_moves_edges(int face, int turns, int piece){
                 uint16_t old_e = build_edge(ep, eo_fb, eo_lr, eo_ud);
                 uint16_t new_e = build_edge(new_ep, new_eo_fb, new_eo_lr, new_eo_ud);
 
-                edge_trans[move][old_e] = new_e;
+                move_table_edge_transformation[move][old_e] = new_e;
             }
         }
     }
@@ -151,18 +151,25 @@ void gen_move_tables(){
     }
 }
 
+
+void generate_move_tables(){
+    initialize_move_tables();
+    gen_move_tables();
+}
+
+
 bool save_move_tables(const char *filename) {
     FILE *file = fopen(filename, "wb");
     if (!file) return false;
 
-    // Save the corner_trans array
-    if (fwrite(corner_trans, sizeof(corner_trans), 1, file) != 1) {
+    // Save the move_table_corner_transformation array
+    if (fwrite(move_table_corner_transformation, sizeof(move_table_corner_transformation), 1, file) != 1) {
         fclose(file);
         return false;
     }
 
-    // Save the edge_trans array
-    if (fwrite(edge_trans, sizeof(edge_trans), 1, file) != 1) {
+    // Save the move_table_edge_transformation array
+    if (fwrite(move_table_edge_transformation, sizeof(move_table_edge_transformation), 1, file) != 1) {
         fclose(file);
         return false;
     }
@@ -175,14 +182,14 @@ bool load_move_tables(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) return false;
 
-    // Load the corner_trans array
-    if (fread(corner_trans, sizeof(corner_trans), 1, file) != 1) {
+    // Load the move_table_corner_transformation array
+    if (fread(move_table_corner_transformation, sizeof(move_table_corner_transformation), 1, file) != 1) {
         fclose(file);
         return false;
     }
 
-    // Load the edge_trans array
-    if (fread(edge_trans, sizeof(edge_trans), 1, file) != 1) {
+    // Load the move_table_edge_transformation array
+    if (fread(move_table_edge_transformation, sizeof(move_table_edge_transformation), 1, file) != 1) {
         fclose(file);
         return false;
     }

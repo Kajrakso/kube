@@ -1,13 +1,10 @@
-#include "move.h"
+#include "../include/core/move.h"
+#include "_move_tables.h"
 
-/* makes a move to the cube.
-move is a number 0,...,18. where
-(move // 3) is the move, and
-(move % 3) is the number of twists.*/
-void make_move(cube_t* cube, move m){
+void cube_apply_move(cube_t* cube, int move){
     uint16_t* p;
     
-    p = corner_trans[m];
+    p = move_table_corner_transformation[move];
     
     cube->corners[0] = p[cube->corners[0]];
     cube->corners[1] = p[cube->corners[1]];
@@ -18,7 +15,7 @@ void make_move(cube_t* cube, move m){
     cube->corners[6] = p[cube->corners[6]];
     cube->corners[7] = p[cube->corners[7]];
     
-    p = edge_trans[m];
+    p = move_table_edge_transformation[move];
 
     cube->edges[0] = p[cube->edges[0]];
     cube->edges[1] = p[cube->edges[1]];
@@ -34,8 +31,8 @@ void make_move(cube_t* cube, move m){
     cube->edges[11] = p[cube->edges[11]];
 }
 
-void make_multiple_moves(cube_t* cube, move* moves_ptr, int number_of_moves){
+void cube_apply_multiple_moves(cube_t* cube, int* moves_arr, int number_of_moves){
     for (int i = 0; i < number_of_moves; i++){
-        make_move(cube, moves_ptr[i]);
+        cube_apply_move(cube, moves_arr[i]);
     }
 }

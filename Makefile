@@ -1,23 +1,55 @@
+# Compiler and standard flags
 CC = cc
-CFLAGS = -std=c99 -pthread -pedantic -Wall -Wextra -Wno-unused-parameter -O3
-DBGFLAGS = -std=c99 -pthread -pedantic -Wall -Wextra \
-	-Wno-unused-parameter -Wno-unused-function \
-	-fsanitize=address -fsanitize=undefined \
-	-g3
+CFLAGS_COMMON = -std=c99 -pthread -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
+CFLAGS_OPTIMIZED = -O3
+CFLAGS_DEBUG = -g3 -fsanitize=address -fsanitize=undefined -fsanitize=leak -fstack-protector-all -Wno-unused-function
 
-OBJ = src/cube.o src/move_tables.o src/move.o src/utilities.o src/print_cube.o
-TEST_OBJ = tests/cube_moves_tests.o tests/cube_repr_tests.o tests/util_tests.o
+# Targets
+LIB = libcube.a
+TEST_EXEC = test.out
 
-test: $(TEST_OBJ) libcube.a
-		$(CC) $^ -lcriterion -o a.out && a.out --verbose=1
+# Directories
+SRC_DIR = src
+TEST_DIR = tests
 
-libcube.a: $(OBJ)
-		ar rcs $@ $^
+# Source and object files
+SRC = $(wildcard $(SRC_DIR)/*.c)
+OBJ = $(SRC:.c=.o)
 
-main: libcube.a
-		$(CC) $(DBGFLAGS) main.c -L. -lcube -o $@
+TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
+TEST_OBJ = $(TEST_SRC:.c=.o)
 
+# Default target
+all: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_OPTIMIZED)
+all: $(LIB)
+
+# Debug target
+debug: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_DEBUG)
+debug: $(LIB)
+
+# Test target
+test: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_DEBUG)
+test: $(TEST_EXEC)
+
+# Library creation
+$(LIB): $(OBJ)
+	ar rcs $@ $^
+
+# Test executable
+$(TEST_EXEC): $(TEST_OBJ) $(OBJ)
+	$(CC) $(CFLAGS) $^ -lcriterion -o $@ && ./$(TEST_EXEC) --verbose=1
+
+# Compile source files
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile test files
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean target
 clean:
-		rm -f *.a *.o src/*.a src/*.o tests/*.a tests/*.o *.out
+	rm -f $(OBJ) $(LIB) $(TEST_OBJ) $(TEST_EXEC)
 
-.PHONY: test clean
+# Phony targets
+.PHONY: all debug test clean

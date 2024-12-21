@@ -2,8 +2,7 @@
 #define _PRINT_CUBE_H_
 
 #include <stdio.h>
-#include "cube.h"
-#include "move.h"
+#include "../core/cube.h"
 
 void print_cube(cube_t* cube);
 
