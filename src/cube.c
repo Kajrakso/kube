@@ -2,8 +2,8 @@
 
 cube_t cube_create_new_cube(){
   cube_t cube = {
-    .edges = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    .corners = {0, 0, 0, 0, 0, 0, 0, 0},
+      .edges = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+      .corners = {0, 0, 0, 0, 0, 0, 0, 0},
   };
 
   for (int i = 0; i < 12; i++){
@@ -37,22 +37,22 @@ int extract_edge_perm(uint16_t edge){
 
 void update_edge_perm(uint16_t* edge, int ep){
   *edge &= 7;
-  *edge |= (ep & 15) << 3;  // just to be safe
+  *edge |= (ep & 15) << 3; // just to be safe
 }
 
-void update_edge_orien(uint16_t* edge, int o_fb, int o_lr, int o_ud){
-  *edge &= 120;   // 0b1111000
-  *edge |= (o_fb << 2) | (o_lr << 1) | o_ud;
+void update_edge_orien(uint16_t* edge, int eo_fb, int eo_lr, int eo_ud){
+  *edge &= 120; // 0b1111000
+  *edge |= (eo_fb << 2) | (eo_lr << 1) | eo_ud;
 }
 
 void update_corner_perm(uint16_t* corner, int cp){
-  *corner &= 504;  // 0b111111000
-  *corner |= (cp & 7);  // just to be safe
+  *corner &= 504;      // 0b111111000
+  *corner |= (cp & 7); // just to be safe
 }
 
-void update_corner_orien(uint16_t* corner, int o_fb, int o_lr, int o_ud){
+void update_corner_orien(uint16_t* corner, int co_fb, int co_lr, int co_ud){
   *corner &= 7;
-  *corner |= (o_ud << 7) | (o_lr << 5) | (o_fb << 3);
+  *corner |= (co_ud << 7) | (co_lr << 5) | (co_fb << 3);
 }
 
 uint16_t build_corner(int cp, int co_fb, int co_lr, int co_ud){

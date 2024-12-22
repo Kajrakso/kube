@@ -41,9 +41,9 @@ int extract_corner_perm(uint16_t corner);
 int extract_edge_orien(uint16_t edge, axes a);
 int extract_edge_perm(uint16_t edge);
 void update_edge_perm(uint16_t* edge, int ep);
-void update_edge_orien(uint16_t* edge, int o_fb, int o_lr, int o_ud);
+void update_edge_orien(uint16_t* edge, int eo_fb, int eo_lr, int eo_ud);
 void update_corner_perm(uint16_t* corner, int cp);
-void update_corner_orien(uint16_t* corner, int o_fb, int o_lr, int o_ud);
+void update_corner_orien(uint16_t* corner, int co_fb, int co_lr, int co_ud);
 
 /* helper functions for building cubies. */
 
