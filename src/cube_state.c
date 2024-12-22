@@ -111,6 +111,10 @@ bool cube_state_is_eo(cube_t* cube){
   return cube_state_is_eo_FB(cube) || cube_state_is_eo_LR(cube) || cube_state_is_eo_UD(cube);
 }
 
+bool cube_state_is_co(cube_t* cube){
+  return cube_state_is_co_FB(cube) || cube_state_is_co_LR(cube) || cube_state_is_co_UD(cube);
+}
+
 bool cube_state_is_dr(cube_t* cube){
   return cube_state_is_dr_FB(cube) || cube_state_is_dr_LR(cube) || cube_state_is_dr_UD(cube);
 }
