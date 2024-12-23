@@ -10,7 +10,6 @@ TestSuite(cube_operations);
 
 // tests
 
-
 Test(cube_operations, cube_equality){
     cube_t cube = cube_create_new_cube();
     cube_t cube_copy = cube_create_new_cube();
@@ -64,4 +63,24 @@ Test(cube_operations, inverse){
     cube_move_apply_move_string(&cube4_inverse, "R U F L'");
 
     cr_assert_not(cube_operation_is_equal(cube_operation_inverse(cube4), cube4_inverse));
+}
+
+Test(cube_operations, composition){
+    cube_movetables_generate();
+
+    cube_t cube1 = cube_create_new_cube();
+    cube_t cube2 = cube_create_new_cube();
+    cube_t cube_result = cube_create_new_cube();
+
+    cube_move_apply_move(&cube1, R1);
+    cube_move_apply_move(&cube2, U1);
+
+    cube_move_apply_move_string(&cube_result, "R U");
+
+    cr_assert(cube_operation_is_equal(cube_operation_compose(cube1, cube2), cube_result));
+
+    cube_t cube_1 = cube_create_new_cube();
+    cube_t cube_2 = cube_create_new_cube();
+
+    cr_assert(cube_operation_is_equal(cube_operation_compose(cube_1, cube_2), cube_create_new_cube()));
 }
