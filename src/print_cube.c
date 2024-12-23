@@ -150,6 +150,7 @@ int* parse_move_string(size_t* out_length, const char* move_string){
     }
 
     // Clean up and set output length
+    free(input_copy);
     *out_length = length;
     return result;
 }
