@@ -96,4 +96,4 @@ The following diagram illustrates the numbering of the pieces:
 
 ## Inspiration
 
-I've used https://cube20.org/src/ and https://nissy.tronto.net/ for inspiration.
+I've used https://github.com/rokicki/cube20src, https://github.com/sebastianotronto/nissy-classic and https://github.com/sebastianotronto/h48 for inspiration.
