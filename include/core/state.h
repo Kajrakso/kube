@@ -45,4 +45,10 @@ bool cube_state_is_htr(cube_t* cube);
 /* Check if the cube is solved. We assume that the cube is in a valid state. */
 bool cube_state_is_solved(cube_t* cube);
 
+/* Check if the cube has solved corners. */
+bool cube_state_is_corners_solved(cube_t* cube);
+
+/* Check if the cube has solved edges. */
+bool cube_state_is_edges_solved(cube_t* cube);
+
 #endif /* _STATE_H_ */

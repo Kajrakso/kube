@@ -17,6 +17,32 @@ Test(cube_info, is_solved){
     cr_assert(cube_state_is_solved(&cube));
 }
 
+Test(cube_info, is_corners_solved){
+    cube_movetables_generate();
+
+    cube_t cube = cube_create_new_cube();
+    cr_assert(cube_state_is_corners_solved(&cube));
+
+    cube_move_apply_move_string(&cube, "R L' U2 R' L F2");     // do a edge commutator.
+    cr_assert(cube_state_is_corners_solved(&cube));
+
+    cube_move_apply_move_string(&cube, "R' D R U R' D' R U'");     // do a corner commutator.
+    cr_assert_not(cube_state_is_corners_solved(&cube));
+}
+
+Test(cube_info, is_edges_solved){
+    cube_movetables_generate();
+
+    cube_t cube = cube_create_new_cube();
+    cr_assert(cube_state_is_edges_solved(&cube));
+
+    cube_move_apply_move_string(&cube, "R' D R U R' D' R U'");     // do a corner commutator
+    cr_assert(cube_state_is_edges_solved(&cube));
+
+    cube_move_apply_move_string(&cube, "R L' U2 R' L F2");    // do a edge commutator
+    cr_assert_not(cube_state_is_edges_solved(&cube));
+}
+
 Test(cube_info, is_solved_after_moves){
     cube_t cube = cube_create_new_cube();
     cube_movetables_generate();

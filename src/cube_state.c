@@ -1,21 +1,12 @@
 #include "_cube.h"
+#include "../include/core/state.h"
 
-bool cube_state_is_solved(cube_t *cube)
-{
-  for (int i = 0; i < NEDGES - 1; i++)
-  {
-    if (extract_edge_perm(cube->edges[i]) != i)
-    {
-      return false;
-    }
-    if (extract_edge_orien(cube->edges[i], FB) != 0)
-    {
-      return false;
-    }
-  }
+bool cube_state_is_solved(cube_t *cube){
+  return cube_state_is_corners_solved(cube) && cube_state_is_edges_solved(cube);
+}
 
-  for (int i = 0; i < NCORNERS - 1; i++)
-  {
+bool cube_state_is_corners_solved(cube_t* cube){
+  for (int i = 0; i < NCORNERS - 1; i++){
     if (extract_corner_perm(cube->corners[i]) != i)
     {
       return false;
@@ -27,6 +18,19 @@ bool cube_state_is_solved(cube_t *cube)
   }
 
   return true;
+}
+
+bool cube_state_is_edges_solved(cube_t* cube){
+  for (int i = 0; i < NEDGES - 1; i++) {
+    if (extract_edge_perm(cube->edges[i]) != i)
+    {
+      return false;
+    }
+    if (extract_edge_orien(cube->edges[i], FB) != 0)
+    {
+      return false;
+    }
+  }
 }
 
 bool cube_state_is_eo_FB(cube_t* cube){
