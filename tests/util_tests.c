@@ -33,10 +33,10 @@ Test(util_tests, arr_eq){
 
 Test(util_tests, perm_parity_is_even){
   uint16_t arr1[] = {1, 2, 3, 4};
-  cr_assert(perm_parity_is_even(arr1, 4));
+  cr_assert(arr_perm_parity_is_even(arr1, 4));
 
   uint16_t arr2[] = {1, 2, 4, 3};
-  cr_assert_not(perm_parity_is_even(arr2, 4));
+  cr_assert_not(arr_perm_parity_is_even(arr2, 4));
 }
 
 Test(util_tests, swap_uint16){

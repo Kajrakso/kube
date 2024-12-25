@@ -10,4 +10,6 @@ cube_t cube_scrambler_get_scrambled_cube(){
     for (int i = 0; i < n_rand_moves; i++){
         cube_move_apply_move(&cube, rand() % NMOVES);
     }
+
+    return cube;
 }
