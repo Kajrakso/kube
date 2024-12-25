@@ -6,7 +6,10 @@
 
 #include <stdlib.h>
 
-cube_t cube_scrambler_get_scrambled_cube();
+/* Just does 26 random moves to the cube. Use ``cube_scrambler_get_scrambled_cube`` for a random state. */
+cube_t cube_scrambler_get_handscrambled_cube();
 
+/* Returns a completely random cube state. */
+cube_t cube_scrambler_get_scrambled_cube();
 
 #endif /* _SCRAMBLER_H_ */

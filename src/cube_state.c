@@ -1,5 +1,34 @@
-#include "_cube.h"
-#include "../include/core/state.h"
+#include "_cube_state.h"
+
+/* private */
+
+bool cube_valid_eo(cube_t* cube){
+  int eo_sum_FB = 0, eo_sum_LR = 0, eo_sum_UD = 0;
+  for (int i = 0; i < NEDGES; i++){
+    eo_sum_FB += extract_edge_orien(cube->edges[i], FB);
+    eo_sum_LR += extract_edge_orien(cube->edges[i], LR);
+    eo_sum_UD += extract_edge_orien(cube->edges[i], UD);
+  }
+  return eo_sum_FB % 2 == 0 && eo_sum_LR % 2 == 0 && eo_sum_UD % 2 == 0;
+}
+
+bool cube_valid_co(cube_t* cube){
+  int co_sum_FB = 0, co_sum_LR = 0, co_sum_UD = 0;
+  for (int i = 0; i < NCORNERS; i++){
+    co_sum_FB += extract_corner_orien(cube->corners[i], FB);
+    co_sum_LR += extract_corner_orien(cube->corners[i], LR);
+    co_sum_UD += extract_corner_orien(cube->corners[i], UD);
+  }
+  return co_sum_FB % 3 == 0 && co_sum_LR % 3 == 0 && co_sum_UD % 3 == 0;
+}
+
+// todo: implement these.
+bool cube_valid_permutation(cube_t* cube){
+  return true;
+}
+
+
+/* public */
 
 bool cube_state_is_solved(cube_t *cube){
   return cube_state_is_corners_solved(cube) && cube_state_is_edges_solved(cube);

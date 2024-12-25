@@ -26,14 +26,6 @@ typedef enum axes {
   FB, LR, UD,
 } axes;
 
-
-/* TODO: these have not been implemented yet! */
-
-bool cube_valid_eo(cube_t* cube);
-bool cube_valid_co(cube_t* cube);
-bool cube_valid_ep(cube_t* cube);
-bool cube_valid_cp(cube_t* cube);
-
 /* helper functions for manipulating and extracting info from the cubies. */
 
 int extract_corner_orien(uint16_t corner, axes a);
@@ -49,5 +41,11 @@ void update_corner_orien(uint16_t* corner, int co_fb, int co_lr, int co_ud);
 
 uint16_t build_corner(int cp, int co_fb, int co_lr, int co_ud);
 uint16_t build_edge(int ep, int eo_fb, int eo_lr, int eo_ud);
+
+/* Given a cube with valid permutations and valid eo and co along FB.
+These functions will set the correct orientation bits for the other axes. */
+
+void fix_co_lr_ud(cube_t* cube);
+void fix_eo_lr_ud(cube_t* cube);
 
 #endif /* __CUBE_H_ */
