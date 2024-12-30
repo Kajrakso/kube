@@ -63,7 +63,7 @@ The following diagram illustrates the numbering of the pieces:
                    |              |
                    |  4    4    5 |
                    |              |
-                   |  7    B    5 |
+                   |  7    D    5 |
                    |              |
                    |  7    6    6 |
                    |              |
