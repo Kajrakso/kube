@@ -2,7 +2,7 @@
 #define _MOVE_H_
 
 #include "cube.h"
-#include "movetables.h"
+#include "tables.h"
 
 #include <stddef.h>
 

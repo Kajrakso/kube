@@ -13,7 +13,7 @@ TestSuite(cube_operations);
 Test(cube_operations, cube_equality){
     cube_t cube = cube_create_new_cube();
     cube_t cube_copy = cube_create_new_cube();
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cr_assert(cube_operation_is_equal(cube, cube_copy));
 
@@ -29,7 +29,7 @@ Test(cube_operations, cube_equality){
 }
 
 Test(cube_operations, inverse){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube = cube_create_new_cube();
     cube_t cube_inverse = cube_operation_inverse(cube);
@@ -66,7 +66,7 @@ Test(cube_operations, inverse){
 }
 
 Test(cube_operations, composition){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube1 = cube_create_new_cube();
     cube_t cube2 = cube_create_new_cube();
@@ -86,7 +86,7 @@ Test(cube_operations, composition){
 }
 
 Test(cube_operations, composition2){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube1 = cube_create_new_cube();
     cube_t cube2 = cube_create_new_cube();

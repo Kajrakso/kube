@@ -18,7 +18,7 @@ Test(cube_info, is_solved){
 }
 
 Test(cube_info, is_corners_solved){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube = cube_create_new_cube();
     cr_assert(cube_state_is_corners_solved(&cube));
@@ -31,7 +31,7 @@ Test(cube_info, is_corners_solved){
 }
 
 Test(cube_info, is_edges_solved){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube = cube_create_new_cube();
     cr_assert(cube_state_is_edges_solved(&cube));
@@ -45,7 +45,7 @@ Test(cube_info, is_edges_solved){
 
 Test(cube_info, is_solved_after_moves){
     cube_t cube = cube_create_new_cube();
-    cube_movetables_generate();
+    cube_tables_generate();
     cube_move_apply_move(&cube, R1);
     cube_move_apply_move(&cube, L1);
     cube_move_apply_move(&cube, R3);
@@ -79,7 +79,7 @@ Test(cube_info, is_not_solved_cp){
 
 Test(cube_info, is_dr){
     cube_t cube = cube_create_new_cube();
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cr_assert(cube_state_is_dr(&cube));
     cr_assert(cube_state_is_dr_FB(&cube));
@@ -115,7 +115,7 @@ Test(cube_info, is_dr){
 
 Test(cube_info, is_eo){
     cube_t cube = cube_create_new_cube();
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cr_assert(cube_state_is_eo(&cube));
     cr_assert(cube_state_is_eo_FB(&cube));
@@ -160,7 +160,7 @@ Test(cube_info, is_eo){
 
 Test(cube_info, is_co){
     cube_t cube = cube_create_new_cube();
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cr_assert(cube_state_is_co(&cube));
     cr_assert(cube_state_is_co_FB(&cube));

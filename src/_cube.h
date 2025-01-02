@@ -4,6 +4,7 @@
 #include "../include/core/cube.h"
 #include <stdbool.h>
 
+#define NSYMS 48
 #define NMOVES 18
 #define NAXES 3
 #define NEDGECUBIES 128  // edges: 3 bits for eo, 4 bits for ep -> 2**7

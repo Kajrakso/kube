@@ -13,7 +13,7 @@ TestSuite(cube_moves);
 // tests
 
 Test(cube_moves, single_U_move){
-  cube_movetables_generate();
+  cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
 
@@ -37,7 +37,7 @@ Test(cube_moves, single_U_move){
 }
 
 Test(cube_moves, single_D_move){
-  cube_movetables_generate();
+  cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
 
@@ -61,7 +61,7 @@ Test(cube_moves, single_D_move){
 }
 
 Test(cube_moves, single_R_move){
-  cube_movetables_generate();
+  cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
 
@@ -85,7 +85,7 @@ Test(cube_moves, single_R_move){
 }
 
 Test(cube_moves, single_L_move){
-  cube_movetables_generate();
+  cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
 
@@ -109,7 +109,7 @@ Test(cube_moves, single_L_move){
 }
 
 Test(cube_moves, single_F_move){
-  cube_movetables_generate();
+  cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
 
@@ -133,7 +133,7 @@ Test(cube_moves, single_F_move){
 }
 
 Test(cube_moves, single_B_move){
-  cube_movetables_generate();
+  cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
 

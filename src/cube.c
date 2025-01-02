@@ -1,11 +1,6 @@
 #include "_cube.h"
 
-// returns the slice an edge belongs to.
-int e_slice(int i);
-
-enum slice {
-  M, S, E
-};
+/* public */
 
 cube_t cube_create_new_cube(){
   cube_t cube = {
@@ -25,6 +20,15 @@ cube_t cube_create_new_cube(){
 
   return cube;
 }
+
+/* private */
+
+// returns the slice an edge belongs to.
+int e_slice(int i);
+
+enum slice {
+  M, S, E
+};
 
 int extract_corner_orien(uint16_t corner, axes a){
   return 3 & (corner >> (3 + 2 * a));

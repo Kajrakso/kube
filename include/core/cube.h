@@ -28,4 +28,7 @@ cube_t cube_operation_compose(cube_t cube1, cube_t cube2);
 /* This function returns the inverse of the cube. That is, the cube C^(-1) that satisfies C^(-1)*C = I. */
 cube_t cube_operation_inverse(cube_t cube);
 
+/* Conjugate by the cube symmetry S. That is, for the cube `C`, return `S^-1 * C * S`. */
+cube_t cube_operation_sym_conjugate(cube_t cube, int symmetry);
+
 #endif /* _CUBE_H_ */

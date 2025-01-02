@@ -15,7 +15,7 @@ Test(fix_orientation, fix_co_lr_ud_several_moves){
     cube_t cube1 = cube_create_new_cube();
     cube_t cube2 = cube_create_new_cube();
 
-    cube_movetables_generate();
+    cube_tables_generate();
 
     int moves[] = {U1, R1, F1, R2, D3, U2, L2};
 
@@ -42,7 +42,7 @@ Test(fix_orientation, fix_eo_lr_ud_several_moves){
     cube_t cube1 = cube_create_new_cube();
     cube_t cube2 = cube_create_new_cube();
 
-    cube_movetables_generate();
+    cube_tables_generate();
 
     int moves[] = {U1, R1, F1, R2, D3, U2, L2};
 

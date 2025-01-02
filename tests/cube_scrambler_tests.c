@@ -13,7 +13,7 @@ TestSuite(scramble);
 // tests
 
 Test(scramble, handscramble_results_in_legal_cube){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube = cube_scrambler_get_handscrambled_cube();
 
@@ -23,7 +23,7 @@ Test(scramble, handscramble_results_in_legal_cube){
 }
 
 Test(scramble, scramble_results_in_legal_cube){
-    cube_movetables_generate();
+    cube_tables_generate();
 
     cube_t cube = cube_scrambler_get_scrambled_cube();
 
