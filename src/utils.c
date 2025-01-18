@@ -25,7 +25,7 @@ void arr_shuffle(uint16_t* arr, int n){
 }
 
 void swap_uint16(uint16_t* a, uint16_t* b){
-  int temp;
+  uint16_t temp;
 
   temp = *a;
   *a = *b;

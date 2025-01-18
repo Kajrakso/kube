@@ -31,7 +31,8 @@ bool cube_valid_permutation(cube_t* cube){
 /* public */
 
 bool cube_state_is_solved(cube_t *cube){
-  return cube_state_is_corners_solved(cube) && cube_state_is_edges_solved(cube);
+  cube_t solved_cube = cube_create_new_cube();
+  return cube_operation_is_equal(solved_cube, *cube);
 }
 
 bool cube_state_is_corners_solved(cube_t* cube){
@@ -60,6 +61,8 @@ bool cube_state_is_edges_solved(cube_t* cube){
       return false;
     }
   }
+
+  return true;
 }
 
 bool cube_state_is_eo_FB(cube_t* cube){

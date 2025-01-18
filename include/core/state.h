@@ -42,7 +42,7 @@ bool cube_state_is_dr(cube_t* cube);
 /* Check if the cube is in half turn reduction. */
 bool cube_state_is_htr(cube_t* cube);
 
-/* Check if the cube is solved. We assume that the cube is in a valid state. */
+/* Check if the cube is solved.  */
 bool cube_state_is_solved(cube_t* cube);
 
 /* Check if the cube has solved corners. */
