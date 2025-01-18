@@ -1,5 +1,85 @@
 #include "_tables.h"
 
+const enum facemove {
+  U, D,
+  L, R,
+  F, B,
+};
+
+static const int edge_perm_cycles[NFACES][4] = {
+    [U] = {UB, UR, UF, UL},
+    [D] = {DF, DR, DB, DL},
+    [L] = {UL, FL, DL, BL},
+    [R] = {UR, BR, DR, FR},
+    [F] = {UF, FR, DF, FL},
+    [B] = {UB, BL, DB, BR},
+};
+
+static const int edge_orient_change[NAXES][NFACES] = {
+    [FB] = {
+        /* U, D, L, R, F, B*/
+        0, 0, 0, 0, 1, 1
+    },
+    [LR] = {
+        /* U, D, L, R, F, B*/
+        0, 0, 1, 1, 0, 0
+    },
+    [UD] = {
+        /* U, D, L, R, F, B*/
+        1, 1, 0, 0, 0, 0
+    },
+};
+
+static const int corner_perm_cycles[NFACES][4] = {
+    [U] = {UBL, UBR, UFR, UFL},
+    [D] = {DFL, DFR, DBR, DBL},
+    [L] = {UBL, UFL, DFL, DBL},
+    [R] = {UFR, UBR, DBR, DFR},
+    [F] = {UFL, UFR, DFR, DFL},
+    [B] = {UBR, UBL, DBL, DBR},
+};
+
+static const int corner_orient_change[NAXES][NFACES][4] = {
+    [FB] = {
+        [U] = {1, 2, 1, 2},
+        [D] = {1, 2, 1, 2},
+        [L] = {2, 1, 2, 1},
+        [R] = {2, 1, 2, 1},
+        [F] = {0, 0, 0, 0},
+        [B] = {0, 0, 0, 0},
+    },
+    [LR] = {
+        [U] = {2, 1, 2, 1},
+        [D] = {2, 1, 2, 1},
+        [L] = {0, 0, 0, 0},
+        [R] = {0, 0, 0, 0},
+        [F] = {2, 1, 2, 1},
+        [B] = {2, 1, 2, 1},
+    },
+    [UD] = {
+        [U] = {0, 0, 0, 0},
+        [D] = {0, 0, 0, 0},
+        [L] = {1, 2, 1, 2},
+        [R] = {1, 2, 1, 2},
+        [F] = {1, 2, 1, 2},
+        [B] = {1, 2, 1, 2},
+    },
+};
+
+static void initialize_move_tables();
+static void gen_move_tables();
+
+// todo: rethink how this should be done. works for now.
+
+static int which_edge_at_pos(int pos, cube_t* cube);
+static int which_corner_at_pos(int pos, cube_t* cube);
+static void do_y_rot(cube_t* cube);
+static void do_z_rot(cube_t* cube);
+static void do_inversion(cube_t* cube);
+
+static void initialize_sym_tables();
+static void gen_sym_tables();
+
 /* moves */
 uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
 uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
@@ -8,82 +88,6 @@ uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
 uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
 uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
-/* ---------------------------- public ---------------------------- */
-
-void cube_tables_generate(){
-    // gen moves
-    initialize_move_tables();
-    gen_move_tables();
-
-    // gen sym
-    initialize_sym_tables();
-    gen_sym_tables();
-}
-
-bool cube_tables_save(const char *filename) {
-    FILE *file = fopen(filename, "wb");
-    if (!file) return false;
-
-    // Save the move_table_corner_transformation array
-    if (fwrite(move_table_corner_transformation, sizeof(move_table_corner_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    // Save the move_table_edge_transformation array
-    if (fwrite(move_table_edge_transformation, sizeof(move_table_edge_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    // Save the sym_table_corner_transformation array
-    if (fwrite(sym_table_corner_transformation, sizeof(sym_table_corner_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    // Save the sym_table_edge_transformation array
-    if (fwrite(sym_table_edge_transformation, sizeof(sym_table_edge_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    fclose(file);
-    return true;
-}
-
-bool cube_tables_load(const char *filename) {
-    FILE *file = fopen(filename, "rb");
-    if (!file) return false;
-
-    // Load the move_table_corner_transformation array
-    if (fread(move_table_corner_transformation, sizeof(move_table_corner_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    // Load the move_table_edge_transformation array
-    if (fread(move_table_edge_transformation, sizeof(move_table_edge_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    // Load the sym_table_corner_transformation array
-    if (fread(sym_table_corner_transformation, sizeof(sym_table_corner_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    // Load the sym_table_edge_transformation array
-    if (fread(sym_table_edge_transformation, sizeof(sym_table_edge_transformation), 1, file) != 1) {
-        fclose(file);
-        return false;
-    }
-
-    fclose(file);
-    return true;
-}
-
 /* ------------------------------ private --------------------------- */
 
 /* Fills the tables with default values.
@@ -91,11 +95,11 @@ This have to be done before we generate the
 actual moves. */
 static void initialize_move_tables(){
     for (int m = 0; m < NMOVES; m++){
-        for (int c = 0; c < NCORNERCUBIES; c++){
+        for (uint16_t c = 0; c < NCORNERCUBIES; c++){
             move_table_corner_transformation[m][c] = c;
         }
-        for (int c = 0; c < NEDGECUBIES; c++){
-            move_table_edge_transformation[m][c] = c;
+        for (uint16_t e = 0; e < NEDGECUBIES; e++){
+            move_table_edge_transformation[m][e] = e;
         }
     }
 }
@@ -173,11 +177,11 @@ This have to be done before we generate the
 actual conjugations. */
 static void initialize_sym_tables(){
     for (int s = 0; s < NSYMS; s++){
-        for (int c = 0; c < NCORNERCUBIES; c++){
+        for (uint16_t c = 0; c < NCORNERCUBIES; c++){
             sym_table_corner_transformation[s][c] = c;
         }
-        for (int c = 0; c < NEDGECUBIES; c++){
-            sym_table_edge_transformation[s][c] = c;
+        for (uint16_t e = 0; e < NEDGECUBIES; e++){
+            sym_table_edge_transformation[s][e] = e;
         }
     }
 }
@@ -323,7 +327,6 @@ static int which_corner_at_pos(int pos, cube_t* cube){
 }
 
 static void do_inversion(cube_t* cube){
-    int temp;
     int e1, e2;
 
     e1 = which_edge_at_pos(UF, cube);
@@ -385,68 +388,78 @@ static void do_inversion(cube_t* cube){
     }
 }
 
-const enum facemove {
-  U, D,
-  L, R,
-  F, B,
-};
+/* ---------------------------- public ---------------------------- */
 
-static const int edge_perm_cycles[NFACES][4] = {
-    [U] = {UB, UR, UF, UL},
-    [D] = {DF, DR, DB, DL},
-    [L] = {UL, FL, DL, BL},
-    [R] = {UR, BR, DR, FR},
-    [F] = {UF, FR, DF, FL},
-    [B] = {UB, BL, DB, BR},
-};
+void cube_tables_generate(){
+    // gen moves
+    initialize_move_tables();
+    gen_move_tables();
 
-static const int edge_orient_change[NAXES][NFACES] = {
-    [FB] = {
-        /* U, D, L, R, F, B*/
-        0, 0, 0, 0, 1, 1
-    },
-    [LR] = {
-        /* U, D, L, R, F, B*/
-        0, 0, 1, 1, 0, 0
-    },
-    [UD] = {
-        /* U, D, L, R, F, B*/
-        1, 1, 0, 0, 0, 0
-    },
-};
+    // gen sym
+    initialize_sym_tables();
+    gen_sym_tables();
+}
 
-static const int corner_perm_cycles[NFACES][4] = {
-    [U] = {UBL, UBR, UFR, UFL},
-    [D] = {DFL, DFR, DBR, DBL},
-    [L] = {UBL, UFL, DFL, DBL},
-    [R] = {UFR, UBR, DBR, DFR},
-    [F] = {UFL, UFR, DFR, DFL},
-    [B] = {UBR, UBL, DBL, DBR},
-};
+bool cube_tables_save(const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) return false;
 
-static const int corner_orient_change[NAXES][NFACES][4] = {
-    [FB] = {
-        [U] = {1, 2, 1, 2},
-        [D] = {1, 2, 1, 2},
-        [L] = {2, 1, 2, 1},
-        [R] = {2, 1, 2, 1},
-        [F] = {0, 0, 0, 0},
-        [B] = {0, 0, 0, 0},
-    },
-    [LR] = {
-        [U] = {2, 1, 2, 1},
-        [D] = {2, 1, 2, 1},
-        [L] = {0, 0, 0, 0},
-        [R] = {0, 0, 0, 0},
-        [F] = {2, 1, 2, 1},
-        [B] = {2, 1, 2, 1},
-    },
-    [UD] = {
-        [U] = {0, 0, 0, 0},
-        [D] = {0, 0, 0, 0},
-        [L] = {1, 2, 1, 2},
-        [R] = {1, 2, 1, 2},
-        [F] = {1, 2, 1, 2},
-        [B] = {1, 2, 1, 2},
-    },
-};
+    // Save the move_table_corner_transformation array
+    if (fwrite(move_table_corner_transformation, sizeof(move_table_corner_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Save the move_table_edge_transformation array
+    if (fwrite(move_table_edge_transformation, sizeof(move_table_edge_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Save the sym_table_corner_transformation array
+    if (fwrite(sym_table_corner_transformation, sizeof(sym_table_corner_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Save the sym_table_edge_transformation array
+    if (fwrite(sym_table_edge_transformation, sizeof(sym_table_edge_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    fclose(file);
+    return true;
+}
+
+bool cube_tables_load(const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) return false;
+
+    // Load the move_table_corner_transformation array
+    if (fread(move_table_corner_transformation, sizeof(move_table_corner_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Load the move_table_edge_transformation array
+    if (fread(move_table_edge_transformation, sizeof(move_table_edge_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Load the sym_table_corner_transformation array
+    if (fread(sym_table_corner_transformation, sizeof(sym_table_corner_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    // Load the sym_table_edge_transformation array
+    if (fread(sym_table_edge_transformation, sizeof(sym_table_edge_transformation), 1, file) != 1) {
+        fclose(file);
+        return false;
+    }
+
+    fclose(file);
+    return true;
+}
