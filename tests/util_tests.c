@@ -48,3 +48,13 @@ Test(util_tests, swap_uint16){
   cr_assert_eq(a, 2);
   cr_assert_eq(b, 1);
 }
+
+Test(util_tests, perm_to_fact){
+  int a[] = {0, 1, 2};
+  int b[] = {0, 2, 1};
+  int c[] = {2, 1, 0};
+
+  cr_assert_eq(perm_to_fact(a, 3), 0);
+  cr_assert_eq(perm_to_fact(b, 3), 1);
+  cr_assert_eq(perm_to_fact(c, 3), 5);
+}

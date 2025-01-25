@@ -17,10 +17,18 @@ extern uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
 extern uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
 extern uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
+/* pruning */
+extern uint16_t prune_table_cp[FACT8];
+
 /* Applies the symmetry sym to the cube.
 This function should probably not be used.
 Use `cube_operation_sym_conjugate` for conjugation
 by a symmetry.*/
 void cube_apply_symm(cube_t* cube, int sym);
+
+void initialize_move_tables();
+void gen_move_tables();
+void initialize_sym_tables();
+void gen_sym_tables();
 
 #endif /* __TABLES_H_ */

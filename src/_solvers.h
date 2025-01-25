@@ -24,13 +24,13 @@ int moveset[] = { R1, R2, R3, U1, U2, U3, F1, F2, F3};
 int solution[20] = {0};
 int max_depth = 5;
 
-bool found_sol = IDDFS(
-    cube, moveset, num_moves_in_moveset, &cube_state_is_solved, max_depth, solution
+int solution_length = IDDFS(
+    cube, moveset, num_moves_in_moveset, &cube_state_is_solved, max_depth
 );
 ```
 
 */
-bool
-IDDFS(cube_t cube, int* moveset, size_t moveset_length, bool (*cube_solved)(cube_t* cube), int MAX_DEPTH, int* solution);
+int
+IDDFS(cube_t cube, int* moveset, size_t moveset_length, bool (*cube_solved)(cube_t* cube), int MAX_DEPTH);
 
 #endif /* __SOLVERS_H_ */
