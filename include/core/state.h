@@ -33,8 +33,14 @@ bool cube_state_is_dr_UD(cube_t* cube);
 /* Check if the cube is in corner orientation on any axis. */
 bool cube_state_is_co(cube_t* cube);
 
+/* Check if the cube has corner permutation solved. */
+bool cube_state_is_cp(cube_t* cube);
+
 /* Check if the cube is in edge orientation on any exis. */
 bool cube_state_is_eo(cube_t* cube);
+
+/* Check if the cube has edge permutation solved. */
+bool cube_state_is_ep(cube_t* cube);
 
 /* Check if the cube is in domino reduction on any axis. */
 bool cube_state_is_dr(cube_t* cube);

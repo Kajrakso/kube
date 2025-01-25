@@ -202,3 +202,25 @@ Test(cube_info, is_co){
     cr_assert_not(cube_state_is_co_LR(&cube));
     cr_assert_not(cube_state_is_co_UD(&cube));
 }
+
+Test(cube_info, is_ep){
+    cube_t cube = cube_create_new_cube();
+    update_corner_perm(&cube.corners[UBL], UFR);
+    update_corner_perm(&cube.corners[UFR], UBL);
+    cr_assert_not(cube_state_is_cp(&cube));
+    cr_assert(cube_state_is_ep(&cube));
+}
+
+Test(cube_info, is_cp){
+    cube_tables_generate();
+    cube_t cube = cube_create_new_cube();
+    update_edge_perm(&cube.edges[UB], UF);
+    update_edge_perm(&cube.edges[UF], UB);
+    cr_assert(cube_state_is_cp(&cube));
+    cr_assert_not(cube_state_is_ep(&cube));
+
+    cube = cube_create_new_cube();
+
+    cube_move_apply_move_string(&cube, "R U R' U R U2 R' L' U' L U' L' U2 L");
+    cr_assert(cube_state_is_cp(&cube));
+}
