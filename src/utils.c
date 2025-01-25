@@ -31,3 +31,55 @@ void swap_uint16(uint16_t* a, uint16_t* b){
   *a = *b;
   *b = temp;
 }
+
+int
+factorial(int n)
+{
+	int i, ret = 1;
+
+	if (n < 0)
+		return 0;
+
+	for (i = 1; i <= n; i++)
+		ret *= i;
+
+	return ret;
+}
+
+int perm_to_fact(int* p, int n){
+    int i, j, m, t = 0;
+
+    for (i = 0; i < n; i++){
+        m = 0;
+        for (j = i + 1; j < n; j++){
+            if (p[i] > p[j]) m++;
+        }
+        t += m * factorial(n - 1 - i);
+    }
+
+    return t;
+}
+
+void
+fact_to_perm(int p, int n, int *r)
+{
+	int i, j, c;
+	int a[n];
+
+	for (i = 0; i < n; i++)
+		a[i] = 0;
+
+	if (p < 0 || p >= factorial(n))
+		for (i = 0; i < n; i++)
+			r[i] = -1;
+
+	for (i = 0; i < n; i++) {
+		c = 0;
+		j = 0;
+		while (c <= p / factorial(n-i-1))
+			c += a[j++] ? 0 : 1;
+		r[i] = j-1;
+		a[j-1] = 1;
+		p %= factorial(n-i-1);
+	}
+}

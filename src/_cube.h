@@ -11,6 +11,7 @@
 #define NCORNERCUBIES 512  // corners: 6 bits for co, 3 bits for cp -> 2**9
 #define NFACES 6
 #define NTWISTS 3
+#define FACT8 40320
 
 enum corner {
     UBL, UBR, UFR, UFL,
