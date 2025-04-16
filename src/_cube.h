@@ -12,6 +12,10 @@
 #define NFACES 6
 #define NTWISTS 3
 #define FACT8 40320
+#define POW3TO7 2187
+#define SIZEH 17321040
+#define SIZEK 277136640
+#define SIZEL 2217093120
 
 enum corner {
     UBL, UBR, UFR, UFL,

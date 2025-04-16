@@ -5,8 +5,7 @@
 #include "../core/move.h"
 #include "../core/tables.h"
 
-/* Solve a cube. Returns an array of moves */
-int* cube_solvers_solve_cube(cube_t* cube, size_t* solution_length);
-
+/* Solve a cube. */
+bool cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length);
 
 #endif // _SOLVERS_H_

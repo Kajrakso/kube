@@ -46,6 +46,11 @@ factorial(int n)
 	return ret;
 }
 
+int comb(int n, int k){
+  if (k > n) return 0;
+  else return factorial(n) / (factorial(n - k) * factorial(k));
+}
+
 int perm_to_fact(int* p, int n){
     int i, j, m, t = 0;
 
@@ -82,4 +87,41 @@ fact_to_perm(int p, int n, int *r)
 		a[j-1] = 1;
 		p %= factorial(n-i-1);
 	}
+}
+
+
+int combinatorials_lookup[20736];
+
+// naive way of precomputing the combinatorials, but
+// it lets me look up the e slice edges directly without any sorting
+void precompute_combinatorials(){
+    // precompute the 24 permutations of 4 letters.
+    int perms[24][4];
+    for (int i = 0; i < 24; i++){
+        fact_to_perm(i, 4, perms[i]);
+    }
+
+    for (int c1 = 0; c1 < 9; c1++){
+        for (int c2 = c1 + 1; c2 < 10; c2++){
+            for (int c3 = c2 + 1; c3 < 11; c3++){
+                for (int c4 = c3 + 1; c4 < 12; c4++){
+                    // we have the combination
+                    int arr[] = {c1, c2, c3, c4};
+
+                    // and the combinatorial number
+                    int c = comb(c1, 1) + comb(c2, 2) + comb(c3, 3) + comb(c4, 4);
+
+                    // for all permutations of this combination, save the same value
+                    for (int perm = 0; perm < 24; perm++){
+                        combinatorials_lookup[
+                              arr[perms[perm][0]] * 1
+                            + arr[perms[perm][1]] * 12
+                            + arr[perms[perm][2]] * 144
+                            + arr[perms[perm][3]] * 1728
+                        ] = c;
+                    }
+                }
+            }
+        }
+    }    
 }

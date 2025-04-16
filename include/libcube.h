@@ -7,6 +7,7 @@
 #include "core/tables.h"
 
 #include "scramblers/scrambler.h"
+#include "solvers/solvers.h"
 
 #include "cli/print_cube.h"
 

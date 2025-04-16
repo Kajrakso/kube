@@ -23,4 +23,10 @@ int perm_to_fact(int* p, int n);
 /* Converts a factoriadic `p` to a permutation `r` of size `n`. */
 void fact_to_perm(int p, int n, int *r);
 
+/* this should be precomputed if used */
+int comb(int n, int k);
+
+/* */
+void precompute_combinatorials();
+
 #endif /* _UTILS_H_ */
