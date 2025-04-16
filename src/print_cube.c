@@ -154,3 +154,20 @@ int* parse_move_string(size_t* out_length, const char* move_string){
     *out_length = length;
     return result;
 }
+
+char *move_notation[] = {
+  "U", "U2", "U'",
+  "D", "D2", "D'",
+  "L", "L2", "L'",
+  "R", "R2", "R'",
+  "F", "F2", "F'",
+  "B", "B2", "B'",
+};
+
+void cube_print_solution_string(int* solution, int solution_length){
+  for (int i = 0; i < 20; i++){
+    if (0 <= solution[i] && solution[i] <= 17){
+      printf("%s ", move_notation[solution[i]]);
+    }
+  }
+}
