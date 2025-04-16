@@ -7,6 +7,9 @@ int main(){
   // Per now we need to do this manually first
   cube_tables_generate();
 
+  // If you do not have the ptable. run this. NOTE: It takes a looong time.
+  // gen_ptable_L();
+
   // Set a scramble sequence. This one is 13 moves optimal.
   char* scr = "D' B' D F B' U F2 U2 B R2 U2 R2 F D2 R2 L2";
   

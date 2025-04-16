@@ -17,4 +17,6 @@ bool cube_tables_load(const char *filename, uint16_t* table, size_t table_size);
 
 bool load_ptable(char* filename, uint16_t* ptable);
 
+void gen_ptable_L();
+
 #endif /* _TABLES_H_ */
