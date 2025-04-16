@@ -7,13 +7,6 @@ int ece_mtable[495][NMOVES];
 int coud_mtable[2187][NMOVES];
 int eofb_mtable[2048][NMOVES];
 
-/* Generic implementation of Depth Limited Search
-`cube_to_index` is used to convert a cube to the corresponding
-index in the table `ptable`*/
-/*
-static void
-DLS(cube_t* cube, int depth, int prev_move, int num_moves_done, unsigned int (*cube_to_index)(cube_t* cube), uint16_t* ptable);
-*/
 void gen_eofb_mtable();
 void gen_coud_mtable();
 void gen_ece_mtable();
@@ -37,87 +30,6 @@ get_inv_move(int move){
     return move;
 }
 
-/* -------------------- H ---------------------- */
-
-/*
-void
-gen_ptable_H()
-{
-    cube_t cube = cube_create_new_cube();
-
-    uint16_t* ptable_H = malloc(sizeof(uint16_t) * SIZEL);
-    char* filename = "H.dat";
-
-    printf("Initializing ptable for group H\n");
-    for (size_t i = 1; i < SIZEL; i++){
-        ptable_H[i] = 0; // a default admissible heuristic.
-    }
-
-    fprintf(stderr, "Start to gen ptable for group H\n");
-    for (int depth = 1; depth <= 10; depth++){
-        fprintf(stderr, "Searching at depth %i\n", depth);
-        DLS(&cube, depth, 18, 1, cube_to_H_index, ptable_H);
-    }
-    
-    fprintf(stderr, "writing ptable for group H to disk. file: %s.\n", filename);
-    
-    FILE *file = fopen(filename, "wb");
-    if (!file)
-    {
-        free(ptable_H);
-        return;
-    }
-
-    // Save the array
-    fwrite(ptable_H, sizeof(uint16_t) * SIZEL, 1, file);
-
-    fclose(file);
-    free(ptable_H);
-}
-*/
-
-//! Note: this is a big table. there might be performance issues.
-/*
-void
-gen_ptable_K()
-{
-    cube_t cube = cube_create_new_cube();
-
-    uint16_t* ptable_K = malloc(sizeof(uint16_t) * SIZEL);
-
-    char* filename = "K.dat";
-
-    printf("Initializing ptable for group K\n");
-    for (size_t i = 1; i < SIZEL; i++){
-        // ptable_K[i] = 0; // a default admissible heuristic.
-        ptable_K[i] = 21; // a dummy val
-    }
-
-    fprintf(stderr, "Start to gen ptable for group K\n");
-    ptable_K[cube_to_K_index(&cube)] = 0;
-    for (int depth = 1; depth <= 9; depth++){
-        fprintf(stderr, "Searching at depth %i\n", depth);
-        DLS(&cube, depth, 18, 1, cube_to_K_index, ptable_K);
-    }
-    
-    fprintf(stderr, "writing ptable for group K to disk. file: %s.\n", filename);
-    
-    FILE *file = fopen(filename, "wb");
-    if (!file)
-    {
-        free(ptable_K);
-        return;
-    }
-
-    // Save the array
-    fwrite(ptable_K, sizeof(uint16_t) * SIZEL, 1, file);
-
-    fclose(file);
-    free(ptable_K);
-}
-*/
-
-//! Note: this is a big table. there might be performance issues.
 void
 gen_ptable_L()
 {
@@ -173,37 +85,6 @@ gen_ptable_L()
     fclose(file);
     free(ptable_L);
 }
-
-/*
-static void
-DLS(
-    cube_t* cube,
-    int depth,
-    int prev_move,
-    int num_moves_done,
-    unsigned int (*cube_to_index)(cube_t* cube),
-    uint16_t* ptable
-){
-    if (depth == 0) return;
-    unsigned int p;
-  
-    for (int m = 0; m < NMOVES; m++){
-        // do not check redundant sequences, ex.: R R, R L R.
-        if (!(m/6 == prev_move/6 && m/3 >= prev_move/3)){
-            cube_move_apply_move(cube, m);
-
-            p = cube_to_index(cube);
-
-            // if (ptable[p] == 0 || ptable[p] == num_moves_done){
-            if (ptable[p] > num_moves_done || ptable[p] == num_moves_done){
-                ptable[p] = (uint16_t)num_moves_done;
-                DLS(cube, depth - 1, m, num_moves_done + 1, cube_to_index, ptable);
-            }
-            cube_move_apply_move(cube, get_inv_move(m));
-        }
-    }
-}
-*/
 
 static void
 DLS_L(

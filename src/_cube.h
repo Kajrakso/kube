@@ -11,10 +11,6 @@
 #define NCORNERCUBIES 512  // corners: 6 bits for co, 3 bits for cp -> 2**9
 #define NFACES 6
 #define NTWISTS 3
-#define FACT8 40320
-#define POW3TO7 2187
-#define SIZEH 17321040
-#define SIZEK 277136640
 #define SIZEL 2217093120
 
 enum corner {

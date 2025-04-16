@@ -6,6 +6,7 @@ struct stats {
   int depth;
   int* solution;
   int* solution_inv;
+  unsigned int no_nisses;
   unsigned int no_nodes_visited;
   unsigned int no_nodes_pruned;
   unsigned int no_inverse_computations;
@@ -19,6 +20,7 @@ init_stats(struct stats* stats){
   stats->depth = 0;
   stats->no_nodes_visited = 0;
   stats->no_nodes_pruned = 0; 
+  stats->no_nisses = 0;
   stats->no_inverse_computations = 0;
   stats->no_equal_pvals_normal = 0;
   stats->no_equal_pvals_inverse = 0;
@@ -43,6 +45,8 @@ print_stats(struct stats* stats){
   printf("No equal pvals normal: %i\n", stats->no_equal_pvals_normal);
   printf("No equal pvals inverse: %i\n", stats->no_equal_pvals_inverse);
   printf("\n");
+  printf("No nisses: %i\n", stats->no_nisses);
+  printf("\n");
   printf("No nodes visited: %i\n", stats->no_nodes_visited);
   printf("No nodes pruned: %i\n", stats->no_nodes_pruned);
   printf("No nodes pruned / visited: %f\n", (float)stats->no_nodes_pruned / (float)stats->no_nodes_visited);
@@ -56,6 +60,13 @@ print_stats(struct stats* stats){
 
 
 // private
+
+static inline int
+get_inv_move(int move){
+    if (move % 3 == 0) return move + 2;
+    else if (move % 3 == 2) return move - 2;
+    return move;
+}
 
 static void
 apply_inverse_move(cube_t* cube, int move){
@@ -171,11 +182,13 @@ TreeSearch(
   fprintf(stderr, "\tinverse: %i, %i, %i\n", x1_inv, x2_inv, x3_inv);
 */ 
   // find out if we niss or not!
-  bool niss = (depth % 5 == 0);
+  // bool niss = (depth % 5 == 0);
+  bool niss = false;
 
   if (niss) {
     swap_cubes(cube, &inv);
     is_inv = is_inv ? false : true;
+    stats->no_nisses++;
   }
 
 
@@ -275,16 +288,6 @@ IDA(
 }
 
 
-char *move_notation[] = {
-  "U", "U2", "U'",
-  "D", "D2", "D'",
-  "L", "L2", "L'",
-  "R", "R2", "R'",
-  "F", "F2", "F'",
-  "B", "B2", "B'",
-};
-
-
 /* public */
 
 bool
@@ -303,9 +306,10 @@ cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
 
   // we collect some stats along the way.
   struct stats* stats = malloc(sizeof(struct stats));
+  init_stats(stats);
 
   // set a max limit.
-  int max_depth = 15;
+  int max_depth = 16;
   printf("Max depth set to: %i\n", max_depth);
 
   // actually search.
@@ -320,27 +324,22 @@ cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
 
   print_stats(stats);
 
+  // combine the solutions on normal and inverse to a final solution
   if (found_sol){
-    //int sol_len = 0;
-    printf("normal: ");
-    for (int i = 19; i >= 0; i--){
-      if (stats->solution[i] != -1){
-        printf("%s ", move_notation[stats->solution[i]]);
-        //sol_len++;
+    int i = 0, j = 0;
+    for (int m = 0; m < 20; m++){
+      if (0 <= stats->solution[19 - m] && stats->solution[19 - m] < 18){  
+        solution[i] = stats->solution[19 - m];
+        i++;
       }
     }
-    printf("\n");
-    printf("inverse: (");
-    for (int i = 19; i >= 0; i--){
-      if (stats->solution_inv[i] != -1){
-        printf("%s ", move_notation[stats->solution_inv[i]]);
-        //sol_len++;
+
+    for (int m = 0; m < 20; m++){
+      if (0 <= stats->solution_inv[m] && stats->solution_inv[m] < 18){  
+        solution[i + j] = get_inv_move(stats->solution_inv[m]);
+        j++;
       }
     }
-    printf(")\n");
-    // printf("\nThe solution length is %i\n", sol_len);
-  } else {
-    printf("Did not find a solution!\n");
   }
 
   free(stats->solution);
