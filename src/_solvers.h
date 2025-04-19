@@ -3,6 +3,8 @@
 
 #include "_cube_state.h"
 #include "_index.h"
+#include "_cube.h"
+#include "_tables.h"
 #include "../include/solvers/solvers.h"
 #include <stdbool.h>
 #include <stdlib.h>

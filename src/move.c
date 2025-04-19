@@ -51,6 +51,11 @@ void cube_move_apply_move_string(cube_t* cube, const char* moves){
 
 /* private */
 
+int
+get_inv_move(int m){
+    return m - 2 * (m % 3) + 2;
+}
+
 void cube_apply_symm(cube_t* cube, int sym){
     uint16_t* p;
     
@@ -80,3 +85,5 @@ void cube_apply_symm(cube_t* cube, int sym){
     cube->edges[10] = p[cube->edges[10]];
     cube->edges[11] = p[cube->edges[11]];
 }
+
+

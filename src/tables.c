@@ -39,19 +39,17 @@ bool cube_tables_load(const char *filename, uint16_t* table, size_t table_size) 
 }
 
 // TEMP: load pruning table
-bool load_ptable(char* filename, uint16_t* ptable){
+bool load_ptable(char* filename, uint8_t* ptable){
   FILE *file = fopen(filename, "rb");
   if (!file){
     fprintf(stderr, "Could not open file\n");
-    free(ptable);
     return false;
   };
   
   fprintf(stderr, "loading ptable from %s\n", filename);
-  if (fread(ptable, sizeof(uint16_t)*SIZEL, 1, file) != 1) {
+  if (fread(ptable, sizeof(uint8_t) * SIZE_PTABLE_L, 1, file) != 1) {
     fprintf(stderr, "Could not read from file %s\n", filename);
     fclose(file);
-    free(ptable);
     return false;
   }
   

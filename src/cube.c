@@ -138,3 +138,10 @@ int e_slice(int i){
     return -1;
   }
 }
+
+void
+swap_cubes(cube_t* c, cube_t* t){
+ cube_t aux = *t;
+ *t = *c;
+ *c = aux;
+}

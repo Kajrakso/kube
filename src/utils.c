@@ -90,7 +90,7 @@ fact_to_perm(int p, int n, int *r)
 }
 
 
-int combinatorials_lookup[20736];
+uint32_t combinatorials_lookup[20736];
 
 // naive way of precomputing the combinatorials, but
 // it lets me look up the e slice edges directly without any sorting
@@ -109,7 +109,7 @@ void precompute_combinatorials(){
                     int arr[] = {c1, c2, c3, c4};
 
                     // and the combinatorial number
-                    int c = comb(c1, 1) + comb(c2, 2) + comb(c3, 3) + comb(c4, 4);
+                    uint32_t c = comb(c1, 1) + comb(c2, 2) + comb(c3, 3) + comb(c4, 4);
 
                     // for all permutations of this combination, save the same value
                     for (int perm = 0; perm < 24; perm++){

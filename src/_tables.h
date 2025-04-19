@@ -2,6 +2,7 @@
 #define __TABLES_H_
 
 #include "_cube.h"
+#include "_move.h"
 #include "utils.h"
 #include "../include/core/move.h"
 #include "../include/core/tables.h"
@@ -27,17 +28,36 @@ void gen_move_tables();
 void initialize_sym_tables();
 void gen_sym_tables();
 
-//! NOTE: These are for testing!
-// void gen_ptable_H();
-// void gen_ptable_K();
+//! 19.04.2025: These are for testing!
+
+
+void ptable_set_val(uint32_t i, uint8_t p, uint8_t* ptable);
+uint8_t ptable_read_val(uint32_t i, uint8_t* ptable);
+
 void gen_ptable_L();
 
-extern int ece_mtable[495][NMOVES];
-extern int coud_mtable[2187][NMOVES];
-extern int eofb_mtable[2048][NMOVES];
+extern uint32_t ece_mtable[NECE][NMOVES];
+extern uint32_t coud_mtable[NCO][NMOVES];
+extern uint32_t eofb_mtable[NEO][NMOVES];
 
 void gen_ece_mtable();
 void gen_eofb_mtable();
 void gen_coud_mtable();
+
+void
+DLS_L(
+  uint32_t ece,
+  uint32_t eofb,
+  uint32_t coud,
+  unsigned int p,
+  int depth,
+  int prev_move,
+  int num_moves_done,
+  uint8_t* ptable
+);
+
+
+void
+gen_ptable_L();
 
 #endif /* __TABLES_H_ */

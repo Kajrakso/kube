@@ -11,7 +11,11 @@
 #define NCORNERCUBIES 512  // corners: 6 bits for co, 3 bits for cp -> 2**9
 #define NFACES 6
 #define NTWISTS 3
+#define NCO 2187
+#define NEO 2048
+#define NECE 495
 #define SIZEL 2217093120
+#define SIZE_PTABLE_L 1108546560
 
 enum corner {
     UBL, UBR, UFR, UFL,
@@ -49,5 +53,9 @@ These functions will set the correct orientation bits for the other axes. */
 
 void fix_co_lr_ud(cube_t* cube);
 void fix_eo_lr_ud(cube_t* cube);
+
+/* swaps two cubes */
+void
+swap_cubes(cube_t* c, cube_t* t);
 
 #endif /* __CUBE_H_ */
