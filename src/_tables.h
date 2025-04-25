@@ -3,6 +3,8 @@
 
 #include "_cube.h"
 #include "_move.h"
+#include "_sym.h"
+#include "_index.h"
 #include "utils.h"
 #include "../include/core/move.h"
 #include "../include/core/tables.h"
@@ -30,34 +32,19 @@ void gen_sym_tables();
 
 //! 19.04.2025: These are for testing!
 
+void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable);
+uint8_t ptable_read_val(uint64_t i, uint8_t* ptable);
 
-void ptable_set_val(uint32_t i, uint8_t p, uint8_t* ptable);
-uint8_t ptable_read_val(uint32_t i, uint8_t* ptable);
-
-void gen_ptable_L();
-
-extern uint32_t ece_mtable[NECE][NMOVES];
-extern uint32_t coud_mtable[NCO][NMOVES];
-extern uint32_t eofb_mtable[NEO][NMOVES];
+extern uint64_t e_stable[NEO*NECE][NSYMS];
+extern uint64_t ece_mtable[NECE][NMOVES];
+extern uint64_t eofb_mtable[NEO][NMOVES];
+extern uint64_t coud_mtable[NCO][NMOVES];
+extern uint64_t ccu_mtable[NCCU][NMOVES];
 
 void gen_ece_mtable();
 void gen_eofb_mtable();
 void gen_coud_mtable();
-
-void
-DLS_L(
-  uint32_t ece,
-  uint32_t eofb,
-  uint32_t coud,
-  unsigned int p,
-  int depth,
-  int prev_move,
-  int num_moves_done,
-  uint8_t* ptable
-);
-
-
-void
-gen_ptable_L();
+void gen_ccu_mtable();
+void gen_e_stable();
 
 #endif /* __TABLES_H_ */

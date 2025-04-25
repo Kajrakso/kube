@@ -145,3 +145,19 @@ swap_cubes(cube_t* c, cube_t* t){
  *t = *c;
  *c = aux;
 }
+
+int
+which_corner_at_pos(int pos, cube_t* cube){
+    for (int k = 0; k < NCORNERS; k++){
+      if (extract_corner_perm(cube->corners[k]) == pos) return k;
+    }
+    return -1;
+}
+
+int
+which_edge_at_pos(int pos, cube_t* cube){
+    for (int k = 0; k < NEDGES; k++){
+      if (extract_edge_perm(cube->edges[k]) == pos) return k;
+    }
+    return -1;
+}

@@ -15,8 +15,13 @@ bool cube_tables_save(const char *filename, uint16_t* table, size_t table_size);
 /* Loads a table from a file. */
 bool cube_tables_load(const char *filename, uint16_t* table, size_t table_size);
 
-bool load_ptable(char* filename, uint8_t* ptable);
+bool load_ptable(char* filename, uint8_t* ptable, size_t table_size);
 
+bool save_ptable(char* filename, uint8_t* ptable, size_t table_size);
+
+// todo: WIP
 void gen_ptable_L();
+
+void gen_ptable_H();
 
 #endif /* _TABLES_H_ */

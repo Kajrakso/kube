@@ -3,49 +3,75 @@
 
 #include "utils.h"
 #include "_cube.h"
+#include "../include/core/tables.h"
+#include "stdio.h"
 
 // testing
 /* TODO: reconsider the way to calculate these indeces. It need to be fast. */
-extern int combinatorials_lookup[20736];
+struct c_index_cclass_sym {
+  uint64_t cclass_i;
+  uint64_t cclass;
+  int sym;
+};
 
-uint32_t
+extern int ece_combinatorials_lookup[20736];
+extern int ccu_combinatorials_lookup[4096];
+
+uint64_t
+cube_to_ccu_index(cube_t* cube);
+
+uint64_t
 cube_to_ece_index(cube_t* cube);
 
-uint32_t
+uint64_t
 cube_to_coud_index(cube_t* cube);
 
-uint32_t
+uint64_t
 cube_to_eofb_index(cube_t* cube);
 
-uint32_t
-cube_to_L_index(cube_t* cube);
+uint64_t
+cclass_i_e_to_H_index(uint64_t cclass_i, uint64_t e_i);
 
-uint32_t
-ece_eofb_coud_to_L_index(uint32_t, uint32_t, uint32_t);
+uint64_t
+ccu_coud_to_c_index(uint64_t ccu, uint64_t coud);
 
-// helper functions
+uint64_t
+ece_eofb_to_e_index(uint64_t ece, uint64_t eofb);
 
-int which_corner_at_pos(int pos, cube_t* cube);
-int which_edge_at_pos(int pos, cube_t* cube);
+uint64_t
+cube_to_c_index(cube_t* cube);
 
+uint64_t
+cube_to_e_index(cube_t* cube);
 
+uint64_t
+cube_to_H_index(cube_t* cube, struct c_index_cclass_sym* cclass);
 
+/* NOTE: the cube returned is not necessarily a valid cube.
+ * Also, these function is not optimized. */
+cube_t
+L_index_to_cube(uint64_t i);
 
-/*
+cube_t
+H_index_to_cube(uint64_t H_index, struct c_index_cclass_sym* cclass);
 
-nxopt:
+cube_t
+coud_index_to_cube(uint64_t coud_i);
 
-factor of the index     // subgroup
-9930                    // permuting U and D layer corners with fixed orientation
-* (1, 24, 70, 1680)     // ep: () <=> (e-edges/UD-edges, UD-edges, U-edges/D-edges/e-edges, U-edges/D-edges)
-* (16, 256, 2048)       // eo: (2**4, 2**8, 2**11) <=> (e-edges, UD-edges, all edges)
-* 495                   // e-slice: keep the e-slice edges in the e-slice
+cube_t
+ccu_index_to_cube(uint64_t ccu_i);
 
-My L group:
-solved CO
-arbitrary CP
-solved EO
-arbitrary EP, except: keep e-slice in e-slice
-*/
+cube_t
+c_index_to_cube(uint64_t c_i);
+
+cube_t
+e_index_to_cube(uint64_t c_i);
+
+// gen
+void gen_c_sym_index_tables();
+
+bool load_cclasstable(char* filename, struct c_index_cclass_sym * cclass_table, size_t table_size);
+
+bool save_cclasstable(char* filename, struct c_index_cclass_sym * cclass_table, size_t table_size);
 
 #endif /* __INDEX_H_ */

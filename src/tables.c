@@ -39,7 +39,7 @@ bool cube_tables_load(const char *filename, uint16_t* table, size_t table_size) 
 }
 
 // TEMP: load pruning table
-bool load_ptable(char* filename, uint8_t* ptable){
+bool load_ptable(char* filename, uint8_t* ptable, size_t table_size){
   FILE *file = fopen(filename, "rb");
   if (!file){
     fprintf(stderr, "Could not open file\n");
@@ -47,12 +47,32 @@ bool load_ptable(char* filename, uint8_t* ptable){
   };
   
   fprintf(stderr, "loading ptable from %s\n", filename);
-  if (fread(ptable, sizeof(uint8_t) * SIZE_PTABLE_L, 1, file) != 1) {
+  if (fread(ptable, table_size, 1, file) != 1) {
     fprintf(stderr, "Could not read from file %s\n", filename);
     fclose(file);
     return false;
   }
   
+  fclose(file);
+  return true;
+}
+
+
+bool save_ptable(char* filename, uint8_t* ptable, size_t table_size){
+  fprintf(stderr, "writing ptable for group L to disk. file: %s.\n", filename);
+
+  FILE *file = fopen(filename, "wb");
+  if (!file) {
+    fprintf(stderr, "Was not able to open file %s\n", filename);
+    return false;
+  }
+
+  // Save the array
+  if (fwrite(ptable, table_size, 1, file) != 1){
+    fclose(file);
+    return false;
+  }
+
   fclose(file);
   return true;
 }

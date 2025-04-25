@@ -1,13 +1,7 @@
 #include "_cube.h"
 #include "utils.h"
 #include "_tables.h"
-
-// the symmetry at index i is i^(-1).
-static const int
-sym_inv[NSYMS] = {
-    0, 3, 2, 1, 8, 5, 23, 14, 4, 22, 13, 11, 12, 10, 7, 21, 16, 17, 18, 19, 20, 15, 9, 6,
-    24, 27, 26, 25, 32, 29, 47, 38, 28, 46, 37, 35, 36, 34, 31, 45, 40, 41, 42, 43, 44, 39, 33, 30
-};
+#include "_sym.h"
 
 bool cube_operation_is_equal(cube_t cube1, cube_t cube2){
     return arr_eq(cube1.edges, cube2.edges, NEDGES) && arr_eq(cube1.corners, cube2.corners, NCORNERS);
@@ -67,7 +61,7 @@ cube_t cube_operation_sym_conjugate(cube_t cube, int symmetry){
     
     cube_apply_symm(&new_cube, symmetry);
     new_cube = cube_operation_compose(new_cube, cube);
-    cube_apply_symm(&new_cube, sym_inv[symmetry]);
+    cube_apply_symm(&new_cube, get_inv_sym(symmetry));
     
     return new_cube;
 }

@@ -11,11 +11,18 @@
 #define NCORNERCUBIES 512  // corners: 6 bits for co, 3 bits for cp -> 2**9
 #define NFACES 6
 #define NTWISTS 3
+
+#define NCCU 70
 #define NCO 2187
-#define NEO 2048
 #define NECE 495
-#define SIZEL 2217093120
-#define SIZE_PTABLE_L 1108546560
+#define NEO 2048
+#define NCCLASS 9930
+
+#define SIZEL 2217093120ULL
+#define SIZE_PTABLE_L 1108546560ULL
+
+#define SIZEH 10066636800ULL
+#define SIZE_PTABLE_H 5033318400ULL
 
 enum corner {
     UBL, UBR, UFR, UFL,
@@ -57,5 +64,9 @@ void fix_eo_lr_ud(cube_t* cube);
 /* swaps two cubes */
 void
 swap_cubes(cube_t* c, cube_t* t);
+
+/* find the edge/corner that occupies a given position */
+int which_corner_at_pos(int pos, cube_t* cube);
+int which_edge_at_pos(int pos, cube_t* cube);
 
 #endif /* __CUBE_H_ */

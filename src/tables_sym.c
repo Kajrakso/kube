@@ -5,11 +5,16 @@
 uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
 uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
-static int which_edge_at_pos(int pos, cube_t* cube);
-static int which_corner_at_pos(int pos, cube_t* cube);
-static void do_y_rot(cube_t* cube);
-static void do_z_rot(cube_t* cube);
-static void do_inversion(cube_t* cube);
+uint64_t e_stable[NECE*NEO][NSYMS];
+
+
+// todo: temp! where to place? how to handle?
+/* these are the 16 symmetries that keep the UD-axis fixed in place. */
+static int UDsyms[] = {
+    0, 1, 2, 3, 16, 17, 18, 19,     // no inversion
+    24, 25, 26, 27, 40, 41, 42, 43  // inversion
+};
+  
 
 /* Fills the tables with default values.
 This have to be done before we generate the
@@ -109,120 +114,84 @@ void gen_sym_tables(){
     }
 }
 
-static void do_y_rot(cube_t* cube){
-    cube_t cube_y = cube_create_new_cube();
 
-    cube_move_apply_move(&cube_y, U1);
-    cube_move_apply_move(&cube_y, D3);
+void
+gen_e_stable(){
+  for (int c1 = 0; c1 < 9; c1++){
+    for (int c2 = c1 + 1; c2 < 10; c2++){
+      for (int c3 = c2 + 1; c3 < 11; c3++){
+        for (int c4 = c3 + 1; c4 < 12; c4++){
+          for (int O1 = 0; O1 < 2; O1++){
+            for (int O2 = 0; O2 < 2; O2++){
+              for (int O3 = 0; O3 < 2; O3++){
+                for (int O4 = 0; O4 < 2; O4++){
+                  for (int O5 = 0; O5 < 2; O5++){
+                    for (int O6 = 0; O6 < 2; O6++){
+                      for (int O7 = 0; O7 < 2; O7++){
+                        for (int O8 = 0; O8 < 2; O8++){
+                          for (int O9 = 0; O9 < 2; O9++){
+                            for (int O10 = 0; O10 < 2; O10++){
+                              for (int O11 = 0; O11 < 2; O11++){
+                                for (int k = 0; k < 16; k++){
+                                  int t = UDsyms[k];
 
-    update_edge_perm(&(cube_y.edges[FL]), BL);
-    update_edge_orien(&(cube_y.edges[FL]), 1, 1, 1);
-    
-    update_edge_perm(&(cube_y.edges[BL]), BR);
-    update_edge_orien(&(cube_y.edges[BL]), 1, 1, 1);
-    
-    update_edge_perm(&(cube_y.edges[BR]), FR);
-    update_edge_orien(&(cube_y.edges[BR]), 1, 1, 1);
-    
-    update_edge_perm(&(cube_y.edges[FR]), FL);
-    update_edge_orien(&(cube_y.edges[FR]), 1, 1, 1);
+                                  cube_t cube;
+                                  int e;
+                                  
+                                  cube = cube_create_new_cube();
 
-    *cube = cube_operation_compose(*cube, cube_y);
-}
+                                  e = which_edge_at_pos(c1, &cube);
+                                  update_edge_perm(&cube.edges[BL], c1);
+                                  update_edge_perm(&cube.edges[e], BL);
 
-static void do_z_rot(cube_t* cube){
-    cube_t cube_z = cube_create_new_cube();
+                                  e = which_edge_at_pos(c2, &cube);
+                                  update_edge_perm(&cube.edges[BR], c2);
+                                  update_edge_perm(&cube.edges[e], BR);
 
-    cube_move_apply_move(&cube_z, F1);
-    cube_move_apply_move(&cube_z, B3);
+                                  e = which_edge_at_pos(c3, &cube);
+                                  update_edge_perm(&cube.edges[FR], c3);
+                                  update_edge_perm(&cube.edges[e], FR);
 
-    update_edge_perm(&(cube_z.edges[UL]), UR);
-    update_edge_orien(&(cube_z.edges[UL]), 1, 1, 1);
-    
-    update_edge_perm(&(cube_z.edges[UR]), DR);
-    update_edge_orien(&(cube_z.edges[UR]), 1, 1, 1);
-    
-    update_edge_perm(&(cube_z.edges[DR]), DL);
-    update_edge_orien(&(cube_z.edges[DR]), 1, 1, 1);
-    
-    update_edge_perm(&(cube_z.edges[DL]), UL);
-    update_edge_orien(&(cube_z.edges[DL]), 1, 1, 1);
+                                  e = which_edge_at_pos(c4, &cube);
+                                  update_edge_perm(&cube.edges[FL], c4);
+                                  update_edge_perm(&cube.edges[e], FL);
 
-    *cube = cube_operation_compose(*cube, cube_z);
-}
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(UB, &cube)], O1, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(UR, &cube)], O2, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(UF, &cube)], O3, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(UL, &cube)], O4, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(DF, &cube)], O5, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(DR, &cube)], O6, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(DB, &cube)], O7, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(DL, &cube)], O8, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(BL, &cube)], O9, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(BR, &cube)], O10, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(FR, &cube)], O11, 0, 0);
+                                  update_edge_orien(&cube.edges[which_edge_at_pos(FL, &cube)], (O1 + O2 + O3 + O4 + O5 + O6 + O7 + O8 + O9 + O10 + O11) % 2, 0, 0);
+                                  fix_eo_lr_ud(&cube);
+                                  fix_co_lr_ud(&cube);
 
-static int which_edge_at_pos(int pos, cube_t* cube){
-    for (int k = 0; k < NEDGES; k++){
-      if (extract_edge_perm(cube->edges[k]) == pos) return k;
+                                  uint64_t ece_i = cube_to_ece_index(&cube);
+                                  uint64_t eofb_i = cube_to_eofb_index(&cube);
+                                  cube = cube_operation_sym_conjugate(cube, t);
+                                  uint64_t ece_ii = cube_to_ece_index(&cube);
+                                  uint64_t eofb_ii = cube_to_eofb_index(&cube);
+                                  
+                                  e_stable[ece_eofb_to_e_index(ece_i, eofb_i)][t] = ece_eofb_to_e_index(ece_ii, eofb_ii);
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
-    return -1;
-}
-
-static int which_corner_at_pos(int pos, cube_t* cube){
-    for (int k = 0; k < NCORNERS; k++){
-      if (extract_corner_perm(cube->corners[k]) == pos) return k;
-    }
-    return -1;
-}
-
-static void do_inversion(cube_t* cube){
-    int e1, e2;
-
-    e1 = which_edge_at_pos(UF, cube);
-    e2 = which_edge_at_pos(DB, cube);
-    update_edge_perm(&(cube->edges[e1]), DB);
-    update_edge_perm(&(cube->edges[e2]), UF);
-
-    e1 = which_edge_at_pos(UL, cube);
-    e2 = which_edge_at_pos(DR, cube);
-    update_edge_perm(&(cube->edges[e1]), DR);
-    update_edge_perm(&(cube->edges[e2]), UL);
-
-    e1 = which_edge_at_pos(UR, cube);
-    e2 = which_edge_at_pos(DL, cube);
-    update_edge_perm(&(cube->edges[e1]), DL);
-    update_edge_perm(&(cube->edges[e2]), UR);
-    
-    e1 = which_edge_at_pos(UB, cube);
-    e2 = which_edge_at_pos(DF, cube);
-    update_edge_perm(&(cube->edges[e1]), DF);
-    update_edge_perm(&(cube->edges[e2]), UB);
-    
-    e1 = which_edge_at_pos(FL, cube);
-    e2 = which_edge_at_pos(BR, cube);
-    update_edge_perm(&(cube->edges[e1]), BR);
-    update_edge_perm(&(cube->edges[e2]), FL);
-    
-    e1 = which_edge_at_pos(FR, cube);
-    e2 = which_edge_at_pos(BL, cube);
-    update_edge_perm(&(cube->edges[e1]), BL);
-    update_edge_perm(&(cube->edges[e2]), FR);
-    
-    e1 = which_corner_at_pos(UFL, cube);
-    e2 = which_corner_at_pos(DBR, cube);
-    update_corner_perm(&(cube->corners[e1]), DBR);
-    update_corner_perm(&(cube->corners[e2]), UFL);
-    
-    e1 = which_corner_at_pos(UFR, cube);
-    e2 = which_corner_at_pos(DBL, cube);
-    update_corner_perm(&(cube->corners[e1]), DBL);
-    update_corner_perm(&(cube->corners[e2]), UFR);
-    
-    e1 = which_corner_at_pos(UBL, cube);
-    e2 = which_corner_at_pos(DFR, cube);
-    update_corner_perm(&(cube->corners[e1]), DFR);
-    update_corner_perm(&(cube->corners[e2]), UBL);
-    
-    e1 = which_corner_at_pos(UBR, cube);
-    e2 = which_corner_at_pos(DFL, cube);
-    update_corner_perm(&(cube->corners[e1]), DFL);
-    update_corner_perm(&(cube->corners[e2]), UBR);
-    
-    for (int i = 0; i < NCORNERS; i++){
-        update_corner_orien(&(cube->corners[i]),
-            (3 - extract_corner_orien(cube->corners[i], FB)) % 3,
-            (3 - extract_corner_orien(cube->corners[i], LR)) % 3,
-            (3 - extract_corner_orien(cube->corners[i], UD)) % 3
-        );
-    }
+  }
 }

@@ -7,6 +7,7 @@
 
 /* Checks if two arrays are equal. */
 bool arr_eq(uint16_t* arr_a, uint16_t* arr_b, int n);
+bool arr_eq_int(int* arr_a, int* arr_b, int n);
 
 /* Checks if the parity of a permutation is even. */
 bool arr_perm_parity_is_even(uint16_t* arr, int n);

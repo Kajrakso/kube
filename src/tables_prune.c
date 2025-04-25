@@ -1,12 +1,8 @@
 #include "_tables.h"
 #include "_index.h"
-#include "stdio.h"
 
-uint32_t ece_mtable[NECE][NMOVES];
-uint32_t coud_mtable[NCO][NMOVES];
-uint32_t eofb_mtable[NEO][NMOVES];
-
-void ptable_set_val(uint32_t i, uint8_t p, uint8_t* ptable){
+void
+ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable){
   if (i % 2 == 0){
     ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
   } else {
@@ -14,7 +10,8 @@ void ptable_set_val(uint32_t i, uint8_t p, uint8_t* ptable){
   }
 }
 
-uint8_t ptable_read_val(uint32_t i, uint8_t* ptable){
+uint8_t
+ptable_read_val(uint64_t i, uint8_t* ptable){
   if (i % 2 == 0) {
     return ptable[i >> 1] & 0x0F;
   } else {
@@ -23,247 +20,166 @@ uint8_t ptable_read_val(uint32_t i, uint8_t* ptable){
 }
 
 void
-gen_ptable_L()
-{
-  cube_t cube = cube_create_new_cube();
-  cube_tables_generate();
-  precompute_combinatorials();
-
-  fprintf(stderr, "Generating move tables\n");
-  fprintf(stderr, "gen_ece_mtable\n");
-  gen_ece_mtable();
-  fprintf(stderr, "gen_coud_mtable\n");
-  gen_coud_mtable();
-  fprintf(stderr, "gen_eofb_mtable\n");
-  gen_eofb_mtable();
-
-  uint8_t* ptable_L = malloc(sizeof(uint8_t) * SIZE_PTABLE_L);
-
-  fprintf(stderr, "Initializing ptable for group L\n");
-
-  // calculate the initial index
-  uint32_t ece = cube_to_ece_index(&cube);
-  uint32_t coud = cube_to_coud_index(&cube);
-  uint32_t eofb = cube_to_eofb_index(&cube);
-  
-  for (uint32_t i = 0; i < SIZEL; i++){
-    // ptable_L[i] = 15; // dummy val to see which indeces are updated.
-    ptable_set_val(i, 15, ptable_L);
-  }
-  
-  uint32_t p = cube_to_L_index(&cube);
-  ptable_set_val(p, 0, ptable_L);
-  // ptable_L[p] = 0;  // and set it to 0
-
-/* TODO: improve table gen! https://github.com/sebastianotronto/h48/blob/master/doc/h48.md#4-bits-tables-for-h0-and-h11 */
-  
-  for (int depth = 0; depth < 9; depth++){
-    fprintf(stderr, "Searching at depth %i\n", depth);
-    DLS_L(ece, eofb, coud, p, depth, 18, 0, ptable_L);
-  }
-
-  for (uint8_t k = 9; k < 12; k++){
-    fprintf(stderr, "Searching at depth %i\n", k);
-    for (coud = 0; coud < NCO; coud++){
-      for (eofb = 0; eofb < NEO; eofb++){
-        for (ece = 0; ece < NECE; ece++){
-          uint32_t p = ece_eofb_coud_to_L_index(ece, eofb, coud);
-          if (ptable_read_val(p, ptable_L) == 15){
-            for (int m = 0; m < NMOVES; m++){
-              uint32_t ece2 = ece_mtable[ece][m];
-              uint32_t eofb2 = eofb_mtable[eofb][m];
-              uint32_t coud2 = coud_mtable[coud][m];
-              uint32_t p2 = ece_eofb_coud_to_L_index(ece2, eofb2, coud2);
-            
-              if (ptable_read_val(p2, ptable_L) == k - 1){
-                ptable_set_val(p, k, ptable_L);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // set the remaining cosets to 12,
-  for (coud = 0; coud < NCO; coud++){
-    for (eofb = 0; eofb < NEO; eofb++){
-      for (ece = 0; ece < NECE; ece++){
-        uint32_t p = ece_eofb_coud_to_L_index(ece, eofb, coud);
-        if (ptable_read_val(p, ptable_L) == 15){ ptable_set_val(p, 12, ptable_L); }
-      }
-    }
-  }
-
-/* end of TODO */
-
-  fprintf(stderr, "writing ptable for group L to disk. file: L.dat.\n");
-  
-  FILE *file = fopen("L.dat", "wb");
-  if (!file) {
-    free(ptable_L);
-    return;
-  }
-
-  // Save the array
-  fwrite(ptable_L, sizeof(uint8_t) * SIZE_PTABLE_L, 1, file);
-
-  fclose(file);
-  free(ptable_L);
-}
-
-void
-DLS_L(
-  uint32_t ece,
-  uint32_t eofb,
-  uint32_t coud,
-  uint32_t p,
+DLS_H(
+  uint64_t ece,
+  uint64_t eofb,
+  uint64_t coud,
+  uint64_t ccu,
+  uint64_t p,
   int depth,
   int prev_move,
   int num_moves_done,
-  uint8_t* ptable
+  uint8_t* ptable,
+  struct c_index_cclass_sym* cclass
 ){
     if (depth == 0) return;
-    uint32_t p2;
+    uint64_t p2, ccu2, coud2, ece2, eofb2, e2, e2_sym;
   
     for (int m = 0; m < NMOVES; m++){
         // do not check redundant sequences, ex.: R R, R L R.
+        // todo: use move_mask similar to solvers.c
         if (!(m/6 == prev_move/6 && m/3 >= prev_move/3)){
-          uint32_t ece2 = ece_mtable[ece][m];
-          uint32_t eofb2 = eofb_mtable[eofb][m];
-          uint32_t coud2 = coud_mtable[coud][m];
-          p2 = ece_eofb_coud_to_L_index(ece2, eofb2, coud2);
+          ccu2 = ccu_mtable[ccu][m];
+          coud2 = coud_mtable[coud][m];
+          ece2 = ece_mtable[ece][m];
+          eofb2 = eofb_mtable[eofb][m];
+
+          struct c_index_cclass_sym c = 
+            cclass[ccu_coud_to_c_index(ccu2, coud2)];
+
+          e2 = ece_eofb_to_e_index(ece2, eofb2);
+          e2_sym = e_stable[e2][c.sym];
+
+          p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
 
           if (p2 == p) continue;
 
           if (ptable_read_val(p2, ptable) > num_moves_done + 1) {
             ptable_set_val(p2, (uint8_t)(num_moves_done + 1), ptable);
           }
-          DLS_L(ece2, eofb2, coud2, p2, depth - 1, m, num_moves_done + 1, ptable);
+
+          DLS_H(ece2, eofb2, coud2, ccu2, p2, depth - 1, m, num_moves_done + 1, ptable, cclass);
         }
     }
 }
 
-void gen_ece_mtable(){
-  for (int c1 = 0; c1 < 9; c1++){
-    for (int c2 = c1 + 1; c2 < 10; c2++){
-      for (int c3 = c2 + 1; c3 < 11; c3++){
-        for (int c4 = c3 + 1; c4 < 12; c4++){
-          for (int m = 0; m < NMOVES; m++){
-            cube_t cube = cube_create_new_cube();
-            int e;
+void
+gen_ptable_H(){
+  // todo: how to handle these?
+  cube_t cube = cube_create_new_cube();
+  cube_tables_generate();
+  precompute_combinatorials();
 
-            e = which_edge_at_pos(c1, &cube);
-            update_edge_perm(&cube.edges[BL], c1);
-            update_edge_perm(&cube.edges[e], BL);
+  const uint64_t
+  size_cclass = sizeof(struct c_index_cclass_sym) * NCCU * NCO;
+  const uint64_t
+  size_ptable_h = sizeof(uint8_t) * SIZE_PTABLE_H;
 
-            e = which_edge_at_pos(c2, &cube);
-            update_edge_perm(&cube.edges[BR], c2);
-            update_edge_perm(&cube.edges[e], BR);
+  struct c_index_cclass_sym* cclass = malloc(size_cclass);
 
-            e = which_edge_at_pos(c3, &cube);
-            update_edge_perm(&cube.edges[FR], c3);
-            update_edge_perm(&cube.edges[e], FR);
+  fprintf(stderr, "Loading cclass table\n");
+  load_cclasstable("cclass.dat", cclass, size_cclass);
 
-            e = which_edge_at_pos(c4, &cube);
-            update_edge_perm(&cube.edges[FL], c4);
-            update_edge_perm(&cube.edges[e], FL);
-            fix_eo_lr_ud(&cube);
-            fix_co_lr_ud(&cube);
+  fprintf(stderr, "Generating move tables\n");
+  fprintf(stderr, "gen_ece_mtable\n"); gen_ece_mtable();
+  fprintf(stderr, "gen_coud_mtable\n"); gen_coud_mtable();
+  fprintf(stderr, "gen_eofb_mtable\n"); gen_eofb_mtable();
+  fprintf(stderr, "gen_ccu_mtable\n"); gen_ccu_mtable();
+  fprintf(stderr, "gen_e_stable\n"); gen_e_stable();
+
+  fprintf(stderr, "Initializing ptable for group H\n");
+  uint8_t* ptable_H = malloc(size_ptable_h);
+
+  // calculate the initial index
+  uint64_t ccu = cube_to_ccu_index(&cube);
+  uint64_t coud = cube_to_coud_index(&cube);
+  uint64_t ece = cube_to_ece_index(&cube);
+  uint64_t eofb = cube_to_eofb_index(&cube);
+  
+  fprintf(stderr, "Setting default values\n");
+  for (uint64_t i = 0; i < SIZEH; i++){
+    ptable_set_val(i, 15, ptable_H);
+  }
+  
+  uint64_t p = cube_to_H_index(&cube, cclass);
+  ptable_set_val(p, 0, ptable_H);
+
+  /* TODO: improve table gen!
+   * https://github.com/sebastianotronto/h48/blob/master/doc/h48.md#4-bits-tables-for-h0-and-h11 */
+  for (int depth = 0; depth < 10; depth++){
+    fprintf(stderr, "Searching at depth %i\n", depth);
+    DLS_H(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_H, cclass);
+  }
+
+  // we fill a cclass -> cindex_rep table here. TODO: reconsider this.
+  fprintf(stderr, "Preparing a cclass -> cindex_rep table. TODO: look into this!\n");
+  uint64_t cclass_index_cindex_rep[NCCLASS];
+  for (uint64_t k = 0; k < NCCLASS; k++){
+    for (uint64_t m = 0; m < NCCU * NCO; m++){
+      if (cclass[m].cclass_i == k){
+        cclass_index_cindex_rep[k] = cclass[m].cclass; 
+        break;
+      }
+    }
+  }
+
+  fprintf(stderr, "Search from nbhs. TODO: For whcih depth should we start doing this?\n");
+  for (uint8_t k = 10; k < 13; k++){
+    fprintf(stderr, "Searching at depth %i\n", k);
+    for (uint64_t p = 0; p < SIZEH; p++){
+      if (p % 1000000000UL == 0){
+        fprintf(stderr, "p = %lu\n", p);
+      }
+      if (ptable_read_val(p, ptable_H) == 15){
+        uint64_t cclass_i = p % NCCLASS;
+        uint64_t ei = p / NCCLASS;
+
+        uint64_t cindex_rep = cclass_index_cindex_rep[cclass_i];
+        uint64_t ccu = cindex_rep % NCCU;
+        uint64_t coud = cindex_rep / NCCU;
+
+        uint64_t ece = ei % NECE;
+        uint64_t eofb = ei / NECE;
+
+        // we check all the nbhs.
+        for (int m = 0; m < NMOVES; m++){
+          uint64_t ccu2 = ccu_mtable[ccu][m];
+          uint64_t coud2 = coud_mtable[coud][m];
+          uint64_t ece2 = ece_mtable[ece][m];
+          uint64_t eofb2 = eofb_mtable[eofb][m];
+
+          struct c_index_cclass_sym c = 
+            cclass[ccu_coud_to_c_index(ccu2, coud2)];
+
+          uint64_t e2 = ece_eofb_to_e_index(ece2, eofb2);
+
+          // we need to apply symmetry conj. to the edge index as well.
+          uint64_t e2_sym = e_stable[e2][c.sym];
+          uint64_t p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
             
-            uint32_t i = cube_to_ece_index(&cube);
-            cube_move_apply_move(&cube, m);
-            uint32_t i_after = cube_to_ece_index(&cube);
-            
-            ece_mtable[i][m] = i_after;
+          if (ptable_read_val(p2, ptable_H) == k - 1){
+            ptable_set_val(p, k, ptable_H);
+            break;
           }
         }
       }
     }
   }
+  // todo: set the remaining cosets. check when to do this.
+
+  // set the remaining cosets to 12,
+  // for (coud = 0; coud < NCO; coud++){
+  //   for (eofb = 0; eofb < NEO; eofb++){
+  //     for (ece = 0; ece < NECE; ece++){
+  //       uint32_t p = ece_eofb_coud_to_L_index(ece, eofb, coud);
+  //       if (ptable_read_val(p, ptable_L) == 15){ ptable_set_val(p, 12, ptable_L); }
+  //     }
+  //   }
+  // }
+
+/* end of TODO */
+  save_ptable("H.dat", ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
+
+  free(ptable_H);
+  free(cclass);
 }
-
-void gen_coud_mtable(){
-  for (int O1 = 0; O1 < 3; O1++){
-    for (int O2 = 0; O2 < 3; O2++){
-      for (int O3 = 0; O3 < 3; O3++){
-        for (int O4 = 0; O4 < 3; O4++){
-          for (int O5 = 0; O5 < 3; O5++){
-            for (int O6 = 0; O6 < 3; O6++){
-              for (int O7 = 0; O7 < 3; O7++){
-                for (int m = 0; m < NMOVES; m++){
-                  cube_t cube = cube_create_new_cube();
-                  update_corner_orien(&cube.corners[0], O1, 0, 0);
-                  update_corner_orien(&cube.corners[1], O2, 0, 0);
-                  update_corner_orien(&cube.corners[2], O3, 0, 0);
-                  update_corner_orien(&cube.corners[3], O4, 0, 0);
-                  update_corner_orien(&cube.corners[4], O5, 0, 0);
-                  update_corner_orien(&cube.corners[5], O6, 0, 0);
-                  update_corner_orien(&cube.corners[6], O7, 0, 0);
-                  update_corner_orien(&cube.corners[7], (3 - (O1 + O2 + O3 + O4 + O5 + O6 + O7) % 3) % 3 , 0, 0);
-                  fix_eo_lr_ud(&cube);
-                  fix_co_lr_ud(&cube);
-
-                  uint32_t i = cube_to_coud_index(&cube);
-                  cube_move_apply_move(&cube, m);
-                  uint32_t i_after = cube_to_coud_index(&cube);
-                  
-                  coud_mtable[i][m] = i_after;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-void gen_eofb_mtable(){
-  for (int O1 = 0; O1 < 2; O1++){
-    for (int O2 = 0; O2 < 2; O2++){
-      for (int O3 = 0; O3 < 2; O3++){
-        for (int O4 = 0; O4 < 2; O4++){
-          for (int O5 = 0; O5 < 2; O5++){
-            for (int O6 = 0; O6 < 2; O6++){
-              for (int O7 = 0; O7 < 2; O7++){
-                for (int O8 = 0; O8 < 2; O8++){
-                  for (int O9 = 0; O9 < 2; O9++){
-                    for (int O10 = 0; O10 < 2; O10++){
-                      for (int O11 = 0; O11 < 2; O11++){
-                        for (int m = 0; m < NMOVES; m++){
-                          cube_t cube = cube_create_new_cube();
-                          update_edge_orien(&cube.edges[0], O1, 0, 0);
-                          update_edge_orien(&cube.edges[1], O2, 0, 0);
-                          update_edge_orien(&cube.edges[2], O3, 0, 0);
-                          update_edge_orien(&cube.edges[3], O4, 0, 0);
-                          update_edge_orien(&cube.edges[4], O5, 0, 0);
-                          update_edge_orien(&cube.edges[5], O6, 0, 0);
-                          update_edge_orien(&cube.edges[6], O7, 0, 0);
-                          update_edge_orien(&cube.edges[7], O8, 0, 0);
-                          update_edge_orien(&cube.edges[8], O9, 0, 0);
-                          update_edge_orien(&cube.edges[9], O10, 0, 0);
-                          update_edge_orien(&cube.edges[10], O11, 0, 0);
-                          update_edge_orien(&cube.edges[11], (O1 + O2 + O3 + O4 + O5 + O6 + O7 + O8 + O9 + O10 + O11) % 2, 0, 0);
-                          fix_eo_lr_ud(&cube);
-                          fix_co_lr_ud(&cube);
-
-                          uint32_t i = cube_to_eofb_index(&cube);
-                          cube_move_apply_move(&cube, m);
-                          uint32_t i_after = cube_to_eofb_index(&cube);
-
-                          eofb_mtable[i][m] = i_after;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
