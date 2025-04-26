@@ -39,16 +39,16 @@ DLS_H(
         // do not check redundant sequences, ex.: R R, R L R.
         // todo: use move_mask similar to solvers.c
         if (!(m/6 == prev_move/6 && m/3 >= prev_move/3)){
-          ccu2 = ccu_mtable[ccu][m];
-          coud2 = coud_mtable[coud][m];
-          ece2 = ece_mtable[ece][m];
-          eofb2 = eofb_mtable[eofb][m];
+          ccu2 = move_table_ccu_index[ccu][m];
+          coud2 = move_table_coud_index[coud][m];
+          ece2 = move_table_ece_index[ece][m];
+          eofb2 = move_table_eofb_index[eofb][m];
 
           struct c_index_cclass_sym c = 
             cclass[ccu_coud_to_c_index(ccu2, coud2)];
 
           e2 = ece_eofb_to_e_index(ece2, eofb2);
-          e2_sym = e_stable[e2][c.sym];
+          e2_sym = sym_table_e_index[e2][c.sym];
 
           p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
 
@@ -81,11 +81,11 @@ gen_ptable_H(){
   load_cclasstable("cclass.dat", cclass, size_cclass);
 
   fprintf(stderr, "Generating move tables\n");
-  fprintf(stderr, "gen_ece_mtable\n"); gen_ece_mtable();
-  fprintf(stderr, "gen_coud_mtable\n"); gen_coud_mtable();
-  fprintf(stderr, "gen_eofb_mtable\n"); gen_eofb_mtable();
-  fprintf(stderr, "gen_ccu_mtable\n"); gen_ccu_mtable();
-  fprintf(stderr, "gen_e_stable\n"); gen_e_stable();
+  fprintf(stderr, "gen_move_table_ece_index\n"); gen_move_table_ece_index();
+  fprintf(stderr, "gen_move_table_coud_index\n"); gen_move_table_coud_index();
+  fprintf(stderr, "gen_move_table_eofb_index\n"); gen_move_table_eofb_index();
+  fprintf(stderr, "gen_move_table_ccu_index\n"); gen_move_table_ccu_index();
+  fprintf(stderr, "gen_sym_table_e_index\n"); gen_sym_table_e_index();
 
   fprintf(stderr, "Initializing ptable for group H\n");
   uint8_t* ptable_H = malloc(size_ptable_h);
@@ -143,10 +143,10 @@ gen_ptable_H(){
 
         // we check all the nbhs.
         for (int m = 0; m < NMOVES; m++){
-          uint64_t ccu2 = ccu_mtable[ccu][m];
-          uint64_t coud2 = coud_mtable[coud][m];
-          uint64_t ece2 = ece_mtable[ece][m];
-          uint64_t eofb2 = eofb_mtable[eofb][m];
+          uint64_t ccu2 = move_table_ccu_index[ccu][m];
+          uint64_t coud2 = move_table_coud_index[coud][m];
+          uint64_t ece2 = move_table_ece_index[ece][m];
+          uint64_t eofb2 = move_table_eofb_index[eofb][m];
 
           struct c_index_cclass_sym c = 
             cclass[ccu_coud_to_c_index(ccu2, coud2)];
@@ -154,7 +154,7 @@ gen_ptable_H(){
           uint64_t e2 = ece_eofb_to_e_index(ece2, eofb2);
 
           // we need to apply symmetry conj. to the edge index as well.
-          uint64_t e2_sym = e_stable[e2][c.sym];
+          uint64_t e2_sym = sym_table_e_index[e2][c.sym];
           uint64_t p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
             
           if (ptable_read_val(p2, ptable_H) == k - 1){

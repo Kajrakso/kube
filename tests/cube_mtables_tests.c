@@ -18,10 +18,10 @@ TestSuite(mtables);
 Test(mtables, mtables){
     cube_tables_generate();
     precompute_combinatorials();    // need to precompute these at the moment.
-    gen_ece_mtable();
-    gen_coud_mtable();
-    gen_eofb_mtable();
-    gen_ccu_mtable();
+    gen_move_table_ece_index();
+    gen_move_table_coud_index();
+    gen_move_table_eofb_index();
+    gen_move_table_ccu_index();
 
     for (int i = 0; i < 100; i++){
         cube_t c = cube_scrambler_get_handscrambled_cube();
@@ -39,10 +39,10 @@ Test(mtables, mtables){
             uint32_t ccu_m = cube_to_ccu_index(&c2);
             uint32_t coud_m = cube_to_coud_index(&c2);
             
-            uint32_t ece_mt = ece_mtable[ece][m];
-            uint32_t eofb_mt = eofb_mtable[eofb][m];
-            uint32_t ccu_mt = ccu_mtable[ccu][m];
-            uint32_t coud_mt = coud_mtable[coud][m];
+            uint32_t ece_mt = move_table_ece_index[ece][m];
+            uint32_t eofb_mt = move_table_eofb_index[eofb][m];
+            uint32_t ccu_mt = move_table_ccu_index[ccu][m];
+            uint32_t coud_mt = move_table_coud_index[coud][m];
             
             cr_assert_eq(ece_m, ece_mt);
             cr_assert_eq(eofb_m, eofb_mt);

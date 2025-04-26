@@ -4,10 +4,10 @@ uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
 uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
 
 uint32_t move_mask[NMOVES + 1];
-uint64_t ccu_mtable[NCCU][NMOVES];
-uint64_t coud_mtable[NCO][NMOVES];
-uint64_t ece_mtable[NECE][NMOVES];
-uint64_t eofb_mtable[NEO][NMOVES];
+uint64_t move_table_ccu_index[NCCU][NMOVES];
+uint64_t move_table_coud_index[NCO][NMOVES];
+uint64_t move_table_ece_index[NECE][NMOVES];
+uint64_t move_table_eofb_index[NEO][NMOVES];
 
 enum facemove {
   U, D,
@@ -175,7 +175,7 @@ gen_move_mask(){
 }
 
 void
-gen_ece_mtable(){
+gen_move_table_ece_index(){
   for (int c1 = 0; c1 < 9; c1++){
     for (int c2 = c1 + 1; c2 < 10; c2++){
       for (int c3 = c2 + 1; c3 < 11; c3++){
@@ -206,7 +206,7 @@ gen_ece_mtable(){
             cube_move_apply_move(&cube, m);
             uint64_t ii = cube_to_ece_index(&cube);
             
-            ece_mtable[i][m] = ii;
+            move_table_ece_index[i][m] = ii;
           }
         }
       }
@@ -215,7 +215,7 @@ gen_ece_mtable(){
 }
 
 void
-gen_coud_mtable(){
+gen_move_table_coud_index(){
   for (int O1 = 0; O1 < 3; O1++){
     for (int O2 = 0; O2 < 3; O2++){
       for (int O3 = 0; O3 < 3; O3++){
@@ -240,7 +240,7 @@ gen_coud_mtable(){
                   cube_move_apply_move(&cube, m);
                   uint64_t ii = cube_to_coud_index(&cube);
                   
-                  coud_mtable[i][m] = ii;
+                  move_table_coud_index[i][m] = ii;
                 }
               }
             }
@@ -252,7 +252,7 @@ gen_coud_mtable(){
 }
 
 void
-gen_eofb_mtable(){
+gen_move_table_eofb_index(){
   for (int O1 = 0; O1 < 2; O1++){
     for (int O2 = 0; O2 < 2; O2++){
       for (int O3 = 0; O3 < 2; O3++){
@@ -285,7 +285,7 @@ gen_eofb_mtable(){
                           cube_move_apply_move(&cube, m);
                           uint64_t ii = cube_to_eofb_index(&cube);
 
-                          eofb_mtable[i][m] = ii;
+                          move_table_eofb_index[i][m] = ii;
                         }
                       }
                     }
@@ -301,7 +301,7 @@ gen_eofb_mtable(){
 }
 
 void
-gen_ccu_mtable(){
+gen_move_table_ccu_index(){
   for (int c1 = 0; c1 < 5; c1++){
     for (int c2 = c1 + 1; c2 < 6; c2++){
       for (int c3 = c2 + 1; c3 < 7; c3++){
@@ -333,7 +333,7 @@ gen_ccu_mtable(){
             cube_move_apply_move(&cube, m);
             uint64_t ii = cube_to_ccu_index(&cube);
             
-            ccu_mtable[i][m] = ii;
+            move_table_ccu_index[i][m] = ii;
           }
         }
       }

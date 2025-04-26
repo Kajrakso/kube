@@ -5,7 +5,7 @@
 uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
 uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
-uint64_t e_stable[NECE*NEO][NSYMS];
+uint64_t sym_table_e_index[NECE*NEO][NSYMS];
 
 // todo: temp! where to place? how to handle?
 /* these are the 16 symmetries that keep the UD-axis fixed in place. */
@@ -114,7 +114,7 @@ void gen_sym_tables(){
 
 
 void
-gen_e_stable(){
+gen_sym_table_e_index(){
   for (int c1 = 0; c1 < 9; c1++){
     for (int c2 = c1 + 1; c2 < 10; c2++){
       for (int c3 = c2 + 1; c3 < 11; c3++){
@@ -175,7 +175,7 @@ gen_e_stable(){
                                   uint64_t ece_ii = cube_to_ece_index(&cube);
                                   uint64_t eofb_ii = cube_to_eofb_index(&cube);
                                   
-                                  e_stable[ece_eofb_to_e_index(ece_i, eofb_i)][t] = ece_eofb_to_e_index(ece_ii, eofb_ii);
+                                  sym_table_e_index[ece_eofb_to_e_index(ece_i, eofb_i)][t] = ece_eofb_to_e_index(ece_ii, eofb_ii);
                                 }
                               }
                             }

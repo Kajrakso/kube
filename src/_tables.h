@@ -39,18 +39,18 @@ uint8_t ptable_read_val(uint64_t i, uint8_t* ptable);
 "R R" is the same as "R2". For two subsequent moves on the same axes
 we only do one: "R L" and "L R" for instance. */
 extern uint32_t move_mask[NMOVES + 1];
-extern uint64_t e_stable[NEO*NECE][NSYMS];
-extern uint64_t ece_mtable[NECE][NMOVES];
-extern uint64_t eofb_mtable[NEO][NMOVES];
-extern uint64_t coud_mtable[NCO][NMOVES];
-extern uint64_t ccu_mtable[NCCU][NMOVES];
+extern uint64_t move_table_ccu_index[NCCU][NMOVES];
+extern uint64_t move_table_coud_index[NCO][NMOVES];
+extern uint64_t move_table_ece_index[NECE][NMOVES];
+extern uint64_t move_table_eofb_index[NEO][NMOVES];
+extern uint64_t sym_table_e_index[NEO*NECE][NSYMS];
 
 /* todo: need to gen these before using them. */
 void gen_move_mask();
-void gen_ece_mtable();
-void gen_eofb_mtable();
-void gen_coud_mtable();
-void gen_ccu_mtable();
-void gen_e_stable();
+void gen_move_table_ccu_index();
+void gen_move_table_coud_index();
+void gen_move_table_ece_index();
+void gen_move_table_eofb_index();
+void gen_sym_table_e_index();
 
 #endif /* __TABLES_H_ */
