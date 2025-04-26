@@ -35,12 +35,18 @@ void gen_sym_tables();
 void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable);
 uint8_t ptable_read_val(uint64_t i, uint8_t* ptable);
 
+/* a move mask prevents us from checking unnecessary move sequences.
+"R R" is the same as "R2". For two subsequent moves on the same axes
+we only do one: "R L" and "L R" for instance. */
+extern uint32_t move_mask[NMOVES + 1];
 extern uint64_t e_stable[NEO*NECE][NSYMS];
 extern uint64_t ece_mtable[NECE][NMOVES];
 extern uint64_t eofb_mtable[NEO][NMOVES];
 extern uint64_t coud_mtable[NCO][NMOVES];
 extern uint64_t ccu_mtable[NCCU][NMOVES];
 
+/* todo: need to gen these before using them. */
+void gen_move_mask();
 void gen_ece_mtable();
 void gen_eofb_mtable();
 void gen_coud_mtable();

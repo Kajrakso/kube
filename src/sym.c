@@ -1,4 +1,4 @@
-#include "_sym.h"
+#include "_tables.h"
 
 /* the symmetry at index i is i^(-1). */
 static const int

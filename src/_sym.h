@@ -2,7 +2,7 @@
 #define __SYM_H_
 
 #include "_cube.h"
-#include "_tables.h"
+#include "../include/core/move.h"
 
 void do_y_rot(cube_t* cube);
 void do_z_rot(cube_t* cube);

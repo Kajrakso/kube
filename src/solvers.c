@@ -59,9 +59,9 @@ print_stats(struct stats* stats){
 
 static inline
 bool prune(uint8_t x1, uint8_t x2, uint8_t x3, int depth){
-  // if (x1 != 15 && (x1 == depth) && (x1 == x2) && (x2 == x3)){
-  //   return true;
-  // }
+  if (x1 != 15 && (x1 == depth) && (x1 == x2) && (x2 == x3)){
+    return true;
+  }
   
   if ((x1 != 15 && x1 > depth) || (x2 != 15 && x2 > depth) || (x3 != 15 && x3 > depth)) {
     return true;
@@ -72,26 +72,24 @@ bool prune(uint8_t x1, uint8_t x2, uint8_t x3, int depth){
 static bool
 TreeSearch(
     cube_t* cube,
-    uint64_t (*cube_to_index)(cube_t* cube, struct c_index_cclass_sym*),
     uint8_t* ptable,
     struct c_index_cclass_sym* cclass,
     int depth,
     struct stats* stats,
     int prev_move,
     int prev_move_inv,
-    bool is_inv,
-    uint32_t* move_mask
+    bool is_inv
 ){
   stats->no_nodes_visited++;
   if (depth == 0){
     return cube_state_is_solved(cube);  // we reached the end...
   }
 
-  uint64_t p1 = cube_to_index(cube, cclass);
+  uint64_t p1 = cube_to_H_index(cube, cclass);
   cube_t cube_z_rot = cube_operation_sym_conjugate(*cube, 7);
-  uint64_t p2 = cube_to_index(&cube_z_rot, cclass);
+  uint64_t p2 = cube_to_H_index(&cube_z_rot, cclass);
   cube_t cube_x_rot = cube_operation_sym_conjugate(*cube, 9);  
-  uint64_t p3 = cube_to_index(&cube_x_rot, cclass);
+  uint64_t p3 = cube_to_H_index(&cube_x_rot, cclass);
 
   const uint8_t x1 = ptable_read_val(p1, ptable);
   const uint8_t x2 = ptable_read_val(p2, ptable);
@@ -102,15 +100,15 @@ TreeSearch(
     return false;
   }
 
-  // we only look up inverse if we have gotten here
+  // we only look up inverse if we did not prune on normal
   cube_t inv = cube_operation_inverse(*cube);
   stats->no_inverse_computations++;
 
-  uint64_t p1_inv = cube_to_index(&inv, cclass);
+  uint64_t p1_inv = cube_to_H_index(&inv, cclass);
   cube_t cube_z_rot_inv = cube_operation_sym_conjugate(inv, 7);
-  uint64_t p2_inv = cube_to_index(&cube_z_rot_inv, cclass);
+  uint64_t p2_inv = cube_to_H_index(&cube_z_rot_inv, cclass);
   cube_t cube_x_rot_inv = cube_operation_sym_conjugate(inv, 9);  
-  uint64_t p3_inv = cube_to_index(&cube_x_rot_inv, cclass);
+  uint64_t p3_inv = cube_to_H_index(&cube_x_rot_inv, cclass);
 
   const uint8_t x1_inv = ptable_read_val(p1_inv, ptable);
   const uint8_t x2_inv = ptable_read_val(p2_inv, ptable);
@@ -120,11 +118,7 @@ TreeSearch(
     stats->no_nodes_pruned++;
     return false;
   }
-/*
-  fprintf(stderr, "Now at depth %i\n", depth);
-  fprintf(stderr, "\tnormal: %i, %i, %i\n", x1, x2, x3);
-  fprintf(stderr, "\tinverse: %i, %i, %i\n", x1_inv, x2_inv, x3_inv);
-*/ 
+
   // find out if we niss or not!
   // bool niss = (depth % 5 == 0);
   
@@ -156,15 +150,13 @@ TreeSearch(
       cube_move_apply_move(cube, move);
       bool found = TreeSearch(
           cube,
-          cube_to_index,
           ptable,
           cclass,
           depth - 1,
           stats,
           !is_inv ? move : prev_move,       // prev_move on normal
           is_inv ? move : prev_move_inv,    // prev_move on inverse
-          is_inv,
-          move_mask
+          is_inv
       );
       
       cube_move_apply_move(cube, get_inv_move(move));
@@ -192,27 +184,9 @@ IDA(
     cube_t cube,
     int MAX_DEPTH,
     uint8_t* ptable,
-    uint64_t (*cube_to_index)(cube_t* cube, struct c_index_cclass_sym*),
     struct c_index_cclass_sym* cclass,
     struct stats* stats
 ){
-  // TODO: Move to a better place
-  // TODO: Add nullmove in a cleverer way
-  // prepare move mask
-  uint32_t* move_mask = malloc(sizeof(uint32_t) * (NMOVES + 1));
-  int m, pm; 
-  for (pm = 0; pm < NMOVES; pm++){
-    move_mask[pm] = 0;
-    for (m = 0; m < NMOVES; m++){
-      if (!(m/6 == pm/6 && m/3 >= pm/3)){
-        move_mask[pm] |= 0b1 << m;
-      }
-    }
-    for (m = 0; m < NMOVES; m++){
-        move_mask[18] |= 0b1 << m;
-    }
-  }
-
   bool found = false;
   for (int depth = 0; depth <= MAX_DEPTH; depth++){
     init_stats(stats);
@@ -220,24 +194,20 @@ IDA(
     fprintf(stderr, "Searching depth %i\n", depth);
     found = TreeSearch(
         &cube,
-        cube_to_index,
         ptable,
         cclass,
         depth,
         stats,
         18,   // NULLMOVE. TODO: formalise
         18,   // NULLMOVE
-        false,
-        move_mask
+        false
     );
   
     if (found) {
-        free(move_mask);
         return found;
       }
     }
     
-  free(move_mask);
   return false;
 }
 
@@ -247,7 +217,6 @@ solve_cube(
     cube_t cube,
     int max_depth,
     uint8_t* ptable,
-    uint64_t (*cube_to_index)(cube_t* cube, struct c_index_cclass_sym*),
     struct c_index_cclass_sym* cclass,
     int* solution
 ){
@@ -260,7 +229,6 @@ solve_cube(
       cube,
       max_depth,
       ptable,
-      cube_to_index,
       cclass,
       stats
   );
@@ -304,13 +272,7 @@ cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
   cube_tables_generate();
   precompute_combinatorials();    // need to precompute these at the moment.
 
-  //gen_ece_mtable();
-  //gen_coud_mtable();
-  //gen_eofb_mtable();
-  //gen_e_stable();
-
-  // prepare prune table and index function.
-  uint64_t (*cube_to_index)(cube_t*, struct c_index_cclass_sym*) = cube_to_H_index;
+  // prepare prune table
   char* filename = "H.dat";
 
   // load pruning table
@@ -344,7 +306,7 @@ cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
   int max_depth = 18;
   printf("Max depth set to: %i\n", max_depth);
 
-  bool found_sol = solve_cube(cube, max_depth, ptable, cube_to_index, cclass, solution);
+  bool found_sol = solve_cube(cube, max_depth, ptable, cclass, solution);
 
   free(ptable);
   free(cclass);

@@ -8,6 +8,9 @@ void cube_tables_generate(){
     // gen sym
     initialize_sym_tables();
     gen_sym_tables();
+
+    // gen move mask
+    gen_move_mask();
 }
 
 bool cube_tables_save(const char *filename, uint16_t* table, size_t table_size) {

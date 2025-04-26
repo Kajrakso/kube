@@ -7,7 +7,6 @@ uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
 uint64_t e_stable[NECE*NEO][NSYMS];
 
-
 // todo: temp! where to place? how to handle?
 /* these are the 16 symmetries that keep the UD-axis fixed in place. */
 static int UDsyms[] = {
@@ -15,7 +14,6 @@ static int UDsyms[] = {
     24, 25, 26, 27, 40, 41, 42, 43  // inversion
 };
   
-
 /* Fills the tables with default values.
 This have to be done before we generate the
 actual conjugations. */

@@ -3,10 +3,11 @@
 uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
 uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
 
+uint32_t move_mask[NMOVES + 1];
+uint64_t ccu_mtable[NCCU][NMOVES];
+uint64_t coud_mtable[NCO][NMOVES];
 uint64_t ece_mtable[NECE][NMOVES];
 uint64_t eofb_mtable[NEO][NMOVES];
-uint64_t coud_mtable[NCO][NMOVES];
-uint64_t ccu_mtable[NCCU][NMOVES];
 
 enum facemove {
   U, D,
@@ -155,6 +156,22 @@ void gen_move_tables(){
             }
         }
     }
+}
+
+void
+gen_move_mask(){
+  int m, pm; 
+  for (pm = 0; pm < NMOVES; pm++){
+    move_mask[pm] = 0;
+    for (m = 0; m < NMOVES; m++){
+      if (!(m/6 == pm/6 && m/3 >= pm/3)){
+        move_mask[pm] |= 0b1 << m;
+      }
+    }
+    for (m = 0; m < NMOVES; m++){
+        move_mask[18] |= 0b1 << m;
+    }
+  }
 }
 
 void
