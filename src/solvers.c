@@ -1,11 +1,12 @@
 #include "_solvers.h"
-
+#include "_print_cube.h"
 // stats (temp)
 
 struct stats {
   int depth;
   int* solution;
   int* solution_inv;
+  int num_sol_found;
   unsigned int no_nisses;
   unsigned int no_nodes_visited;
   unsigned int no_nodes_pruned;
@@ -24,6 +25,7 @@ init_stats(struct stats* stats){
   stats->no_equal_pvals_normal = 0;
   stats->no_equal_pvals_inverse = 0;
 
+  stats->num_sol_found = 0;
   stats->solution = malloc(sizeof(int)*20);
   for (int i = 0; i < 20; i++){
     stats->solution[i] = -1;
@@ -37,17 +39,28 @@ init_stats(struct stats* stats){
 
 static void
 print_stats(struct stats* stats){
-  printf("\n");
-  printf("Some statistics:\n");
-  printf("Depth: %i\n", stats->depth);
-  printf("\n");
-  printf("No nisses: %i\n", stats->no_nisses);
-  printf("\n");
-  printf("No nodes visited: %i\n", stats->no_nodes_visited);
-  printf("No nodes pruned: %i\n", stats->no_nodes_pruned);
-  printf("No nodes pruned / visited: %f\n", (float)stats->no_nodes_pruned / (float)stats->no_nodes_visited);
-  printf("No inverse computations: %i\n", stats->no_inverse_computations);
-  printf("No inverse computations / visited: %f\n", (float)stats->no_inverse_computations / (float)stats->no_nodes_visited);
+  if (stats->no_nodes_visited == 0){
+    fprintf(stderr, "No nodes visited\n");
+  } else {
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Some statistics:\n");
+    fprintf(stderr, "max depth: %i\n", stats->depth);
+    fprintf(stderr, "sols found: %i\n", stats->num_sol_found);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "nodes visited: %i\n", stats->no_nodes_visited);
+    fprintf(stderr, "nodes pruned: %i (%.2f%%)\n",
+      stats->no_nodes_pruned,
+      100 * (float)stats->no_nodes_pruned / (float)stats->no_nodes_visited
+    );
+    fprintf(stderr, "inverse computations: %i (%.2f%%)\n",
+      stats->no_inverse_computations,
+      100 * (float)stats->no_inverse_computations / (float)stats->no_nodes_visited
+    );
+    fprintf(stderr, "nisses: %i (%.2f%%)\n",
+      stats->no_nisses,
+      100 * (float)stats->no_nisses / (float)stats->no_nodes_visited
+    );
+  }
 }
 
 
@@ -58,15 +71,9 @@ print_stats(struct stats* stats){
 
 
 static inline
-bool prune(uint8_t x1, uint8_t x2, uint8_t x3, int depth){
-  if (x1 != 15 && (x1 == depth) && (x1 == x2) && (x2 == x3)){
-    return true;
-  }
-  
-  if ((x1 != 15 && x1 > depth) || (x2 != 15 && x2 > depth) || (x3 != 15 && x3 > depth)) {
-    return true;
-  }
-  return false;
+bool prune(uint8_t x1, uint8_t x2, uint8_t x3, int rem_moves){
+  return ((x1 == rem_moves) && (x1 == x2) && (x2 == x3))
+    || (x1 > rem_moves) || (x2 > rem_moves) || (x3 > rem_moves);
 }
 
 static bool
@@ -74,28 +81,38 @@ TreeSearch(
     cube_t* cube,
     uint8_t* ptable,
     struct c_index_cclass_sym* cclass,
-    int depth,
+    int remaining_moves,
     struct stats* stats,
     int prev_move,
     int prev_move_inv,
-    bool is_inv
+    bool is_inv,
+    int max_num_sols,
+    bool niss
 ){
   stats->no_nodes_visited++;
-  if (depth == 0){
-    return cube_state_is_solved(cube);  // we reached the end...
+
+  if (remaining_moves == 0){
+    if (cube_state_is_solved(cube)){
+      stats->num_sol_found++;
+      cube_print_solution_string(stats->solution, stats->solution_inv);
+      return stats->num_sol_found == max_num_sols;
+    } else {
+      return false;
+    }
   }
 
   uint64_t p1 = cube_to_H_index(cube, cclass);
+  const uint8_t pval_UD = ptable_read_val(p1, ptable);
+
   cube_t cube_z_rot = cube_operation_sym_conjugate(*cube, 7);
   uint64_t p2 = cube_to_H_index(&cube_z_rot, cclass);
+  const uint8_t pval_LR = ptable_read_val(p2, ptable);
+
   cube_t cube_x_rot = cube_operation_sym_conjugate(*cube, 9);  
   uint64_t p3 = cube_to_H_index(&cube_x_rot, cclass);
+  const uint8_t pval_FB = ptable_read_val(p3, ptable);
 
-  const uint8_t x1 = ptable_read_val(p1, ptable);
-  const uint8_t x2 = ptable_read_val(p2, ptable);
-  const uint8_t x3 = ptable_read_val(p3, ptable);
-
-  if (prune(x1, x2, x3, depth)) {
+  if (prune(pval_UD, pval_LR, pval_FB, remaining_moves)) {
     stats->no_nodes_pruned++;
     return false;
   }
@@ -105,172 +122,166 @@ TreeSearch(
   stats->no_inverse_computations++;
 
   uint64_t p1_inv = cube_to_H_index(&inv, cclass);
+  const uint8_t pval_UD_inv = ptable_read_val(p1_inv, ptable);
+
   cube_t cube_z_rot_inv = cube_operation_sym_conjugate(inv, 7);
   uint64_t p2_inv = cube_to_H_index(&cube_z_rot_inv, cclass);
+  const uint8_t pval_LR_inv = ptable_read_val(p2_inv, ptable);
+
   cube_t cube_x_rot_inv = cube_operation_sym_conjugate(inv, 9);  
   uint64_t p3_inv = cube_to_H_index(&cube_x_rot_inv, cclass);
+  const uint8_t pval_FB_inv = ptable_read_val(p3_inv, ptable);
 
-  const uint8_t x1_inv = ptable_read_val(p1_inv, ptable);
-  const uint8_t x2_inv = ptable_read_val(p2_inv, ptable);
-  const uint8_t x3_inv = ptable_read_val(p3_inv, ptable);
-
-  if (prune(x1_inv, x2_inv, x3_inv, depth)){
+  if (prune(pval_UD_inv, pval_LR_inv, pval_FB_inv, remaining_moves)){
     stats->no_nodes_pruned++;
     return false;
   }
 
   // find out if we niss or not!
-  // bool niss = (depth % 5 == 0);
-  
-  // bool niss = (x1_inv + x2_inv + x3_inv < x1 + x2 + x3);
-  // bool niss = false;
-  //
-  // if (niss) {
-  //   swap_cubes(cube, &inv);
-  //   is_inv = is_inv ? false : true;
-  //   stats->no_nisses++;
-  // }
+  bool _niss = false;
+  if (niss) {
+    int num_axis_to_check_normal = 0;
+    int num_axis_to_check_inverse = 0;
+
+    if (pval_UD < remaining_moves) num_axis_to_check_inverse++;
+    if (pval_LR < remaining_moves) num_axis_to_check_inverse++;
+    if (pval_FB < remaining_moves) num_axis_to_check_inverse++;
+    if (pval_UD_inv < remaining_moves) num_axis_to_check_normal++;
+    if (pval_LR_inv < remaining_moves) num_axis_to_check_normal++;
+    if (pval_FB_inv < remaining_moves) num_axis_to_check_normal++;
+
+    _niss = num_axis_to_check_normal > num_axis_to_check_inverse;
+  }
+
+  // niss
+  if (_niss) {
+    swap_cubes(cube, &inv);
+    is_inv = is_inv ? false : true;
+    stats->no_nisses++;
+  }
+
+  // we extract the move_mask for this node.
+  uint32_t mm = move_mask[is_inv ? prev_move_inv : prev_move];
+
+  // nissing magic
+  if (remaining_moves == (_niss ? pval_UD : pval_UD_inv)) mm &= ~(0b111111 << 0);
+  if (remaining_moves == (_niss ? pval_LR : pval_LR_inv)) mm &= ~(0b111111 << 6);
+  if (remaining_moves == (_niss ? pval_FB : pval_FB_inv)) mm &= ~(0b111111 << 12);
 
   for (int move = 0; move < NMOVES; move++){
       // check if we actually need to do move.
-      // if (!niss){
-        if (x1_inv == depth && move / 6 == 0) continue;
-        if (x2_inv == depth && move / 6 == 1) continue;
-        if (x3_inv == depth && move / 6 == 2) continue;
-      // }
-      // else {
-      //   if (x1 == depth && move / 6 == 0) continue;
-      //   if (x2 == depth && move / 6 == 1) continue;
-      //   if (x3 == depth && move / 6 == 2) continue;
-      // }
-      
-      if (!(move_mask[is_inv ? prev_move_inv : prev_move] & (0b1 << move))) continue;
+      if (!(mm & (0b1 << move))) continue;
 
-      // cube_t c = *cube;
       cube_move_apply_move(cube, move);
+
+      if (!is_inv) stats->solution[20 - remaining_moves] = move;
+      else stats->solution_inv[20 - remaining_moves] = move;
+
       bool found = TreeSearch(
           cube,
           ptable,
           cclass,
-          depth - 1,
+          remaining_moves - 1,
           stats,
           !is_inv ? move : prev_move,       // prev_move on normal
           is_inv ? move : prev_move_inv,    // prev_move on inverse
-          is_inv
+          is_inv,
+          max_num_sols,
+          niss
       );
       
       cube_move_apply_move(cube, get_inv_move(move));
 
-      if (found){
-        // if (niss) {
-        //   swap_cubes(cube, &inv);
-        // }
+      if (!is_inv) stats->solution[20 - remaining_moves] = -1;
+      else stats->solution_inv[20 - remaining_moves] = -1;
 
-        if (!is_inv) stats->solution[depth - 1] = move;
-        else stats->solution_inv[depth - 1] = move;
-
-        return found;
-      }
+      if (found) return true;
   }
 
-  // if (niss) {
-  //   swap_cubes(cube, &inv);
-  // }
+  if (_niss) swap_cubes(cube, &inv);
   return false;
 }
 
-bool
+void
 IDA(
     cube_t cube,
     int MAX_DEPTH,
     uint8_t* ptable,
     struct c_index_cclass_sym* cclass,
-    struct stats* stats
+    struct stats* stats,
+    int max_num_sols,
+    bool niss
 ){
-  bool found = false;
+  bool stop_search = false;
   for (int depth = 0; depth <= MAX_DEPTH; depth++){
     init_stats(stats);
     stats->depth = depth;
-    fprintf(stderr, "Searching depth %i\n", depth);
-    found = TreeSearch(
+    printf("Searching depth %i\n", depth);
+
+    stop_search = TreeSearch(
         &cube,
         ptable,
         cclass,
         depth,
         stats,
-        18,   // NULLMOVE. TODO: formalise
-        18,   // NULLMOVE
-        false
+        18, 18,   // NULLMOVE. TODO: formalise 
+        false,
+        max_num_sols,
+        niss
     );
   
-    if (found) {
-        return found;
-      }
-    }
-    
-  return false;
+    if (stop_search) return;
+  }
 }
 
 
-bool
+void
 solve_cube(
     cube_t cube,
     int max_depth,
     uint8_t* ptable,
     struct c_index_cclass_sym* cclass,
-    int* solution
+    int max_num_sols
 ){
   // we collect some stats along the way.
   struct stats* stats = malloc(sizeof(struct stats));
   init_stats(stats);
 
   // actually search.
-  bool found_sol = IDA(
+  IDA(
       cube,
       max_depth,
       ptable,
       cclass,
-      stats
+      stats,
+      max_num_sols,
+      false
   );
-
-  // combine the solutions on normal and inverse to a final solution
-  if (found_sol){
-    int i = 0, j = 0;
-    for (int m = 0; m < 20; m++){
-      if (0 <= stats->solution[19 - m] && stats->solution[19 - m] < 18){  
-        solution[i] = stats->solution[19 - m];
-        i++;
-      }
-    }
-
-    for (int m = 0; m < 20; m++){
-      if (0 <= stats->solution_inv[m] && stats->solution_inv[m] < 18){  
-        solution[i + j] = get_inv_move(stats->solution_inv[m]);
-        j++;
-      }
-    }
-  }
 
   print_stats(stats);
 
   free(stats->solution);
   free(stats->solution_inv);
   free(stats);
-
-  return found_sol;
 }
 
 
 /* public */
 
 bool
-cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
+cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves, int num_banned_moves){
   fprintf(stderr, "This solver is WIP\n");
-  cube_print_cube(&cube);
+  // cube_print_cube(&cube);
 
   // todo: handle these precomputations
   cube_tables_generate();
   precompute_combinatorials();    // need to precompute these at the moment.
+
+  // todo: maybe split the solver into one that solves optimally
+  // for one solution and one that is used for alg genning?
+  for (int i = 0; i < num_banned_moves; i++){
+    movemask_remove_move(banned_moves[i]);
+  }
 
   // prepare prune table
   char* filename = "H.dat";
@@ -286,14 +297,12 @@ cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
     return false;
   }
 
-  const uint64_t size_cclass =
-    sizeof(struct c_index_cclass_sym) * NCCU * NCO;
-  fprintf(stderr, "Allocating %lu B for cclass table\n", size_cclass);
+  const uint64_t size_cclass = sizeof(struct c_index_cclass_sym) * NCCU * NCO;
 
+  fprintf(stderr, "Allocating %lu B for cclass table\n", size_cclass);
   struct c_index_cclass_sym* cclass = malloc(size_cclass);
 
   fprintf(stderr, "WIP: Loading cclass table\n");
-  ;
 
   if (!load_cclasstable("cclass.dat", cclass, size_cclass)) {
     fprintf(stderr, "Could not load cclass table from %s\n", "cclass.dat");
@@ -304,12 +313,11 @@ cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length){
 
   // set a max limit.
   int max_depth = 18;
-  printf("Max depth set to: %i\n", max_depth);
+  fprintf(stderr, "\nMax depth set to: %i\n", max_depth);
 
-  bool found_sol = solve_cube(cube, max_depth, ptable, cclass, solution);
+  solve_cube(cube, max_depth, ptable, cclass, number_of_solutions);
 
   free(ptable);
   free(cclass);
-
-  return found_sol;
+  return true;
 }

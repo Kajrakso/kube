@@ -62,7 +62,7 @@ bool load_ptable(char* filename, uint8_t* ptable, size_t table_size){
 
 
 bool save_ptable(char* filename, uint8_t* ptable, size_t table_size){
-  fprintf(stderr, "writing ptable for group L to disk. file: %s.\n", filename);
+  fprintf(stderr, "writing ptable to disk. file: %s.\n", filename);
 
   FILE *file = fopen(filename, "wb");
   if (!file) {

@@ -174,6 +174,12 @@ gen_move_mask(){
   }
 }
 
+void movemask_remove_move(int move){
+  for (int pm = 0; pm < NMOVES + 1; pm++){
+    move_mask[pm] &= ~(0b111 << 3 * (move / 3));
+  }
+}
+
 void
 gen_move_table_ece_index(){
   for (int c1 = 0; c1 < 9; c1++){

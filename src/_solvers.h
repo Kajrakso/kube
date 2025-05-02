@@ -12,13 +12,13 @@
 
 #include "_print_cube.h"
 
-bool
+void
 solve_cube(
     cube_t cube,
     int max_depth,
     uint8_t* ptable,
     struct c_index_cclass_sym* cclass,
-    int* solution
+    int max_num_sols
 );
 
 #endif /* __SOLVERS_H_ */

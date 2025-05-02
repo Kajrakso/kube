@@ -26,40 +26,39 @@ DLS_H(
   uint64_t coud,
   uint64_t ccu,
   uint64_t p,
-  int depth,
+  int remaining_moves,
   int prev_move,
   int num_moves_done,
   uint8_t* ptable,
   struct c_index_cclass_sym* cclass
 ){
-    if (depth == 0) return;
+    if (remaining_moves == 0) return;
     uint64_t p2, ccu2, coud2, ece2, eofb2, e2, e2_sym;
-  
+    uint32_t mm = move_mask[prev_move]; 
+
     for (int m = 0; m < NMOVES; m++){
-        // do not check redundant sequences, ex.: R R, R L R.
-        // todo: use move_mask similar to solvers.c
-        if (!(m/6 == prev_move/6 && m/3 >= prev_move/3)){
-          ccu2 = move_table_ccu_index[ccu][m];
-          coud2 = move_table_coud_index[coud][m];
-          ece2 = move_table_ece_index[ece][m];
-          eofb2 = move_table_eofb_index[eofb][m];
+        if (!(mm & (0b1 << m))) continue;
 
-          struct c_index_cclass_sym c = 
-            cclass[ccu_coud_to_c_index(ccu2, coud2)];
+        ccu2 = move_table_ccu_index[ccu][m];
+        coud2 = move_table_coud_index[coud][m];
+        ece2 = move_table_ece_index[ece][m];
+        eofb2 = move_table_eofb_index[eofb][m];
 
-          e2 = ece_eofb_to_e_index(ece2, eofb2);
-          e2_sym = sym_table_e_index[e2][c.sym];
+        struct c_index_cclass_sym c = 
+          cclass[ccu_coud_to_c_index(ccu2, coud2)];
 
-          p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
+        e2 = ece_eofb_to_e_index(ece2, eofb2);
+        e2_sym = sym_table_e_index[e2][c.sym];
 
-          if (p2 == p) continue;
+        p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
 
-          if (ptable_read_val(p2, ptable) > num_moves_done + 1) {
-            ptable_set_val(p2, (uint8_t)(num_moves_done + 1), ptable);
-          }
+        if (p2 == p) continue;
 
-          DLS_H(ece2, eofb2, coud2, ccu2, p2, depth - 1, m, num_moves_done + 1, ptable, cclass);
+        if (ptable_read_val(p2, ptable) > num_moves_done + 1) {
+          ptable_set_val(p2, (uint8_t)(num_moves_done + 1), ptable);
         }
+
+        DLS_H(ece2, eofb2, coud2, ccu2, p2, remaining_moves - 1, m, num_moves_done + 1, ptable, cclass);
     }
 }
 
@@ -160,24 +159,19 @@ gen_ptable_H(){
           if (ptable_read_val(p2, ptable_H) == k - 1){
             ptable_set_val(p, k, ptable_H);
             break;
+          } else if (k == 12) {
+            // set the remaining cosets to 13,
+            // if they are actually a 12
+            // the break; above makes sure that
+            // it is not set to 13.
+            ptable_set_val(p, 13, ptable_H);
           }
         }
       }
     }
   }
-  // todo: set the remaining cosets. check when to do this.
 
-  // set the remaining cosets to 12,
-  // for (coud = 0; coud < NCO; coud++){
-  //   for (eofb = 0; eofb < NEO; eofb++){
-  //     for (ece = 0; ece < NECE; ece++){
-  //       uint32_t p = ece_eofb_coud_to_L_index(ece, eofb, coud);
-  //       if (ptable_read_val(p, ptable_L) == 15){ ptable_set_val(p, 12, ptable_L); }
-  //     }
-  //   }
-  // }
-
-/* end of TODO */
+  /* end of TODO */
   save_ptable("H.dat", ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
 
   free(ptable_H);

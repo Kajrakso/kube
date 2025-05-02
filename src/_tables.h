@@ -53,4 +53,6 @@ void gen_move_table_ece_index();
 void gen_move_table_eofb_index();
 void gen_sym_table_e_index();
 
+void movemask_remove_move(int move);
+
 #endif /* __TABLES_H_ */

@@ -1,5 +1,4 @@
 #include "include/libcube.h"
-#include "string.h"
 #include <stdio.h>
 
 // Example of how to use libcube
@@ -10,34 +9,26 @@ int main(){
   // If you do not have the ptable. run this. NOTE: It takes a looong time.
   // gen_ptable_H();
 
-  // Set a scramble sequence. This one is 13 moves optimal.
-  char* scr = "D' B' D F B' U F2 U2 B R2 U2 R2 F D2 R2 L2";
+  // Set a scramble sequence.
+  char* scr = "F' L2 F D' B' U2 B' U' B2 D"; // LTCT D[G]
 
   // Create a new cube
   cube_t cube = cube_create_new_cube();
 
   // Scramble the cube
-  printf("\nScramble: %s\n", scr);
+  printf("Scramble: %s\n\n", scr);
   cube_move_apply_move_string(&cube, scr);
 
-  // Allocate some space for the solution
-  const int max_sol_size = 20;
-  int* solution = malloc(sizeof(int) * max_sol_size);
-  for (int i = 0; i < 20; i++) solution[i] = -1;
+  // ban some moves from the solution:
+  int num_banned = 0;
+  int banned[] = {B1, L1, D1};    // RUF-gen
 
-  bool solved = cube_solvers_solve_cube(cube, solution, max_sol_size);
+  // set number of solutions you want
+  int num_sols = 10;
 
-  int sol_len = 0;
-  for (int i = 0; i < 20; i++){
-    if (solution[i] == -1) break;
-    else sol_len++;
-  }
+  bool solved = cube_solvers_solve_cube(cube, num_sols, banned, num_banned);
 
-  printf("Solution length is %i\n", sol_len);
+  if (!solved) printf("Was not able to solve the cube :(\n");
 
-  if (solved) cube_print_solution_string(solution, max_sol_size);
-  else printf("Was not able to solve the cube :(\n");
-
-  free(solution);
   return 0;
 }
