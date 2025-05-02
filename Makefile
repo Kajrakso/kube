@@ -1,8 +1,10 @@
 # Compiler and standard flags
 CC = cc
-CFLAGS_COMMON = -std=c99 -pthread -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
+CFLAGS_COMMON = -std=c99 -fPIC -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
 CFLAGS_OPTIMIZED = -O3
-CFLAGS_DEBUG = -g3 -fsanitize=address -fsanitize=undefined -fsanitize=leak -fstack-protector-all -Wno-unused-function
+# CFLAGS_DEBUG = -g3 -fsanitize=address -fsanitize=undefined -fsanitize=leak -fstack-protector-all -Wno-unused-function
+CFLAGS_DEBUG = -g3 -Wno-unused-function
+CFLAGS_PYTHON = -Iinclude 
 
 # Targets
 LIB = libcube.a
@@ -31,6 +33,12 @@ debug: $(LIB)
 test: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_DEBUG)
 test: $(TEST_EXEC)
 
+# pylibcube target
+pylibcube: $(LIB)
+pylibcube: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_OPTIMIZED) $(CFLAGS_PYTHON)
+pylibcube:
+	cd python && python setup.py build_ext -i
+
 # Library creation
 $(LIB): $(OBJ)
 	ar rcs $@ $^
@@ -50,6 +58,9 @@ $(TEST_DIR)/%.o: $(TEST_DIR)/%.c
 # Clean target
 clean:
 	rm -f $(OBJ) $(LIB) $(TEST_OBJ) $(TEST_EXEC)
+	rm -rf python/build
+	find python -name "*.so" -delete
+	find python -name "*.c" -delete
 
 # Phony targets
-.PHONY: all debug test clean
+.PHONY: all debug test clean pylibcube
