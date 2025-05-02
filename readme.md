@@ -11,8 +11,7 @@ It should support moving the the cube, keeping track of oriented
 and misoriented pieces as well as functionality for checking if the
 cube is in a certain state (DR, HTR etc.).
 
-Maybe I will create scramblers, solvers and so on
-that builds on this in the future.
+libcube contains an optimal solver (WIP), scramblers and a python wrapper.
 
 ### Usage
 
@@ -27,10 +26,22 @@ to build the library and
 ```sh
 make test
 ```
-to run the tests.
+to run the tests. See `main.c` for example usage of libcube.
+
+To build the python module run
+
+```sh
+make pylibcube
+```
+
+See `alg_gen.py` for example usage.
 
 ## Project structure:
 
+- `include/`
+    Headers.
+- `python/`
+    Python wrapper.
 - `doc/`
     Documentation.
 - `src/`
