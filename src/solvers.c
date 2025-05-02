@@ -213,8 +213,8 @@ IDA(
     bool niss
 ){
   bool stop_search = false;
+  init_stats(stats);
   for (int depth = 0; depth <= MAX_DEPTH; depth++){
-    init_stats(stats);
     stats->depth = depth;
     printf("Searching depth %i\n", depth);
 
@@ -284,14 +284,14 @@ cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves,
   }
 
   // prepare prune table
-  char* filename = "H.dat";
+  char* filename = "data/H.dat";
 
   // load pruning table
   fprintf(stderr, "Allocating %llu B for pruning table\n", sizeof(uint8_t) * SIZE_PTABLE_H);
 
   uint8_t* ptable = malloc(sizeof(uint8_t) * SIZE_PTABLE_H);
 
-  if (!load_ptable("H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
+  if (!load_ptable("data/H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
     fprintf(stderr, "Could not load pruning table from %s\n", filename);
     free(ptable);
     return false;
@@ -304,8 +304,8 @@ cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves,
 
   fprintf(stderr, "WIP: Loading cclass table\n");
 
-  if (!load_cclasstable("cclass.dat", cclass, size_cclass)) {
-    fprintf(stderr, "Could not load cclass table from %s\n", "cclass.dat");
+  if (!load_cclasstable("data/cclass.dat", cclass, size_cclass)) {
+    fprintf(stderr, "Could not load cclass table from %s\n", "data/cclass.dat");
     free(ptable);
     free(cclass);
     return false;

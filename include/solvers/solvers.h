@@ -6,6 +6,6 @@
 #include "../core/tables.h"
 
 /* Solve a cube. */
-bool cube_solvers_solve_cube(cube_t cube, int* solution, int solution_length);
+bool cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves, int num_banned_moves);
 
 #endif // _SOLVERS_H_

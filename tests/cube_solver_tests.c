@@ -21,12 +21,12 @@ Test(solver, some_simple_scrambles){
   precompute_combinatorials();    // need to precompute these at the moment.
 
   // prepare prune table and index function.
-  char* filename = "H.dat";
+  char* filename = "data/H.dat";
 
   // load pruning table
   uint8_t* ptable = malloc(sizeof(uint8_t) * SIZE_PTABLE_H);
 
-  if (!load_ptable("H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
+  if (!load_ptable("data/H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
     fprintf(stderr, "Could not load pruning table from %s\n", filename);
     free(ptable);
     cr_assert(false);
@@ -37,8 +37,8 @@ Test(solver, some_simple_scrambles){
 
   struct c_index_cclass_sym* cclass = malloc(size_cclass);
 
-  if (!load_cclasstable("cclass.dat", cclass, size_cclass)) {
-    fprintf(stderr, "Could not load cclass table from %s\n", "cclass.dat");
+  if (!load_cclasstable("data/cclass.dat", cclass, size_cclass)) {
+    fprintf(stderr, "Could not load cclass table from %s\n", "data/cclass.dat");
     free(ptable);
     free(cclass);
     cr_assert(false);
@@ -156,12 +156,12 @@ Test(solver, some_mid_scrambles){
   precompute_combinatorials();    // need to precompute these at the moment.
 
   // prepare prune table and index function.
-  char* filename = "H.dat";
+  char* filename = "data/H.dat";
 
   // load pruning table
   uint8_t* ptable = malloc(sizeof(uint8_t) * SIZE_PTABLE_H);
 
-  if (!load_ptable("H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
+  if (!load_ptable("data/H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
     fprintf(stderr, "Could not load pruning table from %s\n", filename);
     free(ptable);
     cr_assert(false);
@@ -172,8 +172,8 @@ Test(solver, some_mid_scrambles){
 
   struct c_index_cclass_sym* cclass = malloc(size_cclass);
 
-  if (!load_cclasstable("cclass.dat", cclass, size_cclass)) {
-    fprintf(stderr, "Could not load cclass table from %s\n", "cclass.dat");
+  if (!load_cclasstable("data/cclass.dat", cclass, size_cclass)) {
+    fprintf(stderr, "Could not load cclass table from %s\n", "data/cclass.dat");
     free(ptable);
     free(cclass);
     cr_assert(false);

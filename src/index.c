@@ -337,7 +337,7 @@ gen_c_sym_index_tables(){
   }
 
   save_cclasstable(
-    "cclass.dat",
+    "data/cclass.dat",
     cclass_table,
     sizeof(struct c_index_cclass_sym) * NCCU * NCO
   );

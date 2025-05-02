@@ -77,7 +77,7 @@ gen_ptable_H(){
   struct c_index_cclass_sym* cclass = malloc(size_cclass);
 
   fprintf(stderr, "Loading cclass table\n");
-  load_cclasstable("cclass.dat", cclass, size_cclass);
+  load_cclasstable("data/cclass.dat", cclass, size_cclass);
 
   fprintf(stderr, "Generating move tables\n");
   fprintf(stderr, "gen_move_table_ece_index\n"); gen_move_table_ece_index();
@@ -172,7 +172,7 @@ gen_ptable_H(){
   }
 
   /* end of TODO */
-  save_ptable("H.dat", ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
+  save_ptable("data/H.dat", ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
 
   free(ptable_H);
   free(cclass);

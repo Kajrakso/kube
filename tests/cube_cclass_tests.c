@@ -25,7 +25,7 @@ Test(cclass, cclass_invariant_under_UDsyms){
   struct c_index_cclass_sym* cclass = malloc(size_cclass);
 
   fprintf(stderr, "Loading cclass table\n");
-  load_cclasstable("cclass.dat", cclass, size_cclass);
+  load_cclasstable("data/cclass.dat", cclass, size_cclass);
 
   static int UDsyms[] = {
     0, 1, 2, 3, 16, 17, 18, 19,     // no inversion
