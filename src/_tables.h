@@ -55,4 +55,7 @@ void gen_sym_table_e_index();
 
 void movemask_remove_move(int move);
 
+/* runs through the ptable and counts the number of cosets for each p-value. */
+void check_Hdat();
+
 #endif /* __TABLES_H_ */

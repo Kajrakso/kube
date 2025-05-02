@@ -177,3 +177,31 @@ gen_ptable_H(){
   free(ptable_H);
   free(cclass);
 }
+
+void check_Hdat(){
+  uint8_t* ptable = malloc(sizeof(uint8_t) * SIZE_PTABLE_H);
+
+  if (!load_ptable("data/H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
+    free(ptable);
+    return;
+  }
+
+  uint64_t stats[21] = {0};
+
+  uint64_t other = 0;
+  for (uint64_t i = 0; i < SIZEH; i++){
+    uint8_t val = ptable_read_val(i, ptable);
+    if (val == 15){
+      other++;
+    } else {
+      stats[val]++;
+    }
+  }
+
+  for (int i = 0; i < 21; i++){
+    printf("%i: %lu\n", i, stats[i]);
+  }
+  printf("other: %lu\n", other);
+
+  free(ptable);  
+}
