@@ -1,6 +1,7 @@
 *.dat
 .vscode/
 *.pdf
+python/*.c
 
 # Prerequisites
 *.d
