@@ -30,6 +30,15 @@ void gen_move_tables();
 void initialize_sym_tables();
 void gen_sym_tables();
 
+
+int init_ptable_H(const char* path);
+void* get_ptable_H();
+void free_ptable_H();
+
+int init_cclass_table(const char* path);
+void* get_cclass_table();
+void free_cclass_table();
+
 //! 19.04.2025: These are for testing!
 
 void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable);

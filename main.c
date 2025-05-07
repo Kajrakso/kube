@@ -5,9 +5,7 @@
 int main(){
   // Per now we need to do this manually first
   cube_tables_generate();
-
-  // If you do not have the ptable. run this. NOTE: It takes a looong time.
-  // gen_ptable_H();
+  cube_tables_load();
 
   // Set a scramble sequence.
   char* scr = "F' L2 F D' B' U2 B' U' B2 D"; // LTCT D[G]
@@ -30,5 +28,6 @@ int main(){
 
   if (!solved) printf("Was not able to solve the cube :(\n");
 
+  cube_tables_free();
   return 0;
 }

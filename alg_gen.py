@@ -6,12 +6,12 @@ sys.path.append(str(Path(__file__).parent / "python"))
 
 import libcube
 
-scramble = "R2 U2 R2 U2 R2 U2"
-generators = set(["U", "D", "R", "L", "F", "B"])
 
-libcube.solve(
-    scramble=scramble,
-    number_of_solutions=8,
-    generators=generators
-)
+@libcube.solver_env
+def alg_genner():
 
+    libcube.solve("R")
+
+
+if __name__ == "__main__":
+    alg_genner()

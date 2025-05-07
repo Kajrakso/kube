@@ -9,11 +9,11 @@
 You have to call this function before applying moves to the cube.*/
 void cube_tables_generate();
 
-/* Saves a table to disk. */
-bool cube_tables_save(const char *filename, uint16_t* table, size_t table_size);
+/* Call before using tables */
+int cube_tables_load();
 
-/* Loads a table from a file. */
-bool cube_tables_load(const char *filename, uint16_t* table, size_t table_size);
+/* Call after use of tables */
+void cube_tables_free();
 
 bool load_ptable(char* filename, uint8_t* ptable, size_t table_size);
 
@@ -23,5 +23,8 @@ bool save_ptable(char* filename, uint8_t* ptable, size_t table_size);
 void gen_ptable_L();
 
 void gen_ptable_H();
+
+int init_ptable_H(const char* path);
+void free_ptable_H();
 
 #endif /* _TABLES_H_ */

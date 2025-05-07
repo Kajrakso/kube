@@ -12,15 +12,24 @@ move_map = {
   "B": 15,
 }
 
+def solver_env(func):
+  
+    def wrapper():
+        libcube.cube_tables_generate()
+        libcube.cube_tables_load()
 
-def solve(scramble: str, number_of_solutions: int, generators: set[str]) -> None:
+        func()
+
+        libcube.cube_tables_free()
+    return wrapper
+
+
+def solve(scramble: str, number_of_solutions: int = 1, generators: set[str] = move_set) -> None:
     assert number_of_solutions >= 1, "number_of_solutions has to be >= 1"
     assert scramble != "", "you have to provide a scramble"
 
     py_byte_scramble = scramble.encode('UTF-8')
     cdef char* c_scramble = py_byte_scramble
-
-    libcube.cube_tables_generate()
 
     c = libcube.cube_create_new_cube()
     

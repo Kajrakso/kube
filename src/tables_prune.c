@@ -179,10 +179,10 @@ gen_ptable_H(){
 }
 
 void check_Hdat(){
-  uint8_t* ptable = malloc(sizeof(uint8_t) * SIZE_PTABLE_H);
+  uint8_t* ptable = (uint8_t*)get_ptable_H();
 
-  if (!load_ptable("data/H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
-    free(ptable);
+  if (!ptable) {
+    fprintf(stderr, "UPPSI, we aint got tabl\n");
     return;
   }
 
@@ -202,6 +202,4 @@ void check_Hdat(){
     printf("%i: %lu\n", i, stats[i]);
   }
   printf("other: %lu\n", other);
-
-  free(ptable);  
 }

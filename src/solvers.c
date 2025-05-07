@@ -273,41 +273,21 @@ cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves,
   fprintf(stderr, "This solver is WIP\n");
   // cube_print_cube(&cube);
 
-  // todo: handle these precomputations
-  cube_tables_generate();
-  precompute_combinatorials();    // need to precompute these at the moment.
-
   // todo: maybe split the solver into one that solves optimally
   // for one solution and one that is used for alg genning?
   for (int i = 0; i < num_banned_moves; i++){
     movemask_remove_move(banned_moves[i]);
   }
 
-  // prepare prune table
-  char* filename = "data/H.dat";
-
-  // load pruning table
-  fprintf(stderr, "Allocating %llu B for pruning table\n", sizeof(uint8_t) * SIZE_PTABLE_H);
-
-  uint8_t* ptable = malloc(sizeof(uint8_t) * SIZE_PTABLE_H);
-
-  if (!load_ptable("data/H.dat", ptable, sizeof(uint8_t) * SIZE_PTABLE_H)) {
-    fprintf(stderr, "Could not load pruning table from %s\n", filename);
-    free(ptable);
+  uint8_t* ptable = (uint8_t*)get_ptable_H();
+  if (!ptable) {
+    fprintf(stderr, "Could not load pruning table. Have you initialized it?\n");
     return false;
   }
 
-  const uint64_t size_cclass = sizeof(struct c_index_cclass_sym) * NCCU * NCO;
-
-  fprintf(stderr, "Allocating %lu B for cclass table\n", size_cclass);
-  struct c_index_cclass_sym* cclass = malloc(size_cclass);
-
-  fprintf(stderr, "WIP: Loading cclass table\n");
-
-  if (!load_cclasstable("data/cclass.dat", cclass, size_cclass)) {
-    fprintf(stderr, "Could not load cclass table from %s\n", "data/cclass.dat");
-    free(ptable);
-    free(cclass);
+  struct c_index_cclass_sym* cclass = (struct c_index_cclass_sym*)get_cclass_table();
+  if (!cclass) {
+    fprintf(stderr, "Could not load cclass table. Have you initialized it?\n");
     return false;
   }
 
@@ -317,7 +297,5 @@ cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves,
 
   solve_cube(cube, max_depth, ptable, cclass, number_of_solutions);
 
-  free(ptable);
-  free(cclass);
   return true;
 }
