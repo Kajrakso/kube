@@ -37,7 +37,7 @@ test: $(TEST_EXEC)
 pylibcube: $(LIB)
 pylibcube: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_OPTIMIZED) $(CFLAGS_PYTHON)
 pylibcube:
-	cd python && python setup.py build_ext -i
+	cd python && python3 setup.py build_ext -i
 
 # Library creation
 $(LIB): $(OBJ)
