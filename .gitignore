@@ -1,6 +1,7 @@
 data/
 .vscode/
 python/*.c
+*.zip
 
 # Prerequisites
 *.d
