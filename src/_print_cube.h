@@ -11,6 +11,6 @@
 // need to rewrite this function someday
 int* parse_move_string(size_t* out_length, const char* move_string);
 
-void cube_print_solution_string(int* sol, int* sol_inv);
+void cube_print_solutions(int* solutions, int num_sols);
 
 #endif /* __PRINT_CUBE_H_ */

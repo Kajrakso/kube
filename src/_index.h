@@ -50,9 +50,6 @@ cube_to_H_index(cube_t* cube, struct c_index_cclass_sym* cclass);
 /* NOTE: the cube returned is not necessarily a valid cube.
  * Also, these function is not optimized. */
 cube_t
-L_index_to_cube(uint64_t i);
-
-cube_t
 H_index_to_cube(uint64_t H_index, struct c_index_cclass_sym* cclass);
 
 cube_t
@@ -66,12 +63,5 @@ c_index_to_cube(uint64_t c_i);
 
 cube_t
 e_index_to_cube(uint64_t c_i);
-
-// gen
-void gen_c_sym_index_tables();
-
-bool load_cclasstable(char* filename, struct c_index_cclass_sym * cclass_table, size_t table_size);
-
-bool save_cclasstable(char* filename, struct c_index_cclass_sym * cclass_table, size_t table_size);
 
 #endif /* __INDEX_H_ */

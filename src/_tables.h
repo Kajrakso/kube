@@ -35,10 +35,6 @@ int init_ptable_H(const char* path);
 void* get_ptable_H();
 void free_ptable_H();
 
-int init_cclass_table(const char* path);
-void* get_cclass_table();
-void free_cclass_table();
-
 //! 19.04.2025: These are for testing!
 
 void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable);
@@ -54,6 +50,9 @@ extern uint64_t move_table_ece_index[NECE][NMOVES];
 extern uint64_t move_table_eofb_index[NEO][NMOVES];
 extern uint64_t sym_table_e_index[NEO*NECE][NSYMS];
 
+extern struct c_index_cclass_sym cclass_table[NCCU * NCO];
+
+
 /* todo: need to gen these before using them. */
 void gen_move_mask();
 void gen_move_table_ccu_index();
@@ -61,6 +60,7 @@ void gen_move_table_coud_index();
 void gen_move_table_ece_index();
 void gen_move_table_eofb_index();
 void gen_sym_table_e_index();
+void gen_c_sym_index_tables();
 
 void movemask_remove_move(int move);
 

@@ -164,43 +164,15 @@ char *move_notation[] = {
   "B", "B2", "B'",
 };
 
-void cube_print_solution_string(int* sol, int* sol_inv){
-      for (int m = 0; m < 20; m++){
-        if (0 <= sol[m] && sol[m] < NMOVES){  
-          printf("%s ", move_notation[sol[m]]);
-        }
-      }
-      bool moves_on_inverse = false;
 
-      for (int m = 0; m < 20; m++){
-        if (0 <= sol_inv[m] && sol_inv[m] < NMOVES){  
-          moves_on_inverse = true;
-          break;
-        }
-      }
-      if (moves_on_inverse){
-        printf("(");
-        for (int m = 0; m < 20; m++){
-          if (0 <= sol_inv[m] && sol_inv[m] < NMOVES){  
-            printf("%s ", move_notation[sol_inv[m]]);
-          }
-        }
-        printf(") = ");
-
-        int i = 0, j = 0;
-        for (int m = 0; m < 20; m++){
-          if (0 <= sol[m] && sol[m] < NMOVES){  
-            printf("%s ", move_notation[sol[m]]);
-            i++;
-          }
-        }
-
-        for (int m = 19; m >= 0; m--){
-          if (0 <= sol_inv[m] && sol_inv[m] < 18){  
-            printf("%s ", move_notation[get_inv_move(sol_inv[m])]);
-            j++;
-          }
-        }
-      }
-      printf("\n");
+void cube_print_solutions(int* solutions, int num_sols){
+ for (int sol = 0; sol < num_sols; sol++){
+  for (int m = 0; m < 20; m++){
+    int move = solutions[20*sol + m];
+    if (0 <=  move &&  move < 18){
+      printf("%s ", move_notation[move]);
+    }
+  }
+  printf("\n");
+ }
 }

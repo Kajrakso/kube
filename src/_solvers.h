@@ -17,8 +17,8 @@ solve_cube(
     cube_t cube,
     int max_depth,
     uint8_t* ptable,
-    struct c_index_cclass_sym* cclass,
-    int max_num_sols
+    int max_num_sols,
+    int* solutions
 );
 
 #endif /* __SOLVERS_H_ */

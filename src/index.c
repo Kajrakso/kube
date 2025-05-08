@@ -11,7 +11,6 @@ cube_to_ccu_index(cube_t* cube){
     ];
 }
 
-
 /* 0, .., 495 - 1 = comb(12, 4) - 1 */
 uint64_t
 cube_to_ece_index(cube_t* cube){
@@ -65,7 +64,6 @@ cube_to_coud_index(cube_t* cube){
     return orien;
 }
 
-
 inline uint64_t
 ccu_coud_to_c_index(uint64_t ccu, uint64_t coud){
   return ccu + NCCU*(coud);
@@ -76,12 +74,10 @@ ece_eofb_to_e_index(uint64_t ece, uint64_t eofb){
   return ece + NECE*(eofb);
 }
 
-
 uint64_t
 cclass_i_e_to_H_index(uint64_t cclass_i, uint64_t e_i){
   return cclass_i + NCCLASS * e_i;
 }
-
 
 uint64_t
 cube_to_H_index(cube_t* cube, struct c_index_cclass_sym* cclass){
@@ -92,7 +88,11 @@ cube_to_H_index(cube_t* cube, struct c_index_cclass_sym* cclass){
   return cclass_i_e_to_H_index(c.cclass_i, e_i);
 }
 
-//todo: remove?
+/*
+  TODO: remove?
+  TODO: rewrite/refactor/delete!
+  TODO: need testing. well, all of these functions need testing.
+*/
 cube_t
 ccu_index_to_cube(uint64_t ccu_i){
   cube_t cube = cube_create_new_cube();
@@ -140,7 +140,8 @@ ccu_index_to_cube(uint64_t ccu_i){
   return cube;
 }
 
-cube_t coud_index_to_cube(uint64_t coud_i){
+cube_t
+coud_index_to_cube(uint64_t coud_i){
   cube_t cube = cube_create_new_cube();
 
   int c_i, co, co_sum = 0, pow = 1;
@@ -162,7 +163,8 @@ cube_t coud_index_to_cube(uint64_t coud_i){
   return cube;
 }
 
-cube_t ece_index_to_cube(uint64_t ece_i){
+cube_t
+ece_index_to_cube(uint64_t ece_i){
   cube_t cube = cube_create_new_cube();
 
   int m = -1;
@@ -205,8 +207,8 @@ cube_t ece_index_to_cube(uint64_t ece_i){
   return cube;
 }
 
-// todo: remove?
-cube_t eofb_index_to_cube(uint64_t eofb_i){
+cube_t
+eofb_index_to_cube(uint64_t eofb_i){
   cube_t cube = cube_create_new_cube();
 
   // set eo
@@ -228,7 +230,6 @@ cube_t eofb_index_to_cube(uint64_t eofb_i){
   return cube;
 }
 
-// need testing. well, all of these functions need testing.
 cube_t
 c_index_to_cube(uint64_t c_i){
   cube_t cube1 = ccu_index_to_cube(c_i % NCCU); 
@@ -237,7 +238,6 @@ c_index_to_cube(uint64_t c_i){
   return cube_operation_compose(cube1, cube2);
 }
 
-// need testing. well, all of these functions need testing.
 cube_t
 e_index_to_cube(uint64_t e_i){
   cube_t cube1 = ece_index_to_cube(e_i % NECE); 
@@ -246,7 +246,6 @@ e_index_to_cube(uint64_t e_i){
   return cube_operation_compose(cube1, cube2);
 }
 
-// TODO: rewrite/refactor/delete!
 cube_t
 H_index_to_cube(uint64_t H_index, struct c_index_cclass_sym* cclass){
 
@@ -279,110 +278,3 @@ H_index_to_cube(uint64_t H_index, struct c_index_cclass_sym* cclass){
 
   return c;
 }
-
-/* gen */
-
-/* temp! */
-
-static int UDsyms[] = {
-  0, 1, 2, 3, 16, 17, 18, 19,     // no inversion
-  24, 25, 26, 27, 40, 41, 42, 43  // inversion
-};
-
-// todo: ugly. need to rewrite
-void
-gen_c_sym_index_tables(){
-  cube_t c1, c2;
-  int sym, t;
-  uint64_t best, idx;
-
-  struct c_index_cclass_sym* cclass_table
-    = malloc(sizeof(struct c_index_cclass_sym) * NCCU * NCO);
-
-  fprintf(stderr, "initializing cclass_table with default values\n");
-  for (uint64_t c_index = 0; c_index < NCCU * NCO; c_index++){
-    cclass_table[c_index] = (struct c_index_cclass_sym){-1, -1, -1};
-  }
-
-  fprintf(stderr, "start to fill cclass_table with actual values\n");
-  int cclass_num = -1;
-  for (uint64_t c_index = 0; c_index < NCCU * NCO; c_index++){
-    c1 = c_index_to_cube(c_index);
-    sym = 0;
-    best = c_index;
-    for (int i = 1; i < 16; i++){
-      t = UDsyms[i];
-      c2 = cube_operation_sym_conjugate(c1, t);
-      idx = cube_to_c_index(&c2);   //  todo: look into type
-      if (idx < best){
-        best = idx;
-        sym = t;
-      }
-    }
-    if (cclass_table[best].cclass == -1){
-      cclass_num++; 
-
-      cclass_table[c_index] = (struct c_index_cclass_sym){
-        .cclass_i = cclass_num,
-        .cclass = best,
-        .sym = sym
-      };
-    } else {
-      cclass_table[c_index] = (struct c_index_cclass_sym){
-        .cclass_i = cclass_table[best].cclass_i,
-        .cclass = best,
-        .sym = sym
-      };
-    }
-  }
-
-  save_cclasstable(
-    "data/cclass.dat",
-    cclass_table,
-    sizeof(struct c_index_cclass_sym) * NCCU * NCO
-  );
-
-  free(cclass_table);
-}
-
-// temp!
-
-bool load_cclasstable(char* filename, struct c_index_cclass_sym* cclass_table, size_t table_size){
-
-  FILE *file = fopen(filename, "rb");
-  if (!file){
-    fprintf(stderr, "Could not open file\n");
-    return false;
-  };
-  
-  fprintf(stderr, "loading cclass_table from %s\n", filename);
-  if (fread(cclass_table, table_size, 1, file) != 1) {
-    fprintf(stderr, "Could not read from file %s\n", filename);
-    fclose(file);
-    return false;
-  }
-  
-  fclose(file);
-  return true;
-}
-
-bool save_cclasstable(char* filename, struct c_index_cclass_sym * cclass_table, size_t table_size){
-
-  fprintf(stderr, "writing cclass_table to disk. file: %s.\n", filename);
-
-  FILE *file = fopen(filename, "wb");
-  if (!file) {
-    fprintf(stderr, "Was not able to open file %s\n", filename);
-    return false;
-  }
-
-  // Save the array
-  if (fwrite(cclass_table, table_size, 1, file) != 1){
-    fclose(file);
-    return false;
-  }
-
-  fclose(file);
-  return true;
-}
-

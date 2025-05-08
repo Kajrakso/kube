@@ -64,20 +64,13 @@ DLS_H(
 
 void
 gen_ptable_H(){
-  // todo: how to handle these?
   cube_t cube = cube_create_new_cube();
+
+  // todo: how to handle these?
   cube_tables_generate();
   precompute_combinatorials();
 
-  const uint64_t
-  size_cclass = sizeof(struct c_index_cclass_sym) * NCCU * NCO;
-  const uint64_t
-  size_ptable_h = sizeof(uint8_t) * SIZE_PTABLE_H;
-
-  struct c_index_cclass_sym* cclass = malloc(size_cclass);
-
-  fprintf(stderr, "Loading cclass table\n");
-  load_cclasstable("data/cclass.dat", cclass, size_cclass);
+  const uint64_t size_ptable_h = sizeof(uint8_t) * SIZE_PTABLE_H;
 
   fprintf(stderr, "Generating move tables\n");
   fprintf(stderr, "gen_move_table_ece_index\n"); gen_move_table_ece_index();
@@ -85,6 +78,7 @@ gen_ptable_H(){
   fprintf(stderr, "gen_move_table_eofb_index\n"); gen_move_table_eofb_index();
   fprintf(stderr, "gen_move_table_ccu_index\n"); gen_move_table_ccu_index();
   fprintf(stderr, "gen_sym_table_e_index\n"); gen_sym_table_e_index();
+  fprintf(stderr, "gen_c_sym_index_tables\n"); gen_c_sym_index_tables();
 
   fprintf(stderr, "Initializing ptable for group H\n");
   uint8_t* ptable_H = malloc(size_ptable_h);
@@ -100,14 +94,14 @@ gen_ptable_H(){
     ptable_set_val(i, 15, ptable_H);
   }
   
-  uint64_t p = cube_to_H_index(&cube, cclass);
+  uint64_t p = cube_to_H_index(&cube, cclass_table);
   ptable_set_val(p, 0, ptable_H);
 
   /* TODO: improve table gen!
    * https://github.com/sebastianotronto/h48/blob/master/doc/h48.md#4-bits-tables-for-h0-and-h11 */
   for (int depth = 0; depth < 10; depth++){
     fprintf(stderr, "Searching at depth %i\n", depth);
-    DLS_H(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_H, cclass);
+    DLS_H(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_H, cclass_table);
   }
 
   // we fill a cclass -> cindex_rep table here. TODO: reconsider this.
@@ -115,8 +109,8 @@ gen_ptable_H(){
   uint64_t cclass_index_cindex_rep[NCCLASS];
   for (uint64_t k = 0; k < NCCLASS; k++){
     for (uint64_t m = 0; m < NCCU * NCO; m++){
-      if (cclass[m].cclass_i == k){
-        cclass_index_cindex_rep[k] = cclass[m].cclass; 
+      if (cclass_table[m].cclass_i == k){
+        cclass_index_cindex_rep[k] = cclass_table[m].cclass; 
         break;
       }
     }
@@ -148,7 +142,7 @@ gen_ptable_H(){
           uint64_t eofb2 = move_table_eofb_index[eofb][m];
 
           struct c_index_cclass_sym c = 
-            cclass[ccu_coud_to_c_index(ccu2, coud2)];
+            cclass_table[ccu_coud_to_c_index(ccu2, coud2)];
 
           uint64_t e2 = ece_eofb_to_e_index(ece2, eofb2);
 
@@ -175,7 +169,6 @@ gen_ptable_H(){
   save_ptable("data/H.dat", ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
 
   free(ptable_H);
-  free(cclass);
 }
 
 void check_Hdat(){

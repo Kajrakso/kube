@@ -5,7 +5,7 @@ cdef extern from "libcube.h":
     cube_t cube_create_new_cube()
     
     void cube_move_apply_move_string(cube_t* cube, const char* moves)
-    bint cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves, int num_banned_moves)
+    bint cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int* banned_moves, int num_banned_moves)
 
     void cube_print_cube(cube_t* cube)
 

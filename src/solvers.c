@@ -13,10 +13,12 @@ struct stats {
   unsigned int no_inverse_computations;
   int no_equal_pvals_normal;
   int no_equal_pvals_inverse;
+
+  int* solutions;
 };
 
 void
-init_stats(struct stats* stats){
+init_stats(struct stats* stats, int max_num_sols){
   stats->depth = 0;
   stats->no_nodes_visited = 0;
   stats->no_nodes_pruned = 0; 
@@ -35,6 +37,12 @@ init_stats(struct stats* stats){
   for (int i = 0; i < 20; i++){
     stats->solution_inv[i] = -1;
   }
+
+  stats->solutions = malloc(sizeof(int) * 20 * max_num_sols);
+  for (int i = 0; i < 20 * max_num_sols; i++){
+    stats->solutions[i] = -1;
+  }
+
 }
 
 static void
@@ -80,7 +88,6 @@ static bool
 TreeSearch(
     cube_t* cube,
     uint8_t* ptable,
-    struct c_index_cclass_sym* cclass,
     int remaining_moves,
     struct stats* stats,
     int prev_move,
@@ -93,23 +100,33 @@ TreeSearch(
 
   if (remaining_moves == 0){
     if (cube_state_is_solved(cube)){
+      int i = 0;
+      for (int m = 0; m < 20; m++){
+        if (0 <= stats->solution[m] && stats->solution[m] < NMOVES){  
+          stats->solutions[stats->num_sol_found * 20 + i++] = stats->solution[m];
+        }
+      }
+      for (int m = 19; m >= 0; m--){
+        if (0 <= stats->solution_inv[m] && stats->solution_inv[m] < 18){  
+          stats->solutions[stats->num_sol_found * 20 + i++] = get_inv_move(stats->solution_inv[m]);
+        }
+      }
       stats->num_sol_found++;
-      cube_print_solution_string(stats->solution, stats->solution_inv);
       return stats->num_sol_found == max_num_sols;
     } else {
       return false;
     }
   }
 
-  uint64_t p1 = cube_to_H_index(cube, cclass);
+  uint64_t p1 = cube_to_H_index(cube, cclass_table);
   const uint8_t pval_UD = ptable_read_val(p1, ptable);
 
   cube_t cube_z_rot = cube_operation_sym_conjugate(*cube, 7);
-  uint64_t p2 = cube_to_H_index(&cube_z_rot, cclass);
+  uint64_t p2 = cube_to_H_index(&cube_z_rot, cclass_table);
   const uint8_t pval_LR = ptable_read_val(p2, ptable);
 
   cube_t cube_x_rot = cube_operation_sym_conjugate(*cube, 9);  
-  uint64_t p3 = cube_to_H_index(&cube_x_rot, cclass);
+  uint64_t p3 = cube_to_H_index(&cube_x_rot, cclass_table);
   const uint8_t pval_FB = ptable_read_val(p3, ptable);
 
   if (prune(pval_UD, pval_LR, pval_FB, remaining_moves)) {
@@ -121,15 +138,15 @@ TreeSearch(
   cube_t inv = cube_operation_inverse(*cube);
   stats->no_inverse_computations++;
 
-  uint64_t p1_inv = cube_to_H_index(&inv, cclass);
+  uint64_t p1_inv = cube_to_H_index(&inv, cclass_table);
   const uint8_t pval_UD_inv = ptable_read_val(p1_inv, ptable);
 
   cube_t cube_z_rot_inv = cube_operation_sym_conjugate(inv, 7);
-  uint64_t p2_inv = cube_to_H_index(&cube_z_rot_inv, cclass);
+  uint64_t p2_inv = cube_to_H_index(&cube_z_rot_inv, cclass_table);
   const uint8_t pval_LR_inv = ptable_read_val(p2_inv, ptable);
 
   cube_t cube_x_rot_inv = cube_operation_sym_conjugate(inv, 9);  
-  uint64_t p3_inv = cube_to_H_index(&cube_x_rot_inv, cclass);
+  uint64_t p3_inv = cube_to_H_index(&cube_x_rot_inv, cclass_table);
   const uint8_t pval_FB_inv = ptable_read_val(p3_inv, ptable);
 
   if (prune(pval_UD_inv, pval_LR_inv, pval_FB_inv, remaining_moves)){
@@ -180,7 +197,6 @@ TreeSearch(
       bool found = TreeSearch(
           cube,
           ptable,
-          cclass,
           remaining_moves - 1,
           stats,
           !is_inv ? move : prev_move,       // prev_move on normal
@@ -207,21 +223,18 @@ IDA(
     cube_t cube,
     int MAX_DEPTH,
     uint8_t* ptable,
-    struct c_index_cclass_sym* cclass,
     struct stats* stats,
     int max_num_sols,
     bool niss
 ){
   bool stop_search = false;
-  init_stats(stats);
   for (int depth = 0; depth <= MAX_DEPTH; depth++){
     stats->depth = depth;
-    printf("Searching depth %i\n", depth);
+    fprintf(stderr, "Searching depth %i\n", depth);
 
     stop_search = TreeSearch(
         &cube,
         ptable,
-        cclass,
         depth,
         stats,
         18, 18,   // NULLMOVE. TODO: formalise 
@@ -240,19 +253,18 @@ solve_cube(
     cube_t cube,
     int max_depth,
     uint8_t* ptable,
-    struct c_index_cclass_sym* cclass,
-    int max_num_sols
+    int max_num_sols,
+    int* solutions
 ){
   // we collect some stats along the way.
   struct stats* stats = malloc(sizeof(struct stats));
-  init_stats(stats);
+  init_stats(stats, max_num_sols);
 
   // actually search.
   IDA(
       cube,
       max_depth,
       ptable,
-      cclass,
       stats,
       max_num_sols,
       false
@@ -260,8 +272,15 @@ solve_cube(
 
   print_stats(stats);
 
+  memcpy(
+    solutions,
+    stats->solutions,
+    sizeof(int) * 20 * max_num_sols
+  );
+
   free(stats->solution);
   free(stats->solution_inv);
+  free(stats->solutions);
   free(stats);
 }
 
@@ -269,7 +288,7 @@ solve_cube(
 /* public */
 
 bool
-cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves, int num_banned_moves){
+cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int* banned_moves, int num_banned_moves){
   fprintf(stderr, "This solver is WIP\n");
   // cube_print_cube(&cube);
 
@@ -285,17 +304,10 @@ cube_solvers_solve_cube(cube_t cube, int number_of_solutions, int* banned_moves,
     return false;
   }
 
-  struct c_index_cclass_sym* cclass = (struct c_index_cclass_sym*)get_cclass_table();
-  if (!cclass) {
-    fprintf(stderr, "Could not load cclass table. Have you initialized it?\n");
-    return false;
-  }
-
   // set a max limit.
   int max_depth = 18;
   fprintf(stderr, "\nMax depth set to: %i\n", max_depth);
 
-  solve_cube(cube, max_depth, ptable, cclass, number_of_solutions);
-
+  solve_cube(cube, max_depth, ptable, number_of_solutions, solutions);
   return true;
 }

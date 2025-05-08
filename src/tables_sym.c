@@ -7,6 +7,8 @@ uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
 uint64_t sym_table_e_index[NECE*NEO][NSYMS];
 
+struct c_index_cclass_sym cclass_table[NCCU * NCO];
+
 // todo: temp! where to place? how to handle?
 /* these are the 16 symmetries that keep the UD-axis fixed in place. */
 static int UDsyms[] = {
@@ -32,7 +34,8 @@ void initialize_sym_tables(){
     todo: explain how we go from integer to element of O_h
     20 for-loops. woho!
 */
-void gen_sym_tables(){
+void
+gen_sym_tables(){
     /* The idea is that we place
     each possible cubie somewhere
     on the cube and then act on 
@@ -112,7 +115,6 @@ void gen_sym_tables(){
     }
 }
 
-
 void
 gen_sym_table_e_index(){
   for (int c1 = 0; c1 < 9; c1++){
@@ -190,6 +192,52 @@ gen_sym_table_e_index(){
           }
         }
       }
+    }
+  }
+}
+
+// todo: ugly. need to rewrite
+/* generates a table that maps a c-index to a pair (cclass_i, cclass, sym) */
+void
+gen_c_sym_index_tables(){
+  cube_t c1, c2;
+  int sym, t;
+  uint64_t best, idx;
+
+  // fprintf(stderr, "initializing cclass_table with default values\n");
+  for (uint64_t c_index = 0; c_index < NCCU * NCO; c_index++){
+    cclass_table[c_index] = (struct c_index_cclass_sym){-1, -1, -1};
+  }
+
+  // fprintf(stderr, "start to fill cclass_table with actual values\n");
+  int cclass_num = -1;
+  for (uint64_t c_index = 0; c_index < NCCU * NCO; c_index++){
+    c1 = c_index_to_cube(c_index);
+    sym = 0;
+    best = c_index;
+    for (int i = 1; i < 16; i++){
+      t = UDsyms[i];
+      c2 = cube_operation_sym_conjugate(c1, t);
+      idx = cube_to_c_index(&c2);   //  todo: look into type
+      if (idx < best){
+        best = idx;
+        sym = t;
+      }
+    }
+    if (cclass_table[best].cclass == -1){
+      cclass_num++; 
+
+      cclass_table[c_index] = (struct c_index_cclass_sym){
+        .cclass_i = cclass_num,
+        .cclass = best,
+        .sym = sym
+      };
+    } else {
+      cclass_table[c_index] = (struct c_index_cclass_sym){
+        .cclass_i = cclass_table[best].cclass_i,
+        .cclass = best,
+        .sym = sym
+      };
     }
   }
 }

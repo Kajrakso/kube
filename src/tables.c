@@ -5,7 +5,6 @@
 
 // The table pointers is only visible in this file.
 static void* ptable_H = NULL;
-static void* cclass_table = NULL;
 
 void* load_table_from_file(const char* path, const size_t table_size) {
     FILE* fp = fopen(path, "rb");
@@ -29,31 +28,13 @@ int init_ptable_H(const char* path) {
     return 0;
 }
 
-int init_cclass_table(const char* path) {
-  size_t cclass_table_size = sizeof(struct c_index_cclass_sym) * NCCU * NCO;
-    if (cclass_table == NULL) {
-        cclass_table = load_table_from_file(path, cclass_table_size);
-        if (!cclass_table) return -1;
-    }
-    return 0;
-}
-
 void* get_ptable_H() {
     return ptable_H;
-}
-
-void* get_cclass_table() {
-    return cclass_table;
 }
 
 void free_ptable_H() {
     free(ptable_H);
     ptable_H = NULL;
-}
-
-void free_cclass_table() {
-    free(cclass_table);
-    cclass_table = NULL;
 }
 
 void cube_tables_generate(){
@@ -70,6 +51,9 @@ void cube_tables_generate(){
 
     // temp: combinatorials
     precompute_combinatorials();
+
+    // temp: gen c_sym_cclass
+    gen_c_sym_index_tables();
 }
 
 
@@ -78,17 +62,12 @@ int cube_tables_load(){
     fprintf(stderr, "Failed to load pruning table H.\n");
     return 1;
   }
-  if (init_cclass_table("data/cclass.dat") != 0) {
-    fprintf(stderr, "Failed to load cclass table.\n");
-    return 1;
-  }
   return 0;
 }
 
 
 void cube_tables_free(){
   free_ptable_H();
-  free_cclass_table();
 }
 
 // TEMP: load pruning table

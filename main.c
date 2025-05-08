@@ -22,12 +22,17 @@ int main(){
   int banned[] = {B1, L1, D1};    // RUF-gen
 
   // set number of solutions you want
-  int num_sols = 10;
+  int num_sols = 1;
 
-  bool solved = cube_solvers_solve_cube(cube, num_sols, banned, num_banned);
+  // prepare array  for solutions
+  int* solutions = malloc(sizeof(int) * 20 *  num_sols);
+
+  bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, banned, num_banned);
 
   if (!solved) printf("Was not able to solve the cube :(\n");
+  else cube_print_solutions(solutions, num_sols);
 
+  free(solutions);
   cube_tables_free();
   return 0;
 }
