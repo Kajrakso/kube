@@ -6,6 +6,7 @@
 
 #define NSYMS 48
 #define NMOVES 18
+#define NMOVES_EXTENDED 54
 #define NAXES 3
 #define NEDGECUBIES 128  // edges: 3 bits for eo, 4 bits for ep -> 2**7
 #define NCORNERCUBIES 512  // corners: 6 bits for co, 3 bits for cp -> 2**9

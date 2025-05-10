@@ -8,11 +8,12 @@
 
 // suites
 
-TestSuite(cube_moves);
+TestSuite(standard_cube_moves);
+TestSuite(extended_cube_moves);
 
 // tests
 
-Test(cube_moves, single_U_move){
+Test(standard_cube_moves, single_U_move){
   cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
@@ -36,7 +37,7 @@ Test(cube_moves, single_U_move){
   cr_assert(arr_eq(cube.corners, corners_after_U, NCORNERS));
 }
 
-Test(cube_moves, single_D_move){
+Test(standard_cube_moves, single_D_move){
   cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
@@ -60,7 +61,7 @@ Test(cube_moves, single_D_move){
   cr_assert(arr_eq(cube.corners, corners_after_D, NCORNERS));
 }
 
-Test(cube_moves, single_R_move){
+Test(standard_cube_moves, single_R_move){
   cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
@@ -84,7 +85,7 @@ Test(cube_moves, single_R_move){
   cr_assert(arr_eq(cube.corners, corners_after_R, NCORNERS));
 }
 
-Test(cube_moves, single_L_move){
+Test(standard_cube_moves, single_L_move){
   cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
@@ -108,7 +109,7 @@ Test(cube_moves, single_L_move){
   cr_assert(arr_eq(cube.corners, corners_after_L, NCORNERS));
 }
 
-Test(cube_moves, single_F_move){
+Test(standard_cube_moves, single_F_move){
   cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
@@ -132,7 +133,7 @@ Test(cube_moves, single_F_move){
   cr_assert(arr_eq(cube.corners, corners_after_F, NCORNERS));
 }
 
-Test(cube_moves, single_B_move){
+Test(standard_cube_moves, single_B_move){
   cube_tables_generate();
 
   cube_t cube = cube_create_new_cube();
