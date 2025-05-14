@@ -1,11 +1,11 @@
-#include "_tables.h"
+#include "_index.h"
 
 // todo: rethink how this should be done. works for now.
 
 uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
 uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
-uint64_t sym_table_e_index[NECE*NEO][NSYMS];
+// uint64_t sym_table_e_index[NECE*NEO][NSYMS];
 
 struct c_index_cclass_sym cclass_table[NCCU * NCO];
 
@@ -117,6 +117,9 @@ gen_sym_tables(){
 
 void
 gen_sym_table_e_index(){
+  size_t table_size = sizeof(uint64_t) * NECE*NEO*NSYMS;
+  fprintf(stderr, "Initializing table for sym_table_e_index\n");
+  uint64_t* sym_table_e_index = malloc(table_size);
   for (int c1 = 0; c1 < 9; c1++){
     for (int c2 = c1 + 1; c2 < 10; c2++){
       for (int c3 = c2 + 1; c3 < 11; c3++){
@@ -177,7 +180,7 @@ gen_sym_table_e_index(){
                                   uint64_t ece_ii = cube_to_ece_index(&cube);
                                   uint64_t eofb_ii = cube_to_eofb_index(&cube);
                                   
-                                  sym_table_e_index[ece_eofb_to_e_index(ece_i, eofb_i)][t] = ece_eofb_to_e_index(ece_ii, eofb_ii);
+                                  sym_table_e_index[ece_eofb_to_e_index(ece_i, eofb_i)*NSYMS + t] = ece_eofb_to_e_index(ece_ii, eofb_ii);
                                 }
                               }
                             }
@@ -194,6 +197,8 @@ gen_sym_table_e_index(){
       }
     }
   }
+  save_table_to_file("data/sym_table_e_index.dat", sym_table_e_index, table_size);
+  free(sym_table_e_index);
 }
 
 // todo: ugly. need to rewrite

@@ -9,7 +9,7 @@ int main(){
 
   // Set a scramble sequence.
   char* scr = "F' L2 F D' B' U2 B' U' B2 D"; // LTCT D[G]
-
+  
   // Create a new cube
   cube_t cube = cube_create_new_cube();
 

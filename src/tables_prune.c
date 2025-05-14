@@ -30,7 +30,7 @@ DLS_H(
   int prev_move,
   int num_moves_done,
   uint8_t* ptable,
-  struct c_index_cclass_sym* cclass
+  uint64_t* sym_table_e_index
 ){
     if (remaining_moves == 0) return;
     uint64_t p2, ccu2, coud2, ece2, eofb2, e2, e2_sym;
@@ -45,10 +45,10 @@ DLS_H(
         eofb2 = move_table_eofb_index[eofb][m];
 
         struct c_index_cclass_sym c = 
-          cclass[ccu_coud_to_c_index(ccu2, coud2)];
+          cclass_table[ccu_coud_to_c_index(ccu2, coud2)];
 
         e2 = ece_eofb_to_e_index(ece2, eofb2);
-        e2_sym = sym_table_e_index[e2][c.sym];
+        e2_sym = sym_table_e_index[e2 * NSYMS + c.sym];
 
         p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
 
@@ -58,7 +58,7 @@ DLS_H(
           ptable_set_val(p2, (uint8_t)(num_moves_done + 1), ptable);
         }
 
-        DLS_H(ece2, eofb2, coud2, ccu2, p2, remaining_moves - 1, m, num_moves_done + 1, ptable, cclass);
+        DLS_H(ece2, eofb2, coud2, ccu2, p2, remaining_moves - 1, m, num_moves_done + 1, ptable, sym_table_e_index);
     }
 }
 
@@ -77,8 +77,15 @@ gen_ptable_H(){
   fprintf(stderr, "gen_move_table_coud_index\n"); gen_move_table_coud_index();
   fprintf(stderr, "gen_move_table_eofb_index\n"); gen_move_table_eofb_index();
   fprintf(stderr, "gen_move_table_ccu_index\n"); gen_move_table_ccu_index();
-  fprintf(stderr, "gen_sym_table_e_index\n"); gen_sym_table_e_index();
+  // fprintf(stderr, "gen_sym_table_e_index\n"); gen_sym_table_e_index();
   fprintf(stderr, "gen_c_sym_index_tables\n"); gen_c_sym_index_tables();
+
+  if (!(init_sym_table_e_index("data/sym_table_e_index.dat") == 0)){
+    fprintf(stderr, "gen sym_table_e_index first!\n");
+    return;
+  }
+  uint64_t* sym_table_e_index = get_sym_table_e_index();
+
 
   fprintf(stderr, "Initializing ptable for group H\n");
   uint8_t* ptable_H = malloc(size_ptable_h);
@@ -94,14 +101,14 @@ gen_ptable_H(){
     ptable_set_val(i, 15, ptable_H);
   }
   
-  uint64_t p = cube_to_H_index(&cube, cclass_table);
+  uint64_t p = cube_to_H_index(&cube);
   ptable_set_val(p, 0, ptable_H);
 
   /* TODO: improve table gen!
    * https://github.com/sebastianotronto/h48/blob/master/doc/h48.md#4-bits-tables-for-h0-and-h11 */
   for (int depth = 0; depth < 10; depth++){
     fprintf(stderr, "Searching at depth %i\n", depth);
-    DLS_H(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_H, cclass_table);
+    DLS_H(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_H, sym_table_e_index);
   }
 
   // we fill a cclass -> cindex_rep table here. TODO: reconsider this.
@@ -147,7 +154,7 @@ gen_ptable_H(){
           uint64_t e2 = ece_eofb_to_e_index(ece2, eofb2);
 
           // we need to apply symmetry conj. to the edge index as well.
-          uint64_t e2_sym = sym_table_e_index[e2][c.sym];
+          uint64_t e2_sym = sym_table_e_index[e2*NSYMS + c.sym];
           uint64_t p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
             
           if (ptable_read_val(p2, ptable_H) == k - 1){

@@ -23,11 +23,11 @@ move_notation = [
 
 def solver_env(func):
   
-    def wrapper():
+    def wrapper(*args, **kwargs):
         libcube.cube_tables_generate()
         libcube.cube_tables_load()
 
-        func()
+        func(*args, **kwargs)
 
         libcube.cube_tables_free()
 

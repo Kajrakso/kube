@@ -10,7 +10,7 @@ import libcube
 def alg_genner(scr):
   solutions = libcube.solve(
       scr,
-      number_of_solutions=100
+      number_of_solutions=10
   )
 
   for _solution in solutions:
@@ -18,4 +18,4 @@ def alg_genner(scr):
 
 
 if __name__ == "__main__":
-    alg_genner(scr = "R U2 R' U' R U' R'")
+    alg_genner(scr = "F2 L2 D2 F2 D L2 D' L2 U' F2 R2 F R' B2 D' U L' F L B")

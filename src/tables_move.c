@@ -1,4 +1,4 @@
-#include "_tables.h"
+#include "_index.h"
 
 uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
 uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];

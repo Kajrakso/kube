@@ -4,12 +4,15 @@
 #include "_cube.h"
 #include "_move.h"
 #include "_sym.h"
-#include "_index.h"
+// #include "_index.h"
 #include "utils.h"
 #include "../include/core/move.h"
 #include "../include/core/tables.h"
 #include <stdio.h>
 #include <stdbool.h>
+
+#define SIZEH 10066636800ULL
+#define SIZE_PTABLE_H (5033318400ULL * (sizeof(uint8_t)))
 
 /* moves */
 extern uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
@@ -30,12 +33,23 @@ void gen_move_tables();
 void initialize_sym_tables();
 void gen_sym_tables();
 
+bool save_table_to_file(const char* path, void* table, const size_t table_size);
 
 int init_ptable_H(const char* path);
 void* get_ptable_H();
 void free_ptable_H();
 
+int init_sym_table_e_index(const char* path);
+void* get_sym_table_e_index();
+void free_sym_table_e_index();
+
 //! 19.04.2025: These are for testing!
+
+struct c_index_cclass_sym {
+    uint64_t cclass_i;
+    uint64_t cclass;
+    int sym;
+  };
 
 void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable);
 uint8_t ptable_read_val(uint64_t i, uint8_t* ptable);
@@ -48,8 +62,6 @@ extern uint64_t move_table_ccu_index[NCCU][NMOVES];
 extern uint64_t move_table_coud_index[NCO][NMOVES];
 extern uint64_t move_table_ece_index[NECE][NMOVES];
 extern uint64_t move_table_eofb_index[NEO][NMOVES];
-extern uint64_t sym_table_e_index[NEO*NECE][NSYMS];
-
 extern struct c_index_cclass_sym cclass_table[NCCU * NCO];
 
 

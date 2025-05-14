@@ -80,12 +80,21 @@ cclass_i_e_to_H_index(uint64_t cclass_i, uint64_t e_i){
 }
 
 uint64_t
-cube_to_H_index(cube_t* cube, struct c_index_cclass_sym* cclass){
-  struct c_index_cclass_sym c = cclass[cube_to_c_index(cube)];
-  cube_t c2 = cube_operation_sym_conjugate(*cube, c.sym);
-  uint64_t e_i = (uint64_t)cube_to_e_index(&c2);
+cube_to_H_index(cube_t* cube){
+  // uint64_t c_i = cube_to_c_index(cube);
+  // struct c_index_cclass_sym c = cclass_table[c_i];
+  // cube_t c2 = cube_operation_sym_conjugate(*cube, c.sym);
+  // return cclass_i_e_to_H_index(c.cclass_i, cube_to_e_index(&c2));
+  
+  uint64_t* sym_table_e_index = get_sym_table_e_index();
 
-  return cclass_i_e_to_H_index(c.cclass_i, e_i);
+  uint64_t c_i = cube_to_c_index(cube);
+  uint64_t e_i = cube_to_e_index(cube);
+
+  struct c_index_cclass_sym c = cclass_table[c_i];
+  uint64_t e_i2 = sym_table_e_index[e_i*NSYMS + c.sym];
+
+  return cclass_i_e_to_H_index(c.cclass_i, e_i2);
 }
 
 /*
@@ -247,15 +256,15 @@ e_index_to_cube(uint64_t e_i){
 }
 
 cube_t
-H_index_to_cube(uint64_t H_index, struct c_index_cclass_sym* cclass){
+H_index_to_cube(uint64_t H_index){
 
   fprintf(stderr, "Preparing a cclass -> cindex_rep table. TODO: look into this!\n");
   // we fill a cclass -> cindex_rep table here. TODO: reconsider this.
   uint64_t cclass_index_cindex_rep[NCCLASS];
   for (uint64_t k = 0; k < NCCLASS; k++){
     for (uint64_t m = 0; m < NCCU * NCO; m++){
-      if (cclass[m].cclass_i == k){
-        cclass_index_cindex_rep[k] = cclass[m].cclass; 
+      if (cclass_table[m].cclass_i == k){
+        cclass_index_cindex_rep[k] = cclass_table[m].cclass; 
         break;
       }
     }

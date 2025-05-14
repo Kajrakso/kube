@@ -19,22 +19,7 @@ enum move {
     L1, L2, L3,
     R1, R2, R3,
     F1, F2, F3,
-    B1, B2, B3,
-
-    Uw1, Uw2, Uw3,
-    Dw1, Dw2, Dw3,
-    Lw1, Lw2, Lw3,
-    Rw1, Rw2, Rw3,
-    Fw1, Fw2, Fw3,
-    Bw1, Bw2, Bw3,
-
-    M1, M2, M3,
-    S1, S2, S3,
-    E1, E2, E3,
-
-    x1, x2, x3,
-    y1, y2, y3,
-    z1, z2, z3
+    B1, B2, B3
 };
 
 /* Applies a move to a cube.

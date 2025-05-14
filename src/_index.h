@@ -3,16 +3,12 @@
 
 #include "utils.h"
 #include "_cube.h"
-#include "../include/core/tables.h"
+#include "_tables.h"
 #include "stdio.h"
 
 // testing
 /* TODO: reconsider the way to calculate these indeces. It need to be fast. */
-struct c_index_cclass_sym {
-  uint64_t cclass_i;
-  uint64_t cclass;
-  int sym;
-};
+
 
 extern int ece_combinatorials_lookup[20736];
 extern int ccu_combinatorials_lookup[4096];
@@ -45,12 +41,12 @@ uint64_t
 cube_to_e_index(cube_t* cube);
 
 uint64_t
-cube_to_H_index(cube_t* cube, struct c_index_cclass_sym* cclass);
+cube_to_H_index(cube_t* cube);
 
 /* NOTE: the cube returned is not necessarily a valid cube.
  * Also, these function is not optimized. */
 cube_t
-H_index_to_cube(uint64_t H_index, struct c_index_cclass_sym* cclass);
+H_index_to_cube(uint64_t H_index);
 
 cube_t
 coud_index_to_cube(uint64_t coud_i);

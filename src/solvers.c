@@ -118,15 +118,15 @@ TreeSearch(
     }
   }
 
-  uint64_t p1 = cube_to_H_index(cube, cclass_table);
+  uint64_t p1 = cube_to_H_index(cube);
   const uint8_t pval_UD = ptable_read_val(p1, ptable);
 
   cube_t cube_z_rot = cube_operation_sym_conjugate(*cube, 7);
-  uint64_t p2 = cube_to_H_index(&cube_z_rot, cclass_table);
+  uint64_t p2 = cube_to_H_index(&cube_z_rot);
   const uint8_t pval_LR = ptable_read_val(p2, ptable);
 
   cube_t cube_x_rot = cube_operation_sym_conjugate(*cube, 9);  
-  uint64_t p3 = cube_to_H_index(&cube_x_rot, cclass_table);
+  uint64_t p3 = cube_to_H_index(&cube_x_rot);
   const uint8_t pval_FB = ptable_read_val(p3, ptable);
 
   if (prune(pval_UD, pval_LR, pval_FB, remaining_moves)) {
@@ -138,15 +138,15 @@ TreeSearch(
   cube_t inv = cube_operation_inverse(*cube);
   stats->no_inverse_computations++;
 
-  uint64_t p1_inv = cube_to_H_index(&inv, cclass_table);
+  uint64_t p1_inv = cube_to_H_index(&inv);
   const uint8_t pval_UD_inv = ptable_read_val(p1_inv, ptable);
 
   cube_t cube_z_rot_inv = cube_operation_sym_conjugate(inv, 7);
-  uint64_t p2_inv = cube_to_H_index(&cube_z_rot_inv, cclass_table);
+  uint64_t p2_inv = cube_to_H_index(&cube_z_rot_inv);
   const uint8_t pval_LR_inv = ptable_read_val(p2_inv, ptable);
 
   cube_t cube_x_rot_inv = cube_operation_sym_conjugate(inv, 9);  
-  uint64_t p3_inv = cube_to_H_index(&cube_x_rot_inv, cclass_table);
+  uint64_t p3_inv = cube_to_H_index(&cube_x_rot_inv);
   const uint8_t pval_FB_inv = ptable_read_val(p3_inv, ptable);
 
   if (prune(pval_UD_inv, pval_LR_inv, pval_FB_inv, remaining_moves)){
@@ -267,7 +267,7 @@ solve_cube(
       ptable,
       stats,
       max_num_sols,
-      false
+      true
   );
 
   print_stats(stats);
@@ -301,6 +301,12 @@ cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, in
   uint8_t* ptable = (uint8_t*)get_ptable_H();
   if (!ptable) {
     fprintf(stderr, "Could not load pruning table. Have you initialized it?\n");
+    return false;
+  }
+
+  uint64_t* sym_table_e_index = (uint64_t*)get_sym_table_e_index();
+  if (!sym_table_e_index) {
+    fprintf(stderr, "Could not load sym_table_e_index. Have you initialized it?\n");
     return false;
   }
 
