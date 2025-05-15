@@ -267,7 +267,7 @@ solve_cube(
       ptable,
       stats,
       max_num_sols,
-      true
+      false
   );
 
   print_stats(stats);
