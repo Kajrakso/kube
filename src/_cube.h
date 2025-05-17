@@ -36,19 +36,56 @@ typedef enum axes {
 
 /* helper functions for manipulating and extracting info from the cubies. */
 
-int extract_corner_orien(uint16_t corner, axes a);
-int extract_corner_perm(uint16_t corner);
-int extract_edge_orien(uint16_t edge, axes a);
-int extract_edge_perm(uint16_t edge);
-void update_edge_perm(uint16_t* edge, int ep);
-void update_edge_orien(uint16_t* edge, int eo_fb, int eo_lr, int eo_ud);
-void update_corner_perm(uint16_t* corner, int cp);
-void update_corner_orien(uint16_t* corner, int co_fb, int co_lr, int co_ud);
+static inline int extract_corner_orien(uint16_t corner, axes a){
+  return 3 & (corner >> (3 + 2 * a));
+}
+
+static inline int extract_corner_perm(uint16_t corner){
+  return 7 & corner;
+}
+
+static inline int extract_edge_orien(uint16_t edge, axes a){
+  return 1 & (edge >> (2 - a));
+}
+
+static inline int extract_edge_perm(uint16_t edge){
+  return 15 & (edge >> 3);
+}
+
+static inline void update_edge_perm(uint16_t* edge, int ep){
+  *edge &= 7;
+  *edge |= (ep & 15) << 3; // just to be safe
+}
+
+static inline void update_edge_orien(uint16_t* edge, int eo_fb, int eo_lr, int eo_ud){
+  *edge &= 120; // 0b1111000
+  *edge |= (eo_fb << 2) | (eo_lr << 1) | eo_ud;
+}
+
+static inline void update_corner_perm(uint16_t* corner, int cp){
+  *corner &= 504;      // 0b111111000
+  *corner |= (cp & 7); // just to be safe
+}
+
+static inline void update_corner_orien(uint16_t* corner, int co_fb, int co_lr, int co_ud){
+  *corner &= 7;
+  *corner |= (co_ud << 7) | (co_lr << 5) | (co_fb << 3);
+}
 
 /* helper functions for building cubies. */
+static inline uint16_t build_corner(int cp, int co_fb, int co_lr, int co_ud){
+  uint16_t c = 0;
+  update_corner_orien(&c, co_fb, co_lr, co_ud);
+  update_corner_perm(&c, cp);
+  return c;
+}
 
-uint16_t build_corner(int cp, int co_fb, int co_lr, int co_ud);
-uint16_t build_edge(int ep, int eo_fb, int eo_lr, int eo_ud);
+static inline uint16_t build_edge(int ep, int eo_fb, int eo_lr, int eo_ud){
+  uint16_t e = 0;
+  update_edge_orien(&e, eo_fb, eo_lr, eo_ud);
+  update_edge_perm(&e, ep);
+  return e;
+}
 
 /* Given a cube with valid permutations and valid eo and co along FB.
 These functions will set the correct orientation bits for the other axes. */
@@ -62,5 +99,10 @@ void swap_cubes(cube_t* c, cube_t* t);
 /* find the edge/corner that occupies a given position */
 int which_corner_at_pos(int pos, cube_t* cube);
 int which_edge_at_pos(int pos, cube_t* cube);
+
+void
+build_pos_to_edge(const cube_t* cube, int pos_to_edge[NEDGES]);
+void
+build_pos_to_corner(const cube_t* cube, int pos_to_corner[NCORNERS]);
 
 #endif /* __CUBE_H_ */

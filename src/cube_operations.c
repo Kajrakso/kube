@@ -11,25 +11,33 @@ cube_t cube_operation_compose(cube_t cube1, cube_t cube2){
     cube_t result;
     
     for (int i = 0; i < NEDGES; i++){
-        int i1 = extract_edge_perm(cube1.edges[i]);
-        int i2 = extract_edge_perm(cube2.edges[i1]);
+      int e1 = cube1.edges[i];
+      int i1 = extract_edge_perm(e1);
+      
+      int e2 = cube2.edges[i1];
+      int i2 = extract_edge_perm(e2);
 
-        int eo_fb = extract_edge_orien(cube1.edges[i], FB) ^ extract_edge_orien(cube2.edges[i1], FB);
-        int eo_lr = extract_edge_orien(cube1.edges[i], LR) ^ extract_edge_orien(cube2.edges[i1], LR);
-        int eo_ud = extract_edge_orien(cube1.edges[i], UD) ^ extract_edge_orien(cube2.edges[i1], UD);
-
-        result.edges[i] = build_edge(i2, eo_fb, eo_lr, eo_ud);
+      result.edges[i] = build_edge(
+        i2,
+        extract_edge_orien(e1, FB) ^ extract_edge_orien(e2, FB),
+        extract_edge_orien(e1, LR) ^ extract_edge_orien(e2, LR),
+        extract_edge_orien(e1, UD) ^ extract_edge_orien(e2, UD)
+      );
     }
 
     for (int i = 0; i < NCORNERS; i++){
-        int i1 = extract_corner_perm(cube1.corners[i]);
-        int i2 = extract_corner_perm(cube2.corners[i1]);
+      int c1 = cube1.corners[i];
+      int i1 = extract_corner_perm(c1);
 
-        int co_fb = (extract_corner_orien(cube1.corners[i], FB) + extract_corner_orien(cube2.corners[i1], FB)) % 3;
-        int co_lr = (extract_corner_orien(cube1.corners[i], LR) + extract_corner_orien(cube2.corners[i1], LR)) % 3;
-        int co_ud = (extract_corner_orien(cube1.corners[i], UD) + extract_corner_orien(cube2.corners[i1], UD)) % 3;
+      int c2 = cube2.corners[i1];
+      int i2 = extract_corner_perm(c2);
 
-        result.corners[i] = build_corner(i2, co_fb, co_lr, co_ud);
+      result.corners[i] = build_corner(
+        i2,
+        (extract_corner_orien(c1, FB) + extract_corner_orien(c2, FB)) % 3,
+        (extract_corner_orien(c1, LR) + extract_corner_orien(c2, LR)) % 3,
+        (extract_corner_orien(c1, UD) + extract_corner_orien(c2, UD)) % 3
+      );
     }
 
     return result;

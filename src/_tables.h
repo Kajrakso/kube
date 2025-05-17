@@ -51,8 +51,22 @@ struct c_index_cclass_sym {
     int sym;
   };
 
-void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable);
-uint8_t ptable_read_val(uint64_t i, uint8_t* ptable);
+static inline 
+void
+ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable){
+  if (i % 2 == 0){
+    ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
+  } else {
+    ptable[i >> 1] = (ptable[i >> 1] & 0x0F) | ((p & 0x0F) << 4);
+  }
+}
+
+static inline
+uint8_t
+ptable_read_val(uint64_t i, uint8_t* ptable){
+  uint8_t val = ptable[i >> 1];
+  return (val >> ((i & 1) * 4)) & 0x0F;
+}
 
 /* a move mask prevents us from checking unnecessary move sequences.
 "R R" is the same as "R2". For two subsequent moves on the same axes

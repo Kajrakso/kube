@@ -2,24 +2,6 @@
 #include "_index.h"
 
 void
-ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable){
-  if (i % 2 == 0){
-    ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
-  } else {
-    ptable[i >> 1] = (ptable[i >> 1] & 0x0F) | ((p & 0x0F) << 4);
-  }
-}
-
-uint8_t
-ptable_read_val(uint64_t i, uint8_t* ptable){
-  if (i % 2 == 0) {
-    return ptable[i >> 1] & 0x0F;
-  } else {
-    return (ptable[i >> 1] >> 4) & 0x0F;
-  }
-}
-
-void
 DLS_H(
   uint64_t ece,
   uint64_t eofb,

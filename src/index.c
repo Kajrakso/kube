@@ -40,28 +40,37 @@ cube_to_e_index(cube_t* cube){
   );
 }
 
+
 /* 0, ..., 2**11 - 1 */
 uint64_t
 cube_to_eofb_index(cube_t* cube){
-    uint64_t orien = 0;
-    unsigned int pow = 1;
-    for (int i = 0; i < NEDGES - 1; i++){
-        orien += pow * extract_edge_orien(cube->edges[which_edge_at_pos(i, cube)], FB);
-        pow *= 2;
-    } 
-    return orien;
+  // build a "reverse" lookup
+  int pos_to_edge[NEDGES];
+  build_pos_to_edge(cube, pos_to_edge);
+
+  uint64_t orien = 0;
+  uint64_t pow = 1ULL;
+  for (int i = 0; i < NEDGES - 1; i++){
+      orien += pow * extract_edge_orien(cube->edges[pos_to_edge[i]], FB);
+      pow <<= 1;
+  } 
+  return orien;
 }
 
 /* 0, ..., 3**7 - 1 */
 uint64_t
 cube_to_coud_index(cube_t* cube){
-    uint64_t orien = 0;
-    unsigned int pow = 1;
-    for (int i = 0; i < NCORNERS - 1; i++){
-        orien += pow * extract_corner_orien(cube->corners[which_corner_at_pos(i, cube)], UD);
-        pow *= 3;
-    } 
-    return orien;
+  // build a "reverse" lookup
+  int pos_to_corner[NCORNERS];
+  build_pos_to_corner(cube, pos_to_corner);
+
+  uint64_t orien = 0;
+  unsigned int pow = 1;
+  for (int i = 0; i < NCORNERS - 1; i++){
+      orien += pow * extract_corner_orien(cube->corners[pos_to_corner[i]], UD);
+      pow *= 3;
+  } 
+  return orien;
 }
 
 inline uint64_t
@@ -81,11 +90,6 @@ cclass_i_e_to_H_index(uint64_t cclass_i, uint64_t e_i){
 
 uint64_t
 cube_to_H_index(cube_t* cube){
-  // uint64_t c_i = cube_to_c_index(cube);
-  // struct c_index_cclass_sym c = cclass_table[c_i];
-  // cube_t c2 = cube_operation_sym_conjugate(*cube, c.sym);
-  // return cclass_i_e_to_H_index(c.cclass_i, cube_to_e_index(&c2));
-  
   uint64_t* sym_table_e_index = get_sym_table_e_index();
 
   uint64_t c_i = cube_to_c_index(cube);

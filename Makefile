@@ -1,7 +1,7 @@
 # Compiler and standard flags
 CC = cc
 CFLAGS_COMMON = -std=c99 -fPIC -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
-CFLAGS_OPTIMIZED = -O3
+CFLAGS_OPTIMIZED = -O3 -flto
 # CFLAGS_DEBUG = -g3 -fsanitize=address -fsanitize=undefined -fsanitize=leak -fstack-protector-all -Wno-unused-function
 CFLAGS_DEBUG = -g3 -Wno-unused-function
 CFLAGS_PYTHON = -Iinclude 

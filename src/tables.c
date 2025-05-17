@@ -61,16 +61,10 @@ bool save_table_to_file(const char* path, void* table, const size_t table_size){
 
 
 int init_ptable_H(const char* path) {
-  // size_t ptable_H_size = sizeof(uint8_t) * SIZE_PTABLE_H;
-  //   if (ptable_H == NULL) {
-  //       ptable_H = load_table_from_file(path, ptable_H_size);
-  //       if (!ptable_H) return -1;
-  //   }
-  //   return 0;
   size_t table_size = sizeof(uint8_t) * SIZE_PTABLE_H;
 
   size_t out_size;
-  if (sym_table_e_index == NULL) {
+  if (ptable_H == NULL) {
     void* table_data = mmap_table(path, &out_size);
     if (out_size != table_size) {
       munmap(table_data, table_size);
@@ -85,9 +79,16 @@ int init_ptable_H(const char* path) {
 
 int init_sym_table_e_index(const char* path) {
   size_t table_size = sizeof(uint64_t) * NECE*NEO*NSYMS;
+
+  size_t out_size;
   if (sym_table_e_index == NULL) {
-    sym_table_e_index = load_table_from_file(path, table_size);
-    if (!sym_table_e_index) return -1;
+    void* table_data = mmap_table(path, &out_size);
+    if (out_size != table_size) {
+      munmap(table_data, table_size);
+      return 1;
+    }
+    sym_table_e_index = table_data;
+    return 0;
   }
   return 0;
 }
@@ -103,12 +104,13 @@ void* get_sym_table_e_index() {
 void free_ptable_H() {
   munmap(ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
 
-    // free(ptable_H);
-    // ptable_H = NULL;
+  // free(ptable_H);
+  ptable_H = NULL;
 }
 
 void free_sym_table_e_index() {
-  free(sym_table_e_index);
+  munmap(sym_table_e_index, sizeof(uint64_t) * NECE*NEO*NSYMS);
+  //free(sym_table_e_index);
   sym_table_e_index = NULL;
 }
 
