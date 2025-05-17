@@ -130,7 +130,6 @@ void cube_tables_generate(){
 
     // temp: gen c_sym_cclass
     gen_c_sym_index_tables();
-    // gen_sym_table_e_index();
 }
 
 

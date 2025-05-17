@@ -11,10 +11,10 @@ cube_t cube_operation_compose(cube_t cube1, cube_t cube2){
     cube_t result;
     
     for (int i = 0; i < NEDGES; i++){
-      int e1 = cube1.edges[i];
+      uint16_t e1 = cube1.edges[i];
       int i1 = extract_edge_perm(e1);
       
-      int e2 = cube2.edges[i1];
+      uint16_t e2 = cube2.edges[i1];
       int i2 = extract_edge_perm(e2);
 
       result.edges[i] = build_edge(
@@ -26,10 +26,10 @@ cube_t cube_operation_compose(cube_t cube1, cube_t cube2){
     }
 
     for (int i = 0; i < NCORNERS; i++){
-      int c1 = cube1.corners[i];
+      uint16_t c1 = cube1.corners[i];
       int i1 = extract_corner_perm(c1);
 
-      int c2 = cube2.corners[i1];
+      uint16_t c2 = cube2.corners[i1];
       int i2 = extract_corner_perm(c2);
 
       result.corners[i] = build_corner(

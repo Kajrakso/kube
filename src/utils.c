@@ -105,8 +105,8 @@ fact_to_perm(int p, int n, int *r)
 }
 
 
-uint32_t ece_combinatorials_lookup[20736];
-uint32_t ccu_combinatorials_lookup[4096];
+int ece_combinatorials_lookup[20736];
+int ccu_combinatorials_lookup[4096];
 
 // naive way of precomputing the combinatorials, but
 // it lets me look up the e slice edges directly without any sorting

@@ -3,23 +3,23 @@
 /* 0, ..., 70 - 1 = comb(8, 4) - 1 */
 uint64_t
 cube_to_ccu_index(cube_t* cube){
-    return ccu_combinatorials_lookup[
-          extract_corner_perm(cube->corners[UBL]) * 1
-        + extract_corner_perm(cube->corners[UBR]) * 8
-        + extract_corner_perm(cube->corners[UFR]) * 8*8
-        + extract_corner_perm(cube->corners[UFL]) * 8*8*8
-    ];
+  return (uint64_t)ccu_combinatorials_lookup[
+        extract_corner_perm(cube->corners[UBL]) * 1
+      + extract_corner_perm(cube->corners[UBR]) * 8
+      + extract_corner_perm(cube->corners[UFR]) * 8*8
+      + extract_corner_perm(cube->corners[UFL]) * 8*8*8
+  ];
 }
 
 /* 0, .., 495 - 1 = comb(12, 4) - 1 */
 uint64_t
 cube_to_ece_index(cube_t* cube){
-    return ece_combinatorials_lookup[
-          extract_edge_perm(cube->edges[FR]) * 1
-        + extract_edge_perm(cube->edges[FL]) * 12
-        + extract_edge_perm(cube->edges[BL]) * 12*12
-        + extract_edge_perm(cube->edges[BR]) * 12*12*12
-    ];
+  return (uint64_t)ece_combinatorials_lookup[
+        extract_edge_perm(cube->edges[FR]) * 1
+      + extract_edge_perm(cube->edges[FL]) * 12
+      + extract_edge_perm(cube->edges[BL]) * 12*12
+      + extract_edge_perm(cube->edges[BR]) * 12*12*12
+  ];
 }
 
 /* 0, ..., 153090 - 1 */
