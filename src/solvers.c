@@ -1,5 +1,7 @@
 #include "_solvers.h"
-#include "_print_cube.h"
+
+#define NISS true
+
 // stats (temp)
 
 struct stats {
@@ -93,8 +95,7 @@ TreeSearch(
     int prev_move,
     int prev_move_inv,
     bool is_inv,
-    int max_num_sols,
-    bool niss
+    int max_num_sols
 ){
   stats->no_nodes_visited++;
 
@@ -156,7 +157,7 @@ TreeSearch(
 
   // find out if we niss or not!
   bool _niss = false;
-  if (niss) {
+  if (NISS) {
     int num_axis_to_check_normal = 0;
     int num_axis_to_check_inverse = 0;
 
@@ -202,8 +203,7 @@ TreeSearch(
           !is_inv ? move : prev_move,       // prev_move on normal
           is_inv ? move : prev_move_inv,    // prev_move on inverse
           is_inv,
-          max_num_sols,
-          niss
+          max_num_sols
       );
       
       cube_move_apply_move(cube, get_inv_move(move));
@@ -224,8 +224,7 @@ IDA(
     int MAX_DEPTH,
     uint8_t* ptable,
     struct stats* stats,
-    int max_num_sols,
-    bool niss
+    int max_num_sols
 ){
   bool stop_search = false;
   for (int depth = 0; depth <= MAX_DEPTH; depth++){
@@ -239,8 +238,7 @@ IDA(
         stats,
         18, 18,   // NULLMOVE. TODO: formalise 
         false,
-        max_num_sols,
-        niss
+        max_num_sols
     );
   
     if (stop_search) return;
@@ -266,8 +264,7 @@ solve_cube(
       max_depth,
       ptable,
       stats,
-      max_num_sols,
-      false
+      max_num_sols
   );
 
   print_stats(stats);
