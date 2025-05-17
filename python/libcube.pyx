@@ -37,11 +37,13 @@ def solver_env(func):
 def solutions_to_list(solutions, number_of_solutions):
     sols = []
     for i in range(number_of_solutions):
+        sol_length = 0
         sol = ""
         for j in range(20):
             if 0 <= solutions[i*20 + j] < 18:
                 sol += move_notation[solutions[i*20 + j]] + " "
-        sols += [sol.strip()]
+                sol_length +=1
+        sols += [sol.strip() + f" ({sol_length})"]
     return sols
 
 
