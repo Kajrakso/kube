@@ -34,7 +34,7 @@ def solver_env(func):
     return wrapper
 
 
-def solutions_to_list(solutions, number_of_solutions):
+def solutions_to_list(solutions, number_of_solutions, verbose):
     sols = []
     for i in range(number_of_solutions):
         sol_length = 0
@@ -43,11 +43,11 @@ def solutions_to_list(solutions, number_of_solutions):
             if 0 <= solutions[i*20 + j] < 18:
                 sol += move_notation[solutions[i*20 + j]] + " "
                 sol_length +=1
-        sols += [sol.strip() + f" ({sol_length})"]
+        sols += [sol.strip() + (f" ({sol_length})" if verbose else "")]
     return sols
 
 
-def solve(scramble: str, number_of_solutions: int = 1, generators: set[str] = move_set) -> list:
+def solve(scramble: str, number_of_solutions: int = 1, generators: set[str] = move_set, verbose: bool = False) -> list:
     assert number_of_solutions >= 1, "number_of_solutions has to be >= 1"
     assert number_of_solutions <= 1000, "number_of_solutions has to be <= 1000"
     assert scramble != "", "you have to provide a scramble"
@@ -72,4 +72,4 @@ def solve(scramble: str, number_of_solutions: int = 1, generators: set[str] = mo
 
     libcube.cube_solvers_solve_cube(c, solutions, number_of_solutions, c_banned, len(banned))
     
-    return solutions_to_list(solutions, number_of_solutions)
+    return solutions_to_list(solutions, number_of_solutions, verbose)

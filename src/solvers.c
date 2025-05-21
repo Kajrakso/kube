@@ -1,6 +1,6 @@
 #include "_solvers.h"
 
-#define NISS true
+#define NISS false
 
 // stats (temp)
 
@@ -245,7 +245,6 @@ IDA(
   }
 }
 
-
 void
 solve_cube(
     cube_t cube,
@@ -308,7 +307,7 @@ cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, in
   }
 
   // set a max limit.
-  int max_depth = 18;
+  int max_depth = 20;
   fprintf(stderr, "\nMax depth set to: %i\n", max_depth);
 
   solve_cube(cube, max_depth, ptable, number_of_solutions, solutions);
