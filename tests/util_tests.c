@@ -1,7 +1,8 @@
+#include <stdint.h>
+
 #include "../src/utils.h"
 #include "criterion/criterion.h"
 #include "criterion/redirect.h"
-#include <stdint.h>
 
 // suites
 
@@ -9,10 +10,10 @@ TestSuite(util_tests);
 
 // tests
 
-Test(util_tests, arr_eq){
+Test(util_tests, arr_eq) {
   uint16_t arr1[] = {1, 2, 3, 4};
   uint16_t arr2[] = {1, 2, 3, 4};
-  
+
   cr_assert(arr_eq(arr1, arr2, 4));
 
   uint16_t arr3[] = {1};
@@ -31,7 +32,7 @@ Test(util_tests, arr_eq){
   cr_assert_not(arr_eq(arr7, arr8, 3));
 }
 
-Test(util_tests, perm_parity_is_even){
+Test(util_tests, perm_parity_is_even) {
   uint16_t arr1[] = {1, 2, 3, 4};
   cr_assert(arr_perm_parity_is_even(arr1, 4));
 
@@ -39,7 +40,7 @@ Test(util_tests, perm_parity_is_even){
   cr_assert_not(arr_perm_parity_is_even(arr2, 4));
 }
 
-Test(util_tests, swap_uint16){
+Test(util_tests, swap_uint16) {
   uint16_t a = 1;
   uint16_t b = 2;
 
@@ -49,7 +50,7 @@ Test(util_tests, swap_uint16){
   cr_assert_eq(b, 1);
 }
 
-Test(util_tests, perm_to_fact){
+Test(util_tests, perm_to_fact) {
   int a[] = {0, 1, 2};
   int b[] = {0, 2, 1};
   int c[] = {2, 1, 0};

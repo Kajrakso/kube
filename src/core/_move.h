@@ -3,7 +3,6 @@
 
 #include "_cube.h"
 
-int
-get_inv_move(int m);
+int get_inv_move(int m);
 
-#endif /* __MOVE_H_ */ 
+#endif /* __MOVE_H_ */

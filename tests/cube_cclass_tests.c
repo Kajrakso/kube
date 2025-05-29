@@ -1,13 +1,14 @@
-#include "../include/libcube.h"
-#include "../src/_cube.h"
-#include "../src/_index.h"
-#include "../src/_solvers.h"
-#include "../src/_cube_state.h"
-#include "criterion/criterion.h"
-#include "criterion/redirect.h"
-#include "../src/utils.h"
 #include <stdint.h>
 #include <stdio.h>
+
+#include "../include/libcube.h"
+#include "../src//solvers/_solvers.h"
+#include "../src/core/_cube.h"
+#include "../src/core/_cube_state.h"
+#include "../src/solvers/_index.h"
+#include "../src/utils.h"
+#include "criterion/criterion.h"
+#include "criterion/redirect.h"
 
 // suites
 
@@ -15,25 +16,25 @@ TestSuite(cclass);
 
 // tests
 
-Test(cclass, cclass_invariant_under_UDsyms){
+Test(cclass, cclass_invariant_under_UDsyms) {
   cube_tables_generate();
   precompute_combinatorials();
 
   static int UDsyms[] = {
-    0, 1, 2, 3, 16, 17, 18, 19,     // no inversion
-    24, 25, 26, 27, 40, 41, 42, 43  // inversion
+      0,  1,  2,  3,  16, 17, 18, 19,  // no inversion
+      24, 25, 26, 27, 40, 41, 42, 43   // inversion
   };
 
   // ---------------------- BEGIN TEST
 
-  for (int k = 0; k < 100; k++){
+  for (int k = 0; k < 100; k++) {
     cube_t cube = cube_scrambler_get_handscrambled_cube();
 
     uint32_t ci = cclass_table[cube_to_c_index(&cube)].cclass_i;
     uint32_t c = cclass_table[cube_to_c_index(&cube)].cclass;
     uint32_t ci2, c2;
 
-    for (int i = 1; i < 16; i++){
+    for (int i = 1; i < 16; i++) {
       int t = UDsyms[i];
       cube_t cube2 = cube_operation_sym_conjugate(cube, t);
 
@@ -44,5 +45,4 @@ Test(cclass, cclass_invariant_under_UDsyms){
       cr_assert_eq(c2, c2);
     }
   }
-
 }

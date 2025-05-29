@@ -76,7 +76,7 @@ void* get_ptable_H() { return ptable_H; }
 
 void* get_sym_table_e_index() { return sym_table_e_index; }
 
-void free_table(void* table_ptr, size_t size){
+void free_table(void* table_ptr, size_t size) {
   munmap(table_ptr, size);
   table_ptr = NULL;
 }

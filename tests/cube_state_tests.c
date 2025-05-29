@@ -1,6 +1,6 @@
 #include "../include/libcube.h"
 #include "../src/utils.h"
-#include "../src/_cube.h"
+#include "../src/core/_cube.h"
 #include "criterion/criterion.h"
 #include "criterion/redirect.h"
 #include <stdint.h>

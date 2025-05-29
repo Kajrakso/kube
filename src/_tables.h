@@ -1,14 +1,15 @@
 #ifndef __TABLES_H_
 #define __TABLES_H_
 
-#include "core/_cube.h"
-#include "core/_move.h"
-#include "_sym.h"
-#include "utils.h"
+#include <stdbool.h>
+#include <stdio.h>
+
 #include "../include/core/move.h"
 #include "../include/core/tables.h"
-#include <stdio.h>
-#include <stdbool.h>
+#include "_sym.h"
+#include "core/_cube.h"
+#include "core/_move.h"
+#include "utils.h"
 
 #define SIZEH 10066636800ULL
 #define SIZE_PTABLE_H (5033318400ULL * (sizeof(uint8_t)))
@@ -45,24 +46,20 @@ void free_sym_table_e_index();
 //! 19.04.2025: These are for testing!
 
 struct c_index_cclass_sym {
-    uint64_t cclass_i;
-    uint64_t cclass;
-    int sym;
-  };
+  uint64_t cclass_i;
+  uint64_t cclass;
+  int sym;
+};
 
-static inline 
-void
-ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable){
-  if (i % 2 == 0){
+static inline void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
+  if (i % 2 == 0) {
     ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
   } else {
     ptable[i >> 1] = (ptable[i >> 1] & 0x0F) | ((p & 0x0F) << 4);
   }
 }
 
-static inline
-uint8_t
-ptable_read_val(uint64_t i, uint8_t* ptable){
+static inline uint8_t ptable_read_val(uint64_t i, uint8_t* ptable) {
   uint8_t val = ptable[i >> 1];
   return (val >> ((i & 1) * 4)) & 0x0F;
 }
@@ -76,7 +73,6 @@ extern uint64_t move_table_coud_index[NCO][NMOVES];
 extern uint64_t move_table_ece_index[NECE][NMOVES];
 extern uint64_t move_table_eofb_index[NEO][NMOVES];
 extern struct c_index_cclass_sym cclass_table[NCCU * NCO];
-
 
 /* todo: need to gen these before using them. */
 void gen_move_mask();
