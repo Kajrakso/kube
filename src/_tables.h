@@ -1,10 +1,9 @@
 #ifndef __TABLES_H_
 #define __TABLES_H_
 
-#include "_cube.h"
-#include "_move.h"
+#include "core/_cube.h"
+#include "core/_move.h"
 #include "_sym.h"
-// #include "_index.h"
 #include "utils.h"
 #include "../include/core/move.h"
 #include "../include/core/tables.h"

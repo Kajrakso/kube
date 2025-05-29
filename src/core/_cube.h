@@ -1,7 +1,7 @@
 #ifndef __CUBE_H_
 #define __CUBE_H_
 
-#include "../include/core/cube.h"
+#include "../../include/core/cube.h"
 #include <stdbool.h>
 
 #define NSYMS 48
@@ -20,14 +20,29 @@
 #define NCCLASS 9930
 
 enum corner {
-    UBL, UBR, UFR, UFL,
-    DFL, DFR, DBR, DBL,
+  // Stickers with COUD=0, these are used for cp-indeces
+  UBL, UBR, UFR, UFL,
+  DFL, DFR, DBR, DBL,
+
+  // Stickers with COUD=1 (rotated CW)
+  LUB, BUR, RUF, FUL,
+  LDF, FDR, RDB, BDL,
+
+  // Stickers with COUD=2 (rotated CCW)
+  BUL, RUB, FUR, LUF,
+  FDL, RDF, BDR, LDB
 };
 
 enum edge {
-    UB, UR, UF, UL,
-    DF, DR, DB, DL,
-    BL, BR, FR, FL,
+  // Stickers with EOFB=0, these are used for ep-indeces
+  UB, UR, UF, UL,
+  DF, DR, DB, DL,
+  BL, BR, FR, FL,
+
+  // Stickers with EOFB=1 (misoriented edges)
+  BU, RU, FU, LU,
+  FD, RD, BD, LD,
+  LB, RB, RF, LF,
 };
 
 typedef enum axes {
@@ -91,6 +106,10 @@ static inline uint16_t build_edge(int ep, int eo_fb, int eo_lr, int eo_ud){
 These functions will set the correct orientation bits for the other axes. */
 
 void fix_co_lr_ud(cube_t* cube);
+
+// BIGBIG TODO: test this!
+void fix_co_fb_lr(cube_t* cube);
+
 void fix_eo_lr_ud(cube_t* cube);
 
 /* swaps two cubes */

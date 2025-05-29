@@ -1,7 +1,7 @@
 #ifndef __SYM_H_
 #define __SYM_H_
 
-#include "_cube.h"
+#include "core/_cube.h"
 #include "../include/core/move.h"
 
 void do_y_rot(cube_t* cube);

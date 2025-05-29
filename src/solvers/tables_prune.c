@@ -1,4 +1,4 @@
-#include "_tables.h"
+#include "../_tables.h"
 #include "_index.h"
 
 void

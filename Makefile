@@ -15,8 +15,8 @@ SRC_DIR = src
 TEST_DIR = tests
 
 # Source and object files
-SRC = $(wildcard $(SRC_DIR)/*.c)
-OBJ = $(SRC:.c=.o)
+SRCS = $(shell find $(SRC_DIR) -name '*.c')
+OBJS = $(patsubst %.c, %.o, $(SRCS))
 
 TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
 TEST_OBJ = $(TEST_SRC:.c=.o)
@@ -40,11 +40,11 @@ pylibcube:
 	cd python && python3 setup.py build_ext -i
 
 # Library creation
-$(LIB): $(OBJ)
+$(LIB): $(OBJS)
 	ar rcs $@ $^
 
 # Test executable
-$(TEST_EXEC): $(TEST_OBJ) $(OBJ)
+$(TEST_EXEC): $(TEST_OBJ) $(OBJS)
 	$(CC) $(CFLAGS) $^ -lcriterion -o $@ && ./$(TEST_EXEC) --verbose=1
 
 # Compile source files
@@ -57,7 +57,7 @@ $(TEST_DIR)/%.o: $(TEST_DIR)/%.c
 
 # Clean target
 clean:
-	rm -f $(OBJ) $(LIB) $(TEST_OBJ) $(TEST_EXEC)
+	rm -f $(OBJS) $(LIB) $(TEST_OBJ) $(TEST_EXEC)
 	rm -rf python/build
 	find python -name "*.so" -delete
 	find python -name "*.c" -delete

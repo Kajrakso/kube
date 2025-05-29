@@ -1,5 +1,5 @@
 #include "../include/scramblers/scrambler.h"
-#include "_cube.h"
+#include "core/_cube.h"
 #include "utils.h"
 
 cube_t cube_scrambler_get_handscrambled_cube(){

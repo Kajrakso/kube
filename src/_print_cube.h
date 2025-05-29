@@ -2,8 +2,8 @@
 #define __PRINT_CUBE_H_
 
 #include "../include/cli/print_cube.h"
-#include "_cube.h"
-#include "_move.h"
+#include "core/_cube.h"
+#include "core/_move.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

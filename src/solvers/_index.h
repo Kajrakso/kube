@@ -1,9 +1,9 @@
 #ifndef __INDEX_H_
 #define __INDEX_H_
 
-#include "utils.h"
-#include "_cube.h"
-#include "_tables.h"
+#include "../utils.h"
+#include "../core/_cube.h"
+#include "../_tables.h"
 #include "stdio.h"
 
 // testing
