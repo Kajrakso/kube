@@ -6,7 +6,7 @@
 
 #include "../include/core/move.h"
 #include "../include/core/tables.h"
-#include "_sym.h"
+#include "core/_sym.h"
 #include "core/_cube.h"
 #include "core/_move.h"
 #include "utils.h"

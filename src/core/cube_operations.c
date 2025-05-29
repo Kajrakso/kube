@@ -1,7 +1,7 @@
-#include "../_sym.h"
 #include "../_tables.h"
 #include "../utils.h"
 #include "_cube.h"
+#include "_sym.h"
 
 bool cube_operation_is_equal(cube_t cube1, cube_t cube2) {
   return arr_eq(cube1.edges, cube2.edges, NEDGES) &&
