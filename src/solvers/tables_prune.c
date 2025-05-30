@@ -42,7 +42,7 @@ void gen_ptable_H() {
   cube_tables_generate();
   precompute_combinatorials();
 
-  const uint64_t size_ptable_h = sizeof(uint8_t) * SIZE_PTABLE_H;
+  const uint64_t size_ptable_h = SIZE_PTABLE_H;
 
   fprintf(stderr, "Generating move tables\n");
   fprintf(stderr, "gen_move_table_ece_index\n");
@@ -57,11 +57,17 @@ void gen_ptable_H() {
   fprintf(stderr, "gen_c_sym_index_tables\n");
   gen_c_sym_index_tables();
 
-  if (!(init_sym_table_e_index("data/sym_table_e_index.dat") == 0)) {
+  if (cube_tables_load_sym_table_e_index() != 0) {
     fprintf(stderr, "gen sym_table_e_index first!\n");
     return;
   }
-  uint64_t* sym_table_e_index = get_sym_table_e_index();
+
+  uint64_t* sym_table_e_index = (uint64_t*)get_sym_table_e_index();
+  if (!sym_table_e_index) {
+    fprintf(stderr,
+            "Could not load sym_table_e_index. Have you initialized it?\n");
+    return;
+  }
 
   fprintf(stderr, "Initializing ptable for group H\n");
   uint8_t* ptable_H = malloc(size_ptable_h);
@@ -153,7 +159,7 @@ void gen_ptable_H() {
   }
 
   /* end of TODO */
-  save_ptable("data/H.dat", ptable_H, sizeof(uint8_t) * SIZE_PTABLE_H);
+  save_table_to_file("data/H.dat", ptable_H, SIZE_PTABLE_H);
 
   free(ptable_H);
 }

@@ -15,10 +15,6 @@ int cube_tables_load();
 /* Call after use of tables */
 void cube_tables_free();
 
-bool load_ptable(char* filename, uint8_t* ptable, size_t table_size);
-
-bool save_ptable(char* filename, uint8_t* ptable, size_t table_size);
-
 // todo: WIP
 void gen_ptable_L();
 

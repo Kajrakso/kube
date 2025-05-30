@@ -6,9 +6,9 @@
 
 #include "../include/core/move.h"
 #include "../include/core/tables.h"
-#include "core/_sym.h"
 #include "core/_cube.h"
 #include "core/_move.h"
+#include "core/_sym.h"
 #include "utils.h"
 
 #define SIZEH 10066636800ULL
@@ -22,12 +22,6 @@ extern uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
 extern uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
 extern uint16_t sym_table_edge_transformation[NSYMS][NEDGECUBIES];
 
-/* Applies the symmetry sym to the cube.
-This function should probably not be used.
-Use `cube_operation_sym_conjugate` for conjugation
-by a symmetry.*/
-void cube_apply_symm(cube_t* cube, int sym);
-
 void initialize_move_tables();
 void gen_move_tables();
 void initialize_sym_tables();
@@ -35,13 +29,14 @@ void gen_sym_tables();
 
 bool save_table_to_file(const char* path, void* table, const size_t table_size);
 
-int init_ptable_H(const char* path);
-void* get_ptable_H();
-void free_ptable_H();
+int init_table(const char* path, size_t table_size, void** table_ptr);
+void free_table(void* table_ptr, size_t size);
 
-int init_sym_table_e_index(const char* path);
+void* get_ptable_H();
 void* get_sym_table_e_index();
-void free_sym_table_e_index();
+
+int cube_tables_load_ptableH();
+int cube_tables_load_sym_table_e_index();
 
 //! 19.04.2025: These are for testing!
 

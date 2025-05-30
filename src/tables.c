@@ -58,15 +58,15 @@ bool save_table_to_file(const char* path, void* table,
   return true;
 }
 
-int init_table(const char* path, size_t table_size, void* table_ptr) {
+int init_table(const char* path, size_t table_size, void** table_ptr) {
   size_t out_size;
-  if (table_ptr == NULL) {
+  if (*table_ptr == NULL) {
     void* table_data = mmap_table(path, &out_size);
     if (out_size != table_size) {
       munmap(table_data, table_size);
       return 1;
     }
-    table_ptr = table_data;
+    *table_ptr = table_data;
     return 0;
   }
   return 0;
@@ -99,17 +99,29 @@ void cube_tables_generate() {
   gen_c_sym_index_tables();
 }
 
-int cube_tables_load() {
-  if (init_table("data/H.dat", SIZE_PTABLE_H, ptable_H) != 0) {
+int cube_tables_load_ptableH() {
+  if (init_table("data/H.dat", SIZE_PTABLE_H, &ptable_H) != 0) {
     fprintf(stderr, "Failed to load pruning table H.\n");
     return 1;
   }
+  return 0;
+}
+
+int cube_tables_load_sym_table_e_index() {
   if (init_table("data/sym_table_e_index.dat",
                  sizeof(uint64_t) * NECE * NEO * NSYMS,
-                 sym_table_e_index) != 0) {
+                 &sym_table_e_index) != 0) {
     fprintf(stderr, "Failed to load sym_table_e_index.\n");
     return 1;
   }
+  return 0;
+}
+
+int cube_tables_load() {
+  if (cube_tables_load_ptableH() == 1)
+    return 1;
+  if (cube_tables_load_sym_table_e_index() == 1)
+    return 1;
   return 0;
 }
 
@@ -118,21 +130,3 @@ void cube_tables_free() {
   free_table(sym_table_e_index, sizeof(uint64_t) * NECE * NEO * NSYMS);
 }
 
-bool save_ptable(char* filename, uint8_t* ptable, size_t table_size) {
-  fprintf(stderr, "writing ptable to disk. file: %s.\n", filename);
-
-  FILE* file = fopen(filename, "wb");
-  if (!file) {
-    fprintf(stderr, "Was not able to open file %s\n", filename);
-    return false;
-  }
-
-  // Save the array
-  if (fwrite(ptable, table_size, 1, file) != 1) {
-    fclose(file);
-    return false;
-  }
-
-  fclose(file);
-  return true;
-}
