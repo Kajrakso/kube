@@ -4,14 +4,17 @@
 
 ## Goal
 
-Learn to build something in C.
+Learn to build something in C and to make a simple and fast Rubik's cube library.
 
-The objective is to make a simple and fast Rubik's cube library.
-It should support moving the the cube, keeping track of oriented
-and misoriented pieces as well as functionality for checking if the
-cube is in a certain state (DR, HTR etc.).
+## Features
 
-libcube contains an optimal solver (WIP), scramblers and a python wrapper.
+- cube states (eo, co, dr, etc.)
+- cube moves and symmetries
+- scrambler
+- optimal solver (WIP)
+- python wrapper (WIP)
+- state generator (TODO)
+- other optimal solvers (other metrics, solve to specific subgroups)  (TODO)
 
 ### Usage
 
