@@ -104,24 +104,25 @@ static inline int extract_edge_perm(uint16_t edge) { return 15 & (edge >> 3); }
 
 static inline void update_edge_perm(uint16_t* edge, int ep) {
   *edge &= 7;
-  *edge |= (ep & 15) << 3;  // just to be safe
+  *edge |= (uint16_t)((ep & 15) << 3);  // just to be safe
 }
 
 static inline void update_edge_orien(uint16_t* edge, int eo_fb, int eo_lr,
                                      int eo_ud) {
   *edge &= 120;  // 0b1111000
-  *edge |= (eo_fb << 2) | (eo_lr << 1) | eo_ud;
+  *edge |= (uint16_t)(((eo_fb & 1) << 2) | ((eo_lr & 1) << 1) | (eo_ud & 1));
 }
 
 static inline void update_corner_perm(uint16_t* corner, int cp) {
-  *corner &= 504;       // 0b111111000
-  *corner |= (cp & 7);  // just to be safe
+  *corner &= 504;                 // 0b111111000
+  *corner |= (uint16_t)(cp & 7);  // just to be safe
 }
 
 static inline void update_corner_orien(uint16_t* corner, int co_fb, int co_lr,
                                        int co_ud) {
   *corner &= 7;
-  *corner |= (co_ud << 7) | (co_lr << 5) | (co_fb << 3);
+  *corner |=
+      (uint16_t)(((co_ud & 3) << 7) | ((co_lr & 3) << 5) | ((co_fb & 3) << 3));
 }
 
 /* helper functions for building cubies. */
