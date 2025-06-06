@@ -83,53 +83,61 @@ void do_z_rot(cube_t* cube) {
 void do_inversion(cube_t* cube) {
   int e1, e2;
 
-  e1 = which_edge_at_pos(UF, cube);
-  e2 = which_edge_at_pos(DB, cube);
+  // build a "reverse" lookup for corners
+  int pos_to_corner[NCORNERS];
+  build_pos_to_corner(cube, pos_to_corner);
+
+  // build a "reverse" lookup for edges
+  int pos_to_edge[NEDGES];
+  build_pos_to_edge(cube, pos_to_edge);
+
+  e1 = pos_to_edge[UF];
+  e2 = pos_to_edge[DB];
   update_edge_perm(&(cube->edges[e1]), DB);
   update_edge_perm(&(cube->edges[e2]), UF);
 
-  e1 = which_edge_at_pos(UL, cube);
-  e2 = which_edge_at_pos(DR, cube);
+  e1 = pos_to_edge[UL];
+  e2 = pos_to_edge[DR];
   update_edge_perm(&(cube->edges[e1]), DR);
   update_edge_perm(&(cube->edges[e2]), UL);
 
-  e1 = which_edge_at_pos(UR, cube);
-  e2 = which_edge_at_pos(DL, cube);
+  e1 = pos_to_edge[UR];
+  e2 = pos_to_edge[DL];
   update_edge_perm(&(cube->edges[e1]), DL);
   update_edge_perm(&(cube->edges[e2]), UR);
 
-  e1 = which_edge_at_pos(UB, cube);
-  e2 = which_edge_at_pos(DF, cube);
+  e1 = pos_to_edge[UB];
+  e2 = pos_to_edge[DF];
   update_edge_perm(&(cube->edges[e1]), DF);
   update_edge_perm(&(cube->edges[e2]), UB);
 
-  e1 = which_edge_at_pos(FL, cube);
-  e2 = which_edge_at_pos(BR, cube);
+  e1 = pos_to_edge[FL];
+  e2 = pos_to_edge[BR];
   update_edge_perm(&(cube->edges[e1]), BR);
   update_edge_perm(&(cube->edges[e2]), FL);
 
-  e1 = which_edge_at_pos(FR, cube);
-  e2 = which_edge_at_pos(BL, cube);
+  e1 = pos_to_edge[FR];
+  e2 = pos_to_edge[BL];
   update_edge_perm(&(cube->edges[e1]), BL);
   update_edge_perm(&(cube->edges[e2]), FR);
 
-  e1 = which_corner_at_pos(UFL, cube);
-  e2 = which_corner_at_pos(DBR, cube);
+  e1 = pos_to_corner[UFL];
+  e2 = pos_to_corner[DBR];
   update_corner_perm(&(cube->corners[e1]), DBR);
   update_corner_perm(&(cube->corners[e2]), UFL);
 
-  e1 = which_corner_at_pos(UFR, cube);
-  e2 = which_corner_at_pos(DBL, cube);
+  e1 = pos_to_corner[UFR];
+  e2 = pos_to_corner[DBL];
   update_corner_perm(&(cube->corners[e1]), DBL);
   update_corner_perm(&(cube->corners[e2]), UFR);
 
-  e1 = which_corner_at_pos(UBL, cube);
-  e2 = which_corner_at_pos(DFR, cube);
+  e1 = pos_to_corner[UBL];
+  e2 = pos_to_corner[DFR];
   update_corner_perm(&(cube->corners[e1]), DFR);
   update_corner_perm(&(cube->corners[e2]), UBL);
 
-  e1 = which_corner_at_pos(UBR, cube);
-  e2 = which_corner_at_pos(DFL, cube);
+  e1 = pos_to_corner[UBR];
+  e2 = pos_to_corner[DFL];
   update_corner_perm(&(cube->corners[e1]), DFL);
   update_corner_perm(&(cube->corners[e2]), UBR);
 
