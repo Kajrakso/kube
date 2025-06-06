@@ -34,14 +34,10 @@ uint64_t cube_to_H_index(cube_t* cube);
 
 /* NOTE: the cube returned is not necessarily a valid cube.
  * Also, these function is not optimized. */
-cube_t H_index_to_cube(uint64_t H_index);
-
 cube_t coud_index_to_cube(uint64_t coud_i);
 
 cube_t ccu_index_to_cube(uint64_t ccu_i);
 
 cube_t c_index_to_cube(uint64_t c_i);
-
-cube_t e_index_to_cube(uint64_t c_i);
 
 #endif /* __INDEX_H_ */

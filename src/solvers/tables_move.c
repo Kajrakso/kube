@@ -12,18 +12,18 @@ void gen_move_mask() {
     move_mask[pm] = 0;
     for (m = 0; m < NMOVES; m++) {
       if (!(m / 6 == pm / 6 && m / 3 >= pm / 3)) {
-        move_mask[pm] |= 0b1 << m;
+        move_mask[pm] |= 1 << m;
       }
     }
     for (m = 0; m < NMOVES; m++) {
-      move_mask[18] |= 0b1 << m;
+      move_mask[18] |= 1 << m;
     }
   }
 }
 
 void movemask_remove_move(int move) {
   for (int pm = 0; pm < NMOVES + 1; pm++) {
-    move_mask[pm] &= ~(0b111 << 3 * (move / 3));
+    move_mask[pm] &= ~((uint32_t)7 << 3 * (move / 3));
   }
 }
 

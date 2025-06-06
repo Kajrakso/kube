@@ -38,7 +38,8 @@ uint64_t cube_to_eofb_index(cube_t* cube) {
   uint64_t orien = 0;
   uint64_t pow = 1ULL;
   for (int i = 0; i < NEDGES - 1; i++) {
-    orien += pow * extract_edge_orien(cube->edges[pos_to_edge[i]], FB);
+    orien +=
+        pow * (uint64_t)extract_edge_orien(cube->edges[pos_to_edge[i]], FB);
     pow <<= 1;
   }
   return orien;
@@ -53,7 +54,8 @@ uint64_t cube_to_coud_index(cube_t* cube) {
   uint64_t orien = 0;
   unsigned int pow = 1;
   for (int i = 0; i < NCORNERS - 1; i++) {
-    orien += pow * extract_corner_orien(cube->corners[pos_to_corner[i]], UD);
+    orien += pow * (uint64_t)extract_corner_orien(
+                       cube->corners[pos_to_corner[i]], UD);
     pow *= 3;
   }
   return orien;
@@ -156,113 +158,9 @@ cube_t coud_index_to_cube(uint64_t coud_i) {
   return cube;
 }
 
-cube_t ece_index_to_cube(uint64_t ece_i) {
-  cube_t cube = cube_create_new_cube();
-
-  int m = -1;
-  for (int k = 0; k < 20736; k++) {
-    if (ece_combinatorials_lookup[k] == ece_i) {
-      m = k;
-      break;
-    }
-  }
-  if (m == -1) {
-    // OH NO!
-    exit(1);
-  }
-  int BL_i = m % 12;
-  int BR_i = (m % (12 * 12)) / 12;
-  int FR_i = (m % (12 * 12 * 12)) / (12 * 12);
-  int FL_i = (m / (12 * 12 * 12));
-
-  // todo: ugly, but it works
-  int e = which_edge_at_pos(BL_i, &cube);
-  int ep = extract_edge_perm(cube.edges[BL]);
-  update_edge_perm(&cube.edges[BL], BL_i);
-  update_edge_perm(&cube.edges[e], ep);
-
-  e = which_edge_at_pos(BR_i, &cube);
-  ep = extract_edge_perm(cube.edges[BR]);
-  update_edge_perm(&cube.edges[BR], BR_i);
-  update_edge_perm(&cube.edges[e], ep);
-
-  e = which_edge_at_pos(FR_i, &cube);
-  ep = extract_edge_perm(cube.edges[FR]);
-  update_edge_perm(&cube.edges[FR], FR_i);
-  update_edge_perm(&cube.edges[e], ep);
-
-  e = which_edge_at_pos(FL_i, &cube);
-  ep = extract_edge_perm(cube.edges[FL]);
-  update_edge_perm(&cube.edges[FL], FL_i);
-  update_edge_perm(&cube.edges[e], ep);
-
-  return cube;
-}
-
-cube_t eofb_index_to_cube(uint64_t eofb_i) {
-  cube_t cube = cube_create_new_cube();
-
-  // set eo
-  int e_i, eo, eo_sum = 0;
-
-  for (int i = 0; i < NEDGES - 1; i++) {
-    eo = (eofb_i >> i) % 2;
-
-    e_i = which_edge_at_pos(i, &cube);
-    update_edge_orien(&cube.edges[e_i], eo, 0, 0);
-    eo_sum ^= eo;
-  }
-  e_i = which_edge_at_pos(NEDGES - 1, &cube);
-  update_edge_orien(&cube.edges[e_i], eo_sum, 0, 0);
-
-  // fix eo and co
-  fix_eo_lr_ud(&cube);
-
-  return cube;
-}
-
 cube_t c_index_to_cube(uint64_t c_i) {
   cube_t cube1 = ccu_index_to_cube(c_i % NCCU);
   cube_t cube2 = coud_index_to_cube(c_i / NCCU);
 
   return cube_operation_compose(cube1, cube2);
-}
-
-cube_t e_index_to_cube(uint64_t e_i) {
-  cube_t cube1 = ece_index_to_cube(e_i % NECE);
-  cube_t cube2 = eofb_index_to_cube(e_i / NECE);
-
-  return cube_operation_compose(cube1, cube2);
-}
-
-cube_t H_index_to_cube(uint64_t H_index) {
-  fprintf(stderr,
-          "Preparing a cclass -> cindex_rep table. TODO: look into this!\n");
-  // we fill a cclass -> cindex_rep table here. TODO: reconsider this.
-  uint64_t cclass_index_cindex_rep[NCCLASS];
-  for (uint64_t k = 0; k < NCCLASS; k++) {
-    for (uint64_t m = 0; m < NCCU * NCO; m++) {
-      if (cclass_table[m].cclass_i == k) {
-        cclass_index_cindex_rep[k] = cclass_table[m].cclass;
-        break;
-      }
-    }
-  }
-
-  uint64_t cclass_i = H_index % NCCLASS;
-
-  uint64_t cindex_rep = cclass_index_cindex_rep[cclass_i];
-  uint64_t ccu = cindex_rep % NCCU;
-  uint64_t coud = cindex_rep / NCCU;
-
-  uint64_t ei = H_index / NCCLASS;
-  uint64_t ece = ei % NECE;
-  uint64_t eofb = ei / NECE;
-
-  cube_t c1 = e_index_to_cube(ei);
-  cube_t c2 = c_index_to_cube(cindex_rep);
-
-  cube_t c = cube_operation_compose(c1, c2);
-
-  return c;
 }

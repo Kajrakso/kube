@@ -9,7 +9,7 @@ void DLS_H(uint64_t ece, uint64_t eofb, uint64_t coud, uint64_t ccu, uint64_t p,
   uint32_t mm = move_mask[prev_move];
 
   for (int m = 0; m < NMOVES; m++) {
-    if (!(mm & (0b1 << m))) continue;
+    if (!(mm & (1 << m))) continue;
 
     ccu2 = move_table_ccu_index[ccu][m];
     coud2 = move_table_coud_index[coud][m];

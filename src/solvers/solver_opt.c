@@ -167,15 +167,15 @@ static bool TreeSearch(cube_t *cube, uint8_t *ptable, int remaining_moves,
 
   // nissing magic
   if (remaining_moves == (_niss ? pval_UD : pval_UD_inv))
-    mm &= ~(0b111111 << 0);
+    mm &= ~((uint32_t)63 << 0);
   if (remaining_moves == (_niss ? pval_LR : pval_LR_inv))
-    mm &= ~(0b111111 << 6);
+    mm &= ~((uint32_t)63 << 6);
   if (remaining_moves == (_niss ? pval_FB : pval_FB_inv))
-    mm &= ~(0b111111 << 12);
+    mm &= ~((uint32_t)63 << 12);
 
   for (int move = 0; move < NMOVES; move++) {
     // check if we actually need to do move.
-    if (!(mm & (0b1 << move))) continue;
+    if (!(mm & (1 << move))) continue;
 
     cube_move_apply_move(cube, move);
 
