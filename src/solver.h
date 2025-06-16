@@ -12,6 +12,6 @@
 #include "index.h"
 
 /* Solve a cube. */
-bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions);
+bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose);
 
 #endif /* SOLVERS_H */

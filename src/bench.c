@@ -350,12 +350,12 @@ void bench_solver() {
         // prepare array  for solutions
         int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
-        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols);
+        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1);
 
         if (!solved)
             printf("Was not able to solve the cube :(\n");
         else
-            cube_print_solutions(solutions, num_sols);
+            cube_print_solutions(solutions, num_sols, 0);
 
         printf("\n");
         free(solutions);

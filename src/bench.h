@@ -10,7 +10,7 @@
 #include "index.h"
 #include "scrambler.h"
 #include "solver.h"
-#include "print_cube.h"
+#include "cli.h"
 
 #define NUM_MOVES 1000000UL
 

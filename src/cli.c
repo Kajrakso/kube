@@ -1,4 +1,4 @@
-#include "print_cube.h"
+#include "cli.h"
 
 static const char* corners_str_repr[NCORNERS] = {
   "ULB", "UBR", "URF", "UFL", "DLF", "DFR", "DRB", "DBL",
@@ -6,6 +6,11 @@ static const char* corners_str_repr[NCORNERS] = {
 
 static const char* edges_str_repr[NEDGES] = {
   "UB", "UR", "UF", "UL", "DF", "DR", "DB", "DL", "BL", "BR", "FR", "FL",
+};
+
+char* move_notation[] = {
+  "U", "U2", "U'", "D", "D2", "D'", "L", "L2", "L'",
+  "R", "R2", "R'", "F", "F2", "F'", "B", "B2", "B'",
 };
 
 static inline void fill_corner_strings(cube_t* cube, char cs[NCORNERS][3]) {
@@ -45,7 +50,6 @@ static inline void fill_edge_strings(cube_t* cube, char es[NEDGES][2]) {
     }
 }
 
-// TODO: Improve the readability and efficiency of this function.
 void cube_print_cube(cube_t* cube) {
     const char* cube_str_pattern = "      -------\n"
                                    "      |%c %c %c|\n"
@@ -159,22 +163,26 @@ int* parse_move_string(size_t* out_length, const char* move_string) {
     return result;
 }
 
-char* move_notation[] = {
-  "U", "U2", "U'", "D", "D2", "D'", "L", "L2", "L'",
-  "R", "R2", "R'", "F", "F2", "F'", "B", "B2", "B'",
-};
-
-void cube_print_solutions(int* solutions, int num_sols) {
+void cube_print_solutions(int* solutions, int num_sols, int verbose) {
     for (int sol = 0; sol < num_sols; sol++)
     {
+        int len = 0;
         for (int m = 0; m < 20; m++)
         {
             int move = solutions[20 * sol + m];
             if (0 <= move && move < 18)
             {
                 printf("%s ", move_notation[move]);
+                len++;
             }
         }
-        printf("\n");
+        if (verbose == 1)
+        {
+            printf("(%i)\n", len);
+        }
+        else
+        {
+            printf("\n");
+        }
     }
 }

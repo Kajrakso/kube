@@ -46,7 +46,7 @@ Example usage:
 const char* moves = "R U R' U' R' F R2 U' R' U' R U R' F'";
 cube_move_apply_move_string(&cube, moves);
 ```*/
-void cube_move_apply_move_string(cube_t* cube, const char* moves);
+bool cube_move_apply_move_string(cube_t* cube, const char* moves);
 
 int get_inv_move(int m);
 

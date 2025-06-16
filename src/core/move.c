@@ -1,4 +1,4 @@
-#include "../print_cube.h"
+#include "../cli.h"
 #include "../tables.h"
 
 void cube_move_apply_move(cube_t* cube, int move) {
@@ -38,13 +38,18 @@ void cube_move_apply_multiple_moves(cube_t* cube, int* moves_arr, size_t number_
     }
 }
 
-void cube_move_apply_move_string(cube_t* cube, const char* moves) {
+bool cube_move_apply_move_string(cube_t* cube, const char* moves) {
     size_t length;
     int*   parsed_moves = parse_move_string(&length, moves);
-    if (parsed_moves)
+    if (parsed_moves != NULL)
     {
         cube_move_apply_multiple_moves(cube, parsed_moves, length);
         free(parsed_moves);
+        return 0;
+    }
+    else
+    {
+        return 1;
     }
 }
 

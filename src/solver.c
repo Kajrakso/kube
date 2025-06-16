@@ -1,6 +1,6 @@
 #include "solver.h"
 
-#define NISS true
+static bool enable_niss = true;
 
 // stats (temp)
 
@@ -209,7 +209,7 @@ static bool TreeSearch(cube_t*       cube,
 
     bool _niss = false;
     //find out if we niss or not!
-    if (NISS)
+    if (enable_niss)
     {
         int num_axis_to_check_normal  = 0;
         int num_axis_to_check_inverse = 0;
@@ -282,13 +282,20 @@ static bool TreeSearch(cube_t*       cube,
     return false;
 }
 
-void IDA(cube_t cube, int MAX_DEPTH, uint8_t* ptable, struct stats* stats, int max_num_sols) {
+void IDA(
+  cube_t cube, int MAX_DEPTH, uint8_t* ptable, struct stats* stats, int max_num_sols, int verbose) {
     bool stop_search = false;
-    fprintf(stderr, "Depth: ");
+    if (verbose == 1)
+    {
+        fprintf(stderr, "Depth: ");
+    }
     for (int depth = 0; depth <= MAX_DEPTH; depth++)
     {
         stats->depth = depth;
-        fprintf(stderr, "%i ", depth);
+        if (verbose == 1)
+        {
+            fprintf(stderr, "%i ", depth);
+        }
 
         stop_search = TreeSearch(&cube, ptable, depth, stats, 18,
                                  18,  // NULLMOVE. TODO: formalise
@@ -296,16 +303,22 @@ void IDA(cube_t cube, int MAX_DEPTH, uint8_t* ptable, struct stats* stats, int m
 
         if (stop_search)
         {
-            fprintf(stderr, "\n");
+            if (verbose == 1)
+            {
+                fprintf(stderr, "\n");
+            }
             return;
         }
     }
-    fprintf(stderr, "\n");
+    if (verbose == 1)
+    {
+        fprintf(stderr, "\n");
+    }
 }
 
 /* public */
 
-bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions) {
+bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose) {
     uint8_t* ptable = (uint8_t*) get_ptable_H();
     if (!ptable)
     {
@@ -329,10 +342,20 @@ bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solution
     struct stats* stats = malloc(sizeof(struct stats));
     init_stats(stats, number_of_solutions);
 
+    // at the moment nissing does not play well with 
+    // finding multiple solutions.
+    // for instance: R (U R) would be a solution of length 3...
+    // even though it is the same as just U'
+    if (number_of_solutions > 1){
+        enable_niss = false;
+    }
     // actually search.
-    IDA(cube, max_depth, ptable, stats, number_of_solutions);
+    IDA(cube, max_depth, ptable, stats, number_of_solutions, verbose);
 
-    print_stats(stats);
+    if (verbose == 1)
+    {
+        print_stats(stats);
+    }
 
     memcpy(solutions, stats->solutions, sizeof(int) * 20 * number_of_solutions);
 
