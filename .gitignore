@@ -1,6 +1,8 @@
+# executable
+kube
+
 data/
 .vscode/
-python/*.c
 *.zip
 
 # Prerequisites
