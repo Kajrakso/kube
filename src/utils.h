@@ -1,5 +1,5 @@
-#ifndef _UTILS_H_
-#define _UTILS_H_
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,4 +30,4 @@ int comb(int n, int k);
 /* */
 void precompute_combinatorials();
 
-#endif /* _UTILS_H_ */
+#endif /* UTILS_H */

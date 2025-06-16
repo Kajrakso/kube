@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "_tables.h"
+#include "tables.h"
 
 // The table pointers is only visible in this file.
 static void* ptable_H = NULL;
@@ -59,7 +59,7 @@ bool save_table_to_file(const char* path, void* table,
 }
 
 int init_table(const char* path, size_t table_size, void** table_ptr) {
-  size_t out_size;
+  size_t out_size = 0;
   if (*table_ptr == NULL) {
     void* table_data = mmap_table(path, &out_size);
     if (out_size != table_size) {
