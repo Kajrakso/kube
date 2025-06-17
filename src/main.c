@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     struct arguments arguments;
 
     /* Default values. */
-    arguments.verbose = 0;
+    arguments.verbose             = 0;
     arguments.number_of_solutions = number_of_solutions;
 
     /* Parse our arguments; every option seen by parse_opt will
@@ -101,9 +101,9 @@ int main(int argc, char** argv) {
     }
 
     char* scr = arguments.args[0];
-    
+
     init_env();
-    
+
     cube_tables_generate();
     cube_tables_load();
 

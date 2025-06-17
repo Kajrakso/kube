@@ -2,6 +2,7 @@
 #define SYM_H
 
 #include "cube.h"
+#include "cube_operation.h"
 
 void do_y_rot(cube_t* cube);
 void do_z_rot(cube_t* cube);

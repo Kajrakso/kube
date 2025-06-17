@@ -1,7 +1,7 @@
 #ifndef CUBE_STATE_H
 #define CUBE_STATE_H
 
-#include "cube.h"
+#include "cube_operation.h"
 
 bool cube_valid_eo(cube_t* cube);
 

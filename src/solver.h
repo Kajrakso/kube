@@ -1,5 +1,5 @@
-#ifndef SOLVERS_H
-#define SOLVERS_H
+#ifndef SOLVER_H
+#define SOLVER_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,7 +11,6 @@
 #include "core/cube_state.h"
 #include "index.h"
 
-/* Solve a cube. */
 bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose);
 
-#endif /* SOLVERS_H */
+#endif /* SOLVER_H */

@@ -1,8 +1,5 @@
 #include "cube.h"
 
-// returns the slice an edge belongs to.
-int e_slice(int i);
-
 enum slice {
     M,
     S,
@@ -28,6 +25,12 @@ cube_t cube_create_new_cube() {
     }
 
     return cube;
+}
+
+void swap_cubes(cube_t* c, cube_t* t) {
+    cube_t aux = *t;
+    *t         = *c;
+    *c         = aux;
 }
 
 void fix_co_lr_ud(cube_t* cube) {
@@ -106,11 +109,6 @@ int e_slice(int i) {
     }
 }
 
-void swap_cubes(cube_t* c, cube_t* t) {
-    cube_t aux = *t;
-    *t         = *c;
-    *c         = aux;
-}
 
 // TODO: remove these and use a precompouted pos_to_edge/pos_to_corner map
 // instead
@@ -133,6 +131,14 @@ int which_edge_at_pos(int pos, cube_t* cube) {
 }
 
 // TODO: Like these ones :)
+void build_pos_to_corner(const cube_t* cube, int pos_to_corner[NCORNERS]) {
+    for (int k = 0; k < NCORNERS; k++)
+    {
+        int pos            = extract_corner_perm(cube->corners[k]);
+        pos_to_corner[pos] = k;
+    }
+}
+
 void build_pos_to_edge(const cube_t* cube, int pos_to_edge[NEDGES]) {
     for (int k = 0; k < NEDGES; k++)
     {
@@ -141,10 +147,3 @@ void build_pos_to_edge(const cube_t* cube, int pos_to_edge[NEDGES]) {
     }
 }
 
-void build_pos_to_corner(const cube_t* cube, int pos_to_corner[NCORNERS]) {
-    for (int k = 0; k < NCORNERS; k++)
-    {
-        int pos            = extract_corner_perm(cube->corners[k]);
-        pos_to_corner[pos] = k;
-    }
-}

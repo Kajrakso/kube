@@ -1,6 +1,6 @@
 #include "../utils.h"
-#include "cube.h"
 #include "sym.h"
+#include "cube_operation.h"
 
 bool cube_operation_is_equal(cube_t cube1, cube_t cube2) {
     return arr_eq(cube1.edges, cube2.edges, NEDGES)
