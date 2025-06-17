@@ -1,12 +1,13 @@
 #include "solver.h"
 #include "cli.h"
+#include "env.h"
 
 #include <stdlib.h>
 #include <argp.h>
 
 static int number_of_solutions = 1;
 
-const char* argp_program_version     = "kube 0.0";
+const char* argp_program_version     = "kube 0.1";
 const char* argp_program_bug_address = "<kube@oskarfj.no>";
 
 /* Program documentation. */
@@ -88,18 +89,21 @@ int main(int argc, char** argv) {
 
     /* Default values. */
     arguments.verbose = 0;
+    arguments.number_of_solutions = number_of_solutions;
 
     /* Parse our arguments; every option seen by parse_opt will
      be reflected in arguments. */
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-    if (number_of_solutions < 1)
+    if (arguments.number_of_solutions < 1)
     {
         goto KUBE_CLEAN;
     }
 
     char* scr = arguments.args[0];
-
+    
+    init_env();
+    
     cube_tables_generate();
     cube_tables_load();
 
@@ -118,7 +122,7 @@ int main(int argc, char** argv) {
     {
         printf("Could not solve the cube :(\n");
     }
-
+    free(solutions);
 
 KUBE_CLEAN:
     cube_tables_free();

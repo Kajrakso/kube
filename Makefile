@@ -6,8 +6,7 @@ CFLAGS_OPTIMIZED = -O3 -flto
 CFLAGS_DEBUG = -g -Wno-unused-function
 CFLAGS_LINK = -lm
 
-# Targets
-TARGET = kube
+PREFIX = /usr/local
 
 # Directories
 SRC_DIR = src
@@ -23,11 +22,11 @@ TEST_EXEC = test.out
 
 # Default target
 all: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_OPTIMIZED) $(CFLAGS_LINK)
-all: $(TARGET)
+all: kube
 
 # Debug target
 debug: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_DEBUG) $(CFLAGS_LINK)
-debug: $(TARGET)
+debug: kube
 
 # Test target
 test: CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_LINK)
@@ -37,7 +36,7 @@ test: $(TEST_EXEC)
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TARGET): $(OBJS) $(SRC_DIR)/main.c
+kube: $(OBJS) $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Test executable
@@ -48,9 +47,17 @@ $(TEST_EXEC): $(TEST_OBJ) $(OBJS)
 $(TEST_DIR)/%.o: $(TEST_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+install: all
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp -f kube ${DESTDIR}${PREFIX}/bin/kube
+	chmod 755 ${DESTDIR}${PREFIX}/bin/kube
+
+uninstall:
+	rm -rf ${DESTDIR}${PREFIX}/bin/kube
+
 # Clean target
 clean:
-	rm -f $(OBJS) $(TARGET) $(TEST_OBJ) $(TEST_EXEC) $(SRC_DIR)/main.o
+	rm -f $(OBJS) kube $(TEST_OBJ) $(TEST_EXEC) $(SRC_DIR)/main.o
 
 # Phony targets
-.PHONY: all debug clean
+.PHONY: all debug clean install uninstall

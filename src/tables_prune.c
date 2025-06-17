@@ -159,7 +159,13 @@ void gen_ptable_H() {
   }
 
   /* end of TODO */
-  save_table_to_file("data/H.dat", ptable_H, SIZE_PTABLE_H);
+  char fname[strlen(tabledir) + 100];
+
+  strcpy(fname, tabledir);
+  strcat(fname, "/");
+  strcat(fname, "H.dat");
+
+  save_table_to_file(fname, ptable_H, SIZE_PTABLE_H);
 
   free(ptable_H);
 }

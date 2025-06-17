@@ -9,6 +9,7 @@
 #include "core/move.h"
 #include "core/sym.h"
 #include "utils.h"
+#include "env.h"
 
 #define SIZEH 10066636800ULL
 #define SIZE_PTABLE_H (5033318400ULL * (sizeof(uint8_t)))

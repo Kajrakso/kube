@@ -234,7 +234,14 @@ void gen_sym_table_e_index() {
       }
     }
   }
-  save_table_to_file("data/sym_table_e_index.dat", sym_table_e_index,
+
+  char fname[strlen(tabledir) + 100];
+
+  strcpy(fname, tabledir);
+  strcat(fname, "/");
+  strcat(fname, "sym_table_e_index.dat");
+
+  save_table_to_file(fname, sym_table_e_index,
                      table_size);
   free(sym_table_e_index);
 }
