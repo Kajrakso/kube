@@ -33,6 +33,18 @@ make test
 ```
 to run the tests (you need [Criterion](https://github.com/Snaipe/Criterion) for these).
 
+To install on your system (only tested on linux) run
+
+```sh
+make install
+```
+
+and to uninstall run
+
+```sh
+make uninstall
+```
+
 ## Inspiration
 
 I've used [https://github.com/rokicki/cube20src](https://github.com/rokicki/cube20src),
