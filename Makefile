@@ -1,6 +1,6 @@
 # Compiler and standard flags
 CC = cc
-CFLAGS_COMMON = -std=c23 -g -fPIC -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
+CFLAGS_COMMON = -std=c2x -g -fPIC -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
 # -fsanitize=address,undefined # -fno-omit-frame-pointer
 CFLAGS_OPTIMIZED = -O3 -flto
 CFLAGS_DEBUG = -g -Wno-unused-function
