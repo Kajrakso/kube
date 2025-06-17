@@ -7,6 +7,7 @@ CFLAGS_DEBUG = -g -Wno-unused-function
 CFLAGS_LINK = -lm
 
 PREFIX = /usr/local
+MANPREFIX = ${PREFIX}/share/man
 
 # Directories
 SRC_DIR = src
@@ -51,9 +52,13 @@ install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f kube ${DESTDIR}${PREFIX}/bin/kube
 	chmod 755 ${DESTDIR}${PREFIX}/bin/kube
+	mkdir -p ${DESTDIR}${MANPREFIX}/man1
+	# sed "s/VERSION/${VERSION}/g" < doc/kube.1 > ${DESTDIR}${MANPREFIX}/man1/kube.1
+	cp doc/kube.1 ${DESTDIR}${MANPREFIX}/man1/kube.1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/kube.1
 
 uninstall:
-	rm -rf ${DESTDIR}${PREFIX}/bin/kube
+	rm -rf ${DESTDIR}${PREFIX}/bin/kube ${DESTDIR}${MANPREFIX}/man1/kube.1
 
 # Clean target
 clean:
