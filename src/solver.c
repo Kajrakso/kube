@@ -126,7 +126,7 @@ static bool TreeSearch(cube_t*       cube,
         }
     }
 
-    uint64_t      p1      = cube_to_H_index(cube);
+    uint64_t      p1      = cube_to_H_index(cube, UD);
     const uint8_t pval_UD = ptable_read_val(p1, ptable);
 
     if (pval_UD > remaining_moves)
@@ -134,7 +134,7 @@ static bool TreeSearch(cube_t*       cube,
         stats->no_nodes_pruned++;
         return false;
     }
-    uint64_t      p2      = cube_to_H_lr_index(cube);
+    uint64_t      p2      = cube_to_H_index(cube, LR);
     const uint8_t pval_LR = ptable_read_val(p2, ptable);
 
     if (pval_LR > remaining_moves)
@@ -142,7 +142,7 @@ static bool TreeSearch(cube_t*       cube,
         stats->no_nodes_pruned++;
         return false;
     }
-    uint64_t      p3      = cube_to_H_fb_index(cube);
+    uint64_t      p3      = cube_to_H_index(cube, UD);
     const uint8_t pval_FB = ptable_read_val(p3, ptable);
 
     if (pval_FB > remaining_moves)
@@ -160,7 +160,7 @@ static bool TreeSearch(cube_t*       cube,
     cube_t inv = cube_operation_inverse(*cube);
     stats->no_inverse_computations++;
 
-    uint64_t      p1_inv      = cube_to_H_index(&inv);
+    uint64_t      p1_inv      = cube_to_H_index(&inv, UD);
     const uint8_t pval_UD_inv = ptable_read_val(p1_inv, ptable);
 
 
@@ -171,7 +171,7 @@ static bool TreeSearch(cube_t*       cube,
         return false;
     }
 
-    uint64_t      p2_inv      = cube_to_H_lr_index(&inv);
+    uint64_t      p2_inv      = cube_to_H_index(&inv, LR);
     const uint8_t pval_LR_inv = ptable_read_val(p2_inv, ptable);
 
     if (pval_LR_inv > remaining_moves)
@@ -181,7 +181,7 @@ static bool TreeSearch(cube_t*       cube,
         return false;
     }
 
-    uint64_t      p3_inv      = cube_to_H_fb_index(&inv);
+    uint64_t      p3_inv      = cube_to_H_index(&inv, FB);
     const uint8_t pval_FB_inv = ptable_read_val(p3_inv, ptable);
 
     if (pval_FB_inv > remaining_moves)

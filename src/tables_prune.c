@@ -83,7 +83,7 @@ void gen_ptable_H() {
     ptable_set_val(i, 15, ptable_H);
   }
 
-  uint64_t p = cube_to_H_index(&cube);
+  uint64_t p = cube_to_H_index(&cube, UD);
   ptable_set_val(p, 0, ptable_H);
 
   /* TODO: improve table gen!

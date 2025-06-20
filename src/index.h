@@ -31,7 +31,7 @@ uint64_t cube_to_c_index(cube_t* cube);
 
 uint64_t cube_to_e_index(cube_t* cube);
 
-uint64_t cube_to_H_index(cube_t* cube);
+uint64_t cube_to_H_index(cube_t* cube, axes ax);
 
 /* NOTE: the cube returned is not necessarily a valid cube.
  * Also, these function is not optimized. */
@@ -52,6 +52,6 @@ uint64_t cube_to_ccb_index(cube_t* cube);
 uint64_t cube_to_ecs_index(cube_t* cube);
 uint64_t cube_to_ecm_index(cube_t* cube);
 
-uint64_t cube_to_H_lr_index(cube_t* cube);
-uint64_t cube_to_H_fb_index(cube_t* cube);
+// uint64_t cube_to_H_lr_index(cube_t* cube);
+// uint64_t cube_to_H_fb_index(cube_t* cube);
 #endif /* INDEX_H */
