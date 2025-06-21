@@ -142,7 +142,7 @@ static bool TreeSearch(cube_t*       cube,
         stats->no_nodes_pruned++;
         return false;
     }
-    uint64_t      p3      = cube_to_H_index(cube, UD);
+    uint64_t      p3      = cube_to_H_index(cube, FB);
     const uint8_t pval_FB = ptable_read_val(p3, ptable);
 
     if (pval_FB > remaining_moves)

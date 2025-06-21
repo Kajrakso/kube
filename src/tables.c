@@ -7,6 +7,9 @@
 
 #include "tables.h"
 
+int init_table(const char* path, size_t table_size, void** table_ptr);
+void free_table(void* table_ptr, size_t size);
+
 // The table pointers is only visible in this file.
 static void* ptable_H          = NULL;
 static void* sym_table_e_index = NULL;

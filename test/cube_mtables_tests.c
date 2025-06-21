@@ -28,20 +28,20 @@ Test(mtables, mtables) {
     for (int i = 0; i < 100; i++)
     {
         cube_t   c    = cube_scrambler_get_handscrambled_cube();
-        uint32_t ece  = cube_to_ece_index(&c);
-        uint32_t eofb = cube_to_eofb_index(&c);
-        uint32_t ccu  = cube_to_ccu_index(&c);
-        uint32_t coud = cube_to_coud_index(&c);
+        uint32_t ece  = cube_to_ec_index(&c, UD);
+        uint32_t eofb = cube_to_eo_index(&c, FB);
+        uint32_t ccu  = cube_to_cc_index(&c, UD);
+        uint32_t coud = cube_to_co_index(&c, UD);
 
         // make moves
         for (int m = 0; m < NMOVES; m++)
         {
             cube_t c2 = c;
             cube_move_apply_move(&c2, m);
-            uint32_t ece_m  = cube_to_ece_index(&c2);
-            uint32_t eofb_m = cube_to_eofb_index(&c2);
-            uint32_t ccu_m  = cube_to_ccu_index(&c2);
-            uint32_t coud_m = cube_to_coud_index(&c2);
+            uint32_t ece_m  = cube_to_ec_index(&c2, UD);
+            uint32_t eofb_m = cube_to_eo_index(&c2, FB);
+            uint32_t ccu_m  = cube_to_cc_index(&c2, UD);
+            uint32_t coud_m = cube_to_co_index(&c2, UD);
 
             uint32_t ece_mt  = move_table_ece_index[ece][m];
             uint32_t eofb_mt = move_table_eofb_index[eofb][m];

@@ -17,9 +17,9 @@ void DLS_H(uint64_t ece, uint64_t eofb, uint64_t coud, uint64_t ccu, uint64_t p,
     eofb2 = move_table_eofb_index[eofb][m];
 
     struct c_index_cclass_sym c =
-        cclass_table[ccu_coud_to_c_index(ccu2, coud2)];
+        cclass_table[cc_co_to_c_index(ccu2, coud2)];
 
-    e2 = ece_eofb_to_e_index(ece2, eofb2);
+    e2 = ec_eo_to_e_index(ece2, eofb2);
     e2_sym = sym_table_e_index[e2 * NSYMS + c.sym];
 
     p2 = cclass_i_e_to_H_index(c.cclass_i, e2_sym);
@@ -73,10 +73,10 @@ void gen_ptable_H() {
   uint8_t* ptable_H = malloc(size_ptable_h);
 
   // calculate the initial index
-  uint64_t ccu = cube_to_ccu_index(&cube);
-  uint64_t coud = cube_to_coud_index(&cube);
-  uint64_t ece = cube_to_ece_index(&cube);
-  uint64_t eofb = cube_to_eofb_index(&cube);
+  uint64_t ccu = cube_to_cc_index(&cube, UD);
+  uint64_t coud = cube_to_co_index(&cube, UD);
+  uint64_t ece = cube_to_ec_index(&cube, UD);
+  uint64_t eofb = cube_to_eo_index(&cube, FB);
 
   fprintf(stderr, "Setting default values\n");
   for (uint64_t i = 0; i < SIZEH; i++) {
@@ -135,9 +135,9 @@ void gen_ptable_H() {
           uint64_t eofb2 = move_table_eofb_index[eofb][m];
 
           struct c_index_cclass_sym c =
-              cclass_table[ccu_coud_to_c_index(ccu2, coud2)];
+              cclass_table[cc_co_to_c_index(ccu2, coud2)];
 
-          uint64_t e2 = ece_eofb_to_e_index(ece2, eofb2);
+          uint64_t e2 = ec_eo_to_e_index(ece2, eofb2);
 
           // we need to apply symmetry conj. to the edge index as well.
           uint64_t e2_sym = sym_table_e_index[e2 * NSYMS + c.sym];

@@ -207,17 +207,17 @@ void gen_sym_table_e_index() {
                                   fix_eo_lr_ud(&cube);
                                   fix_co_lr_ud(&cube);
 
-                                  uint64_t ece_i = cube_to_ece_index(&cube);
-                                  uint64_t eofb_i = cube_to_eofb_index(&cube);
+                                  uint64_t ece_i = cube_to_ec_index(&cube, UD);
+                                  uint64_t eofb_i = cube_to_eo_index(&cube, FB);
                                   cube = cube_operation_sym_conjugate(cube, t);
-                                  uint64_t ece_ii = cube_to_ece_index(&cube);
-                                  uint64_t eofb_ii = cube_to_eofb_index(&cube);
+                                  uint64_t ece_ii = cube_to_ec_index(&cube, UD);
+                                  uint64_t eofb_ii = cube_to_eo_index(&cube, FB);
 
-                                  sym_table_e_index[ece_eofb_to_e_index(
+                                  sym_table_e_index[ec_eo_to_e_index(
                                                         ece_i, eofb_i) *
                                                         NSYMS +
                                                     t] =
-                                      ece_eofb_to_e_index(ece_ii, eofb_ii);
+                                      ec_eo_to_e_index(ece_ii, eofb_ii);
                                 }
                               }
                             }
@@ -267,7 +267,7 @@ void gen_c_sym_index_tables() {
     for (int i = 1; i < 16; i++) {
       t = UDsyms[i];
       c2 = cube_operation_sym_conjugate(c1, t);
-      idx = cube_to_c_index(&c2);  //  todo: look into type
+      idx = cube_to_c_index(&c2, UD);  //  todo: look into type
       if (idx < best) {
         best = idx;
         sym = t;

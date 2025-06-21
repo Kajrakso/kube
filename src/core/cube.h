@@ -129,8 +129,8 @@ void swap_cubes(cube_t* c, cube_t* t);
 int which_corner_at_pos(int pos, cube_t* cube);
 int which_edge_at_pos(int pos, cube_t* cube);
 
-void build_pos_to_edge(const cube_t* cube, int pos_to_edge[NEDGES]);
-void build_pos_to_corner(const cube_t* cube, int pos_to_corner[NCORNERS]);
+void build_pos_to_edge(const cube_t* cube, int pos_to_edge[NEDGES], axes ax);
+void build_pos_to_corner(const cube_t* cube, int pos_to_corner[NCORNERS], axes ax);
 
 // returns the slice an edge belongs to.
 int e_slice(int i);

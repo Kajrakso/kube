@@ -57,9 +57,9 @@ void gen_move_table_ece_index() {
                         fix_eo_lr_ud(&cube);
                         fix_co_lr_ud(&cube);
 
-                        uint64_t i = cube_to_ece_index(&cube);
+                        uint64_t i = cube_to_ec_index(&cube, UD);
                         cube_move_apply_move(&cube, m);
-                        uint64_t ii = cube_to_ece_index(&cube);
+                        uint64_t ii = cube_to_ec_index(&cube, UD);
 
                         move_table_ece_index[i][m] = ii;
                     }
@@ -100,9 +100,9 @@ void gen_move_table_coud_index() {
                                     fix_eo_lr_ud(&cube);
                                     fix_co_lr_ud(&cube);
 
-                                    uint64_t i = cube_to_coud_index(&cube);
+                                    uint64_t i = cube_to_co_index(&cube, UD);
                                     cube_move_apply_move(&cube, m);
-                                    uint64_t ii = cube_to_coud_index(&cube);
+                                    uint64_t ii = cube_to_co_index(&cube, UD);
 
                                     move_table_coud_index[i][m] = ii;
                                 }
@@ -160,9 +160,9 @@ void gen_move_table_eofb_index() {
                                                     fix_eo_lr_ud(&cube);
                                                     fix_co_lr_ud(&cube);
 
-                                                    uint64_t i = cube_to_eofb_index(&cube);
+                                                    uint64_t i = cube_to_eo_index(&cube, FB);
                                                     cube_move_apply_move(&cube, m);
-                                                    uint64_t ii = cube_to_eofb_index(&cube);
+                                                    uint64_t ii = cube_to_eo_index(&cube, FB);
 
                                                     move_table_eofb_index[i][m] = ii;
                                                 }
@@ -212,9 +212,9 @@ void gen_move_table_ccu_index() {
                         fix_eo_lr_ud(&cube);
                         fix_co_lr_ud(&cube);
 
-                        uint64_t i = cube_to_ccu_index(&cube);
+                        uint64_t i = cube_to_cc_index(&cube, UD);
                         cube_move_apply_move(&cube, m);
-                        uint64_t ii = cube_to_ccu_index(&cube);
+                        uint64_t ii = cube_to_cc_index(&cube, UD);
 
                         move_table_ccu_index[i][m] = ii;
                     }

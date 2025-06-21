@@ -84,11 +84,11 @@ void do_inversion(cube_t* cube) {
 
     // build a "reverse" lookup for corners
     int pos_to_corner[NCORNERS];
-    build_pos_to_corner(cube, pos_to_corner);
+    build_pos_to_corner(cube, pos_to_corner, UD);
 
     // build a "reverse" lookup for edges
     int pos_to_edge[NEDGES];
-    build_pos_to_edge(cube, pos_to_edge);
+    build_pos_to_edge(cube, pos_to_edge, UD);
 
     e1 = pos_to_edge[UF];
     e2 = pos_to_edge[DB];

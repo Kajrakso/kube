@@ -27,17 +27,6 @@ void gen_move_tables();
 void initialize_sym_tables();
 void gen_sym_tables();
 
-bool save_table_to_file(const char* path, void* table, const size_t table_size);
-
-int init_table(const char* path, size_t table_size, void** table_ptr);
-void free_table(void* table_ptr, size_t size);
-
-void* get_ptable_H();
-void* get_sym_table_e_index();
-
-int cube_tables_load_ptableH();
-int cube_tables_load_sym_table_e_index();
-
 //! 19.04.2025: These are for testing!
 
 struct c_index_cclass_sym {
@@ -65,29 +54,33 @@ void gen_move_table_eofb_index();
 void gen_sym_table_e_index();
 void gen_c_sym_index_tables();
 
-/* runs through the ptable and counts the number of cosets for each p-value. */
-void check_Hdat();
+bool save_table_to_file(const char* path, void* table, const size_t table_size);
+
+/* Get the tables. Returns NULL if not loaded. */
+void* get_ptable_H();
+void* get_sym_table_e_index();
 
 /* Initializes the move and symmetry tables.
 You have to call this function before applying moves to the cube.*/
 void cube_tables_generate();
 
-/* Call before using tables */
+/* Call before using ptables and sym_table_e_index*/
 int cube_tables_load();
 
-/* Call after use of tables */
+/* Call after use of ptables and sym_table_e_index */
 void cube_tables_free();
 
 // todo: WIP
-void gen_ptable_L();
-
 void gen_ptable_H();
 
-int init_ptable_H(const char* path);
-void free_ptable_H();
+/* runs through the ptable and counts the number of cosets for each p-value. */
+void check_Hdat();
 
+int cube_tables_load_ptableH();
+int cube_tables_load_sym_table_e_index();
 
-
+/* set and read value from ptable.
+ * these are needed since we store 2 values per byte. */
 static inline void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
   if (i % 2 == 0) {
     ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
