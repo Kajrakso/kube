@@ -19,5 +19,9 @@ void bench();
 void bench_solver();
 
 void bench_solver_16_movers();
+void bench_solver_17_movers();
+void bench_solver_18_movers();
+
+void bench_hardest_scramble();
 
 #endif /* BENCH_H */

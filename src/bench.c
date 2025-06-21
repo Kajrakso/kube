@@ -421,7 +421,7 @@ void bench_solver_18_movers() {
 
 void bench_solver() {
     srand((unsigned int) time(NULL));
-    clock_t start, end;
+    clock_t start, end, start_per_scramble, end_per_scramble;
 
     cube_tables_generate();
     cube_tables_load();
@@ -436,12 +436,18 @@ void bench_solver() {
         // prepare array  for solutions
         int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
-        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1);
+        start_per_scramble = clock();
+        bool solved        = cube_solvers_solve_cube(cube, solutions, num_sols, 1);
+        end_per_scramble   = clock();
 
         if (!solved)
             printf("Was not able to solve the cube :(\n");
         else
             cube_print_solutions(solutions, num_sols, 0);
+
+
+        printf("time for solving scramble %i: %f seconds\n", i,
+               (float) (end_per_scramble - start_per_scramble) / CLOCKS_PER_SEC);
 
         printf("\n");
         free(solutions);
@@ -451,7 +457,33 @@ void bench_solver() {
 
     printf("time for solving %i random states: %f seconds (%f sec/scr)\n", NUM_SCRAMBLES,
            (float) (end - start) / CLOCKS_PER_SEC,
-           ((float) (end - start) / CLOCKS_PER_SEC) / (float)NUM_SCRAMBLES);
+           ((float) (end - start) / CLOCKS_PER_SEC) / (float) NUM_SCRAMBLES);
 }
 
 
+void bench_hardest_scramble() {
+    clock_t start, end;
+    cube_tables_generate();
+    cube_tables_load();
+
+    cube_t cube = cube_create_new_cube();
+    cube_move_apply_move_string(&cube, "F U' F2 D' B U R' F' L D' R' U' L U B' D2 R' F U2 D2");
+
+    const int num_sols = 1;
+    // prepare array  for solutions
+    int* solutions = malloc(sizeof(int) * 20 * num_sols);
+
+    start       = clock();
+    bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1);
+    end         = clock();
+
+    if (!solved)
+        printf("Was not able to solve the cube :(\n");
+    else
+        cube_print_solutions(solutions, num_sols, 0);
+    free(solutions);
+    cube_tables_free();
+
+    printf("time for solving the hardest scramble: %f seconds\n",
+           (float) (end - start) / CLOCKS_PER_SEC);
+}
