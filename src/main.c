@@ -1,12 +1,11 @@
 #include "solver.h"
-#include "bench.h"
 #include "cli.h"
 #include "env.h"
 
 #include <stdlib.h>
 #include <argp.h>
 
-static int number_of_solutions = 1;
+#define BUF_SIZE 4096
 
 const char* argp_program_version     = "kube 0.1";
 const char* argp_program_bug_address = "<kube@oskarfj.no>";
@@ -15,19 +14,18 @@ const char* argp_program_bug_address = "<kube@oskarfj.no>";
 static char doc[] = "kube -- an optimal Rubik's cube solver";
 
 /* A description of the arguments we accept. */
-static char args_doc[] = "scramble";
+static char args_doc[] = "";
 
 /* The options we understand. */
 static struct argp_option options[] = {{"verbose", 'v', 0, 0, "Produce verbose output"},
-                                       {0, 'n', "NUM", 0, "Try to find NUM solutions"},
-                                       {"bench", 'b', 0, 0, "Run some benchmarks"},
+                                       {"num", 'n', "NUM", 0, "Try to find NUM solutions"},
+                                       {"format", 'f', "FORMAT", 0, "Specify scramble format"},
                                        {0}};
 
 /* Used by main to communicate with parse_opt. */
 struct arguments {
-    char* args[1]; /* scramble */
+    char* format;
     int   verbose;
-    int   benchmark;
     int   number_of_solutions;
 };
 
@@ -47,8 +45,8 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->verbose = 1;
         break;
 
-    case 'b' :
-        arguments->benchmark = 1;
+    case 'f' :
+        arguments->format = arg;
         break;
 
     case 'n' :
@@ -57,28 +55,12 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         if (*endptr != '\0')
         {
             // Error: not a valid integer string
-            printf("Conversion error, non-integer characters found: %s. Using n = %i\n", endptr,
-                   number_of_solutions);
+            printf("Conversion error, non-integer characters found: %s. Using n = %i\n", endptr, 1);
         }
         else
         {
-            number_of_solutions = num;
+            arguments->number_of_solutions = num;
         }
-        break;
-
-    case ARGP_KEY_ARG :
-        if (state->arg_num >= 1)
-            /* Too many arguments. */
-            argp_usage(state);
-
-        arguments->args[state->arg_num] = arg;
-
-        break;
-
-    case ARGP_KEY_END :
-        if (state->arg_num < 1 && arguments->benchmark == 0)
-            /* Not enough arguments. */
-            argp_usage(state);
         break;
 
     default :
@@ -90,58 +72,52 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
 /* Our argp parser. */
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
-
 int main(int argc, char** argv) {
     struct arguments arguments;
 
     /* Default values. */
     arguments.verbose             = 0;
-    arguments.benchmark           = 0;
-    arguments.number_of_solutions = number_of_solutions;
+    arguments.format              = "singmaster";
+    arguments.number_of_solutions = 1;
 
     /* Parse our arguments; every option seen by parse_opt will
      be reflected in arguments. */
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
     init_env();
 
-    if (arguments.benchmark == 1)
+    if (arguments.number_of_solutions >= 1)
     {
-        bench_solver();
-    }
-    else
-    {
-        if (arguments.number_of_solutions < 1)
+        cube_tables_generate();  // generates tables for moves, symmetries, etc.
+        cube_tables_load();      // loads the pruning tables
+
+        char* buf       = malloc(BUF_SIZE);
+        int*  solutions = malloc(sizeof(int) * 20 * arguments.number_of_solutions);
+
+        while (fgets(buf, BUF_SIZE, stdin))
         {
-            goto KUBE_CLEAN;
+            buf[strcspn(buf, "\r\n")] = 0;
+
+            cube_t c = cube_create_new_cube();
+            if (cube_move_apply_move_string(&c, buf) == 1)
+            {
+                break;
+            }
+
+            if (cube_solvers_solve_cube(c, solutions, arguments.number_of_solutions,
+                                        arguments.verbose))
+            {
+                cube_print_solutions(solutions, arguments.number_of_solutions, arguments.verbose);
+            }
+            else
+            {
+                printf("Could not solve the cube :(\n");
+            }
         }
 
-        char* scr = arguments.args[0];
-
-
-        cube_tables_generate();
-        cube_tables_load();
-
-        cube_t cube = cube_create_new_cube();
-        if (cube_move_apply_move_string(&cube, scr) == 1)
-        {
-            goto KUBE_CLEAN;
-        }
-
-        int* solutions = malloc(sizeof(int) * 20 * number_of_solutions);
-        if (cube_solvers_solve_cube(cube, solutions, number_of_solutions, arguments.verbose))
-        {
-            cube_print_solutions(solutions, number_of_solutions, arguments.verbose);
-        }
-        else
-        {
-            printf("Could not solve the cube :(\n");
-        }
+        cube_tables_free();
+        free(buf);
         free(solutions);
     }
-
-KUBE_CLEAN:
-    cube_tables_free();
 
     return 0;
 }

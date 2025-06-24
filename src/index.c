@@ -1,38 +1,23 @@
 #include "index.h"
 
-int ud_i_to_fb_i_corners[NCORNERS] = {4, 7, 0, 3, 2, 1, 6, 5};
-int ud_i_to_lr_i_corners[NCORNERS] = {2, 5, 4, 3, 0, 7, 6, 1};
-int ud_i_to_fb_i_edges[NEDGES]     = {7, 8, 3, 11, 1, 9, 5, 10, 4, 6, 0, 2};
-int ud_i_to_lr_i_edges[NEDGES]     = {10, 4, 11, 2, 8, 6, 9, 0, 1, 5, 7, 3};
+int i_transform_axes_c[NAXES][NCORNERS] = {[FB] = {4, 7, 0, 3, 2, 1, 6, 5},
+                                           [LR] = {2, 5, 4, 3, 0, 7, 6, 1},
+                                           [UD] = {0, 1, 2, 3, 4, 5, 6, 7}};
+
+int i_transform_axes_e[NAXES][NEDGES] = {[FB] = {7, 8, 3, 11, 1, 9, 5, 10, 4, 6, 0, 2},
+                                         [LR] = {10, 4, 11, 2, 8, 6, 9, 0, 1, 5, 7, 3},
+                                         [UD] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+
+static int cs[NAXES][4] = {
+  [FB] = {UFL, UFR, DFR, DFL}, [LR] = {DFL, DBL, UBL, UFL}, [UD] = {UBL, UBR, UFR, UFL}};
 
 /* 0, ..., 70 - 1 = comb(8, 4) - 1 */
 uint64_t cube_to_cc_index(cube_t* cube, axes ax) {
-    if (ax == UD)
-    {
-        return (uint64_t)
-          ccu_combinatorials_lookup[extract_corner_perm(cube->corners[UBL]) * 1
-                                    + extract_corner_perm(cube->corners[UBR]) * 8
-                                    + extract_corner_perm(cube->corners[UFR]) * 8 * 8
-                                    + extract_corner_perm(cube->corners[UFL]) * 8 * 8 * 8];
-    }
-    if (ax == FB)
-    {
-        return (uint64_t) ccu_combinatorials_lookup
-          [ud_i_to_fb_i_corners[extract_corner_perm(cube->corners[UFL])] * 1
-           + ud_i_to_fb_i_corners[extract_corner_perm(cube->corners[UFR])] * 8
-           + ud_i_to_fb_i_corners[extract_corner_perm(cube->corners[DFR])] * 8 * 8
-           + ud_i_to_fb_i_corners[extract_corner_perm(cube->corners[DFL])] * 8 * 8 * 8];
-    }
-    if (ax == LR)
-    {
-        return (uint64_t) ccu_combinatorials_lookup
-          [ud_i_to_lr_i_corners[extract_corner_perm(cube->corners[DFL])] * 1
-           + ud_i_to_lr_i_corners[extract_corner_perm(cube->corners[DBL])] * 8
-           + ud_i_to_lr_i_corners[extract_corner_perm(cube->corners[UBL])] * 8 * 8
-           + ud_i_to_lr_i_corners[extract_corner_perm(cube->corners[UFL])] * 8 * 8 * 8];
-    }
-
-    return 0;
+    return (uint64_t) ccu_combinatorials_lookup
+      [i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][0]])] * 1
+       + i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][1]])] * 8
+       + i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][2]])] * 8 * 8
+       + i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][3]])] * 8 * 8 * 8];
 }
 
 /* 0, .., 495 - 1 = comb(12, 4) - 1 */
@@ -48,18 +33,18 @@ uint64_t cube_to_ec_index(cube_t* cube, axes ax) {
     if (ax == FB)
     {
         return (uint64_t) ece_combinatorials_lookup
-          [ud_i_to_fb_i_edges[extract_edge_perm(cube->edges[UL])] * 1
-           + ud_i_to_fb_i_edges[extract_edge_perm(cube->edges[UR])] * 12
-           + ud_i_to_fb_i_edges[extract_edge_perm(cube->edges[DR])] * 12 * 12
-           + ud_i_to_fb_i_edges[extract_edge_perm(cube->edges[DL])] * 12 * 12 * 12];
+          [i_transform_axes_e[ax][extract_edge_perm(cube->edges[UL])] * 1
+           + i_transform_axes_e[ax][extract_edge_perm(cube->edges[UR])] * 12
+           + i_transform_axes_e[ax][extract_edge_perm(cube->edges[DR])] * 12 * 12
+           + i_transform_axes_e[ax][extract_edge_perm(cube->edges[DL])] * 12 * 12 * 12];
     }
     if (ax == LR)
     {
         return (uint64_t) ece_combinatorials_lookup
-          [ud_i_to_lr_i_edges[extract_edge_perm(cube->edges[UB])] * 1
-           + ud_i_to_lr_i_edges[extract_edge_perm(cube->edges[UF])] * 12
-           + ud_i_to_lr_i_edges[extract_edge_perm(cube->edges[DF])] * 12 * 12
-           + ud_i_to_lr_i_edges[extract_edge_perm(cube->edges[DB])] * 12 * 12 * 12];
+          [i_transform_axes_e[ax][extract_edge_perm(cube->edges[UB])] * 1
+           + i_transform_axes_e[ax][extract_edge_perm(cube->edges[UF])] * 12
+           + i_transform_axes_e[ax][extract_edge_perm(cube->edges[DF])] * 12 * 12
+           + i_transform_axes_e[ax][extract_edge_perm(cube->edges[DB])] * 12 * 12 * 12];
     }
     return 0;
 }
@@ -68,24 +53,17 @@ uint64_t cube_to_ec_index(cube_t* cube, axes ax) {
 uint64_t cube_to_eo_index(cube_t* cube, axes ax) {
     // build a "reverse" lookup
     int pos_to_edge[NEDGES];
-    switch (ax)
-    {
-    case FB :
-        build_pos_to_edge(cube, pos_to_edge, UD);
-        break;
-    case UD :
-        build_pos_to_edge(cube, pos_to_edge, LR);
-        break;
-    case LR :
-        build_pos_to_edge(cube, pos_to_edge, FB);
-        break;
-    }
+    build_pos_to_edge(cube, pos_to_edge, ax);
 
     uint64_t orien = 0;
     uint64_t pow   = 1ULL;
     for (int i = 0; i < NEDGES - 1; i++)
     {
-        orien += pow * (uint64_t) extract_edge_orien(cube->edges[pos_to_edge[i]], ax);
+        /* the (ax + 1) % 3 trick is 
+         * to adjust for EO axis being different
+         * than the axis for DR. This is a result of
+         * how EO is defined. */
+        orien += pow * (uint64_t) extract_edge_orien(cube->edges[pos_to_edge[i]], (ax + 1) % 3);
         pow <<= 1;
     }
     return orien;
@@ -114,15 +92,7 @@ uint64_t cube_to_c_index(cube_t* cube, axes ax) {
 
 /* 0, ..., 495*2**11 - 1 = 1013760 - 1 */
 uint64_t cube_to_e_index(cube_t* cube, axes ax) {
-    switch (ax)
-    {
-    case UD :
-        return ec_eo_to_e_index(cube_to_ec_index(cube, UD), cube_to_eo_index(cube, FB));
-    case FB :
-        return ec_eo_to_e_index(cube_to_ec_index(cube, FB), cube_to_eo_index(cube, LR));
-    case LR :
-        return ec_eo_to_e_index(cube_to_ec_index(cube, LR), cube_to_eo_index(cube, UD));
-    }
+    return ec_eo_to_e_index(cube_to_ec_index(cube, ax), cube_to_eo_index(cube, ax));
 }
 
 inline uint64_t cc_co_to_c_index(uint64_t cc, uint64_t co) { return cc + NCCU * (co); }
@@ -135,24 +105,11 @@ uint64_t cclass_i_e_to_H_index(uint64_t cclass_i, uint64_t e_i) { return cclass_
 uint64_t cube_to_H_index(cube_t* cube, axes ax) {
     uint64_t*                 sym_table_e_index = get_sym_table_e_index();
     uint64_t                  c_i, e_i;    // before sym red.
-    uint64_t                  c_i2, e_i2;  // after sym red;
+    uint64_t                  c_i2, e_i2;  // after sym red.
     struct c_index_cclass_sym c;
 
-    switch (ax)
-    {
-    case UD :
-        c_i = cc_co_to_c_index(cube_to_cc_index(cube, UD), cube_to_co_index(cube, UD));
-        e_i = ec_eo_to_e_index(cube_to_ec_index(cube, UD), cube_to_eo_index(cube, FB));
-        break;
-    case LR :
-        c_i = cc_co_to_c_index(cube_to_cc_index(cube, LR), cube_to_co_index(cube, LR));
-        e_i = ec_eo_to_e_index(cube_to_ec_index(cube, LR), cube_to_eo_index(cube, UD));
-        break;
-    case FB :
-        c_i = cc_co_to_c_index(cube_to_cc_index(cube, FB), cube_to_co_index(cube, FB));
-        e_i = ec_eo_to_e_index(cube_to_ec_index(cube, FB), cube_to_eo_index(cube, LR));
-        break;
-    }
+    c_i = cc_co_to_c_index(cube_to_cc_index(cube, ax), cube_to_co_index(cube, ax));
+    e_i = ec_eo_to_e_index(cube_to_ec_index(cube, ax), cube_to_eo_index(cube, ax));
 
     c    = cclass_table[c_i];
     e_i2 = sym_table_e_index[e_i * NSYMS + c.sym];

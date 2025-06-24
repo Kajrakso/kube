@@ -133,56 +133,19 @@ int which_edge_at_pos(int pos, cube_t* cube) {
 
 // TODO: Like these ones :)
 void build_pos_to_corner(const cube_t* cube, int pos_to_corner[NCORNERS], axes ax) {
-    switch (ax)
-    {
-    case UD :
-        for (int k = 0; k < NCORNERS; k++)
-        {
-            int pos            = extract_corner_perm(cube->corners[k]);
-            pos_to_corner[pos] = k;
-        }
-        break;
-    case LR :
-        for (int k = 0; k < NCORNERS; k++)
-        {
-            int pos            = ud_i_to_lr_i_corners[extract_corner_perm(cube->corners[k])];
-            pos_to_corner[pos] = k;
-        }
-        break;
-    case FB :
 
-        for (int k = 0; k < NCORNERS; k++)
-        {
-            int pos            = ud_i_to_fb_i_corners[extract_corner_perm(cube->corners[k])];
-            pos_to_corner[pos] = k;
-        }
-        break;
+    for (int k = 0; k < NCORNERS; k++)
+    {
+        int pos            = i_transform_axes_c[ax][extract_corner_perm(cube->corners[k])];
+        pos_to_corner[pos] = k;
     }
 }
 
 void build_pos_to_edge(const cube_t* cube, int pos_to_edge[NEDGES], axes ax) {
-    switch (ax)
+
+    for (int k = 0; k < NEDGES; k++)
     {
-    case UD :
-        for (int k = 0; k < NEDGES; k++)
-        {
-            int pos          = extract_edge_perm(cube->edges[k]);
-            pos_to_edge[pos] = k;
-        }
-        break;
-    case LR :
-        for (int k = 0; k < NEDGES; k++)
-        {
-            int pos          = ud_i_to_lr_i_edges[extract_edge_perm(cube->edges[k])];
-            pos_to_edge[pos] = k;
-        }
-        break;
-    case FB :
-        for (int k = 0; k < NEDGES; k++)
-        {
-            int pos          = ud_i_to_fb_i_edges[extract_edge_perm(cube->edges[k])];
-            pos_to_edge[pos] = k;
-        }
-        break;
+        int pos          = i_transform_axes_e[ax][extract_edge_perm(cube->edges[k])];
+        pos_to_edge[pos] = k;
     }
 }

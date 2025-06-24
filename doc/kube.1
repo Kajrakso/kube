@@ -7,15 +7,18 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 .B kube
 [\fB\-n\fR \fINUM\fR]
 [\fB\-v\fR]
-.IR scramble
+[\fB\-f\fR \fIFORMAT\fR]
 
 .SH DESCRIPTION
 .B kube
 is an optimal solver for the 3x3x3 Rubik's cube.
-It finds a shortest solution to a given
-scramble in the half turn metric (HTM). The solving
+It finds a shortest solution to the given scramble
+in the half turn metric (HTM). The solving
 algorithm is heavily inspired by Tomas Rokicki's 
 nxopt solver.
+.BR
+kube reads scrambles from stdin on the format
+specified by \fIFORMAT\fR. 
 
 .SH OPTIONS
 .TP
@@ -24,6 +27,10 @@ kube searches for \fINUM\fR solutions. Default is 1.
 .TP
 .BR \-v
 verbose output. kube will print some stats about the solving process.
+.TP
+.BR \-f\fR\ \fIFORMAT\fR
+Specify scramble format. Default is "singmaster".
+.TP
 
 .SH EXAMPLES
 Find an optimal solution for the Ua-perm with verbose output
@@ -31,7 +38,7 @@ Find an optimal solution for the Ua-perm with verbose output
 .nf
 .RS
 .B
-kube -v "R' U R' U' R' U' R' U R U R2"
+echo "R' U R' U' R' U' R' U R U R2" | kube -v
 .RE
 .fi
 .PP

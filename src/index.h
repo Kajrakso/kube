@@ -18,10 +18,8 @@ extern int ccu_combinatorials_lookup[4096];
 // When rotating the cube to another axis
 // the new positions of the pieces relative
 // to the new axis is encoded in these tables.
-extern int ud_i_to_fb_i_corners[NCORNERS];
-extern int ud_i_to_lr_i_corners[NCORNERS];
-extern int ud_i_to_fb_i_edges[NEDGES];
-extern int ud_i_to_lr_i_edges[NEDGES];
+extern int i_transform_axes_c[NAXES][NCORNERS];
+extern int i_transform_axes_e[NAXES][NEDGES];
 
 // the four "base" indeces
 uint64_t cube_to_cc_index(cube_t* cube, axes ax);
