@@ -6,12 +6,15 @@ An optimal solver for the 3x3x3 Rubik's cube.
 
 ### Usage
 
+kube reads scrambles from stdin.
+
 ```
 $ kube --help
-Usage: kube [OPTION...] scramble
+Usage: kube [OPTION...]
 kube -- an optimal Rubik's cube solver
 
-  -n NUM                     Try to find NUM solutions
+  -f, --format=FORMAT        Specify scramble format
+  -n, --num=NUM              Try to find NUM solutions
   -v, --verbose              Produce verbose output
   -?, --help                 Give this help list
       --usage                Give a short usage message
