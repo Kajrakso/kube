@@ -9,3 +9,7 @@ cube_t cube_scrambler_get_handscrambled_cube();
 
 /* Returns a completely random cube state. */
 cube_t cube_scrambler_get_scrambled_cube();
+
+
+/* Parse Speffz notation. */
+int cube_scrambler_parse_speffz(cube_t* c, char* s);

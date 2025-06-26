@@ -1,9 +1,10 @@
-#include "solver.h"
-#include "cli.h"
-#include "env.h"
-
 #include <stdlib.h>
 #include <argp.h>
+
+#include "solver.h"
+#include "cli.h"
+#include "scrambler.h"
+#include "env.h"
 
 #define BUF_SIZE 4096
 
@@ -98,9 +99,19 @@ int main(int argc, char** argv) {
             buf[strcspn(buf, "\r\n")] = 0;
 
             cube_t c = cube_create_new_cube();
-            if (cube_move_apply_move_string(&c, buf) == 1)
+            if (strcmp(arguments.format, "speffz") == 0)
             {
-                break;
+                if (cube_scrambler_parse_speffz(&c, buf) == 1)
+                {
+                    break;
+                }
+            }
+            else if (strcmp(arguments.format, "singmaster") == 0)
+            {
+                if (cube_move_apply_move_string(&c, buf) == 1)
+                {
+                    break;
+                }
             }
 
             if (cube_solvers_solve_cube(c, solutions, arguments.number_of_solutions,

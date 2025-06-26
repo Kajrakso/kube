@@ -30,9 +30,16 @@ verbose output. kube will print some stats about the solving process.
 .TP
 .BR \-f\fR\ \fIFORMAT\fR
 Specify scramble format. Default is "singmaster".
+Use standard notation for moves. Ex.: "R U R' F B2".
+Another option is "speffz". Specify the memo
+needed to solve the cube blindfolded using 
+the Speffz letter scheme from buffers UFR/UF. 
+Corner memo first, then a ".", followed by edge memo.
+Ex.: "abuv.efnt".
 .TP
 
 .SH EXAMPLES
+.PP
 Find an optimal solution for the Ua-perm with verbose output
 .PP
 .nf
@@ -60,6 +67,26 @@ inverse computations: 824 (40.67%)
 nisses: 50 (2.47%)
 
 B2 U' R L' B2 L R' U' B2 (9)
+\fR
+.RE
+.fi
+
+.PP
+Find an optimal solution for an A-perm:
+.PP
+.nf
+.RS
+.B
+echo "ab." | kube -f speffz
+.RE
+.fi
+.PP
+Output:
+.PP
+.nf
+.RS
+\fB
+R' F R' B2 R F' R' B2 R2
 \fR
 
 .SH AUTHORS
