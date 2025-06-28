@@ -160,9 +160,9 @@ void gen_move_table_eofb_index() {
                                                     fix_eo_lr_ud(&cube);
                                                     fix_co_lr_ud(&cube);
 
-                                                    uint64_t i = cube_to_eo_index(&cube, FB);
+                                                    uint64_t i = cube_to_eo_index(&cube, UD);
                                                     cube_move_apply_move(&cube, m);
-                                                    uint64_t ii = cube_to_eo_index(&cube, FB);
+                                                    uint64_t ii = cube_to_eo_index(&cube, UD);
 
                                                     move_table_eofb_index[i][m] = ii;
                                                 }

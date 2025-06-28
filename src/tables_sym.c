@@ -208,10 +208,10 @@ void gen_sym_table_e_index() {
                                   fix_co_lr_ud(&cube);
 
                                   uint64_t ece_i = cube_to_ec_index(&cube, UD);
-                                  uint64_t eofb_i = cube_to_eo_index(&cube, FB);
+                                  uint64_t eofb_i = cube_to_eo_index(&cube, UD);
                                   cube = cube_operation_sym_conjugate(cube, t);
                                   uint64_t ece_ii = cube_to_ec_index(&cube, UD);
-                                  uint64_t eofb_ii = cube_to_eo_index(&cube, FB);
+                                  uint64_t eofb_ii = cube_to_eo_index(&cube, UD);
 
                                   sym_table_e_index[ec_eo_to_e_index(
                                                         ece_i, eofb_i) *

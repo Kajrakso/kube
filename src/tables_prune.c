@@ -76,7 +76,7 @@ void gen_ptable_H() {
   uint64_t ccu = cube_to_cc_index(&cube, UD);
   uint64_t coud = cube_to_co_index(&cube, UD);
   uint64_t ece = cube_to_ec_index(&cube, UD);
-  uint64_t eofb = cube_to_eo_index(&cube, FB);
+  uint64_t eofb = cube_to_eo_index(&cube, UD);
 
   fprintf(stderr, "Setting default values\n");
   for (uint64_t i = 0; i < SIZEH; i++) {
