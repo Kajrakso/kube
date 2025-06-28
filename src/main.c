@@ -21,12 +21,14 @@ static char args_doc[] = "";
 static struct argp_option options[] = {{"verbose", 'v', 0, 0, "Produce verbose output"},
                                        {"num", 'n', "NUM", 0, "Try to find NUM solutions"},
                                        {"format", 'f', "FORMAT", 0, "Specify scramble format"},
+                                       {"gen", 'g', 0, 0, "Generate tables"},
                                        {0}};
 
 /* Used by main to communicate with parse_opt. */
 struct arguments {
     char* format;
     int   verbose;
+    int   gen;
     int   number_of_solutions;
 };
 
@@ -42,6 +44,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
 
     switch (key)
     {
+    case 'g' :
+        arguments->gen = 1;
+        break;
+
     case 'v' :
         arguments->verbose = 1;
         break;
@@ -78,6 +84,7 @@ int main(int argc, char** argv) {
 
     /* Default values. */
     arguments.verbose             = 0;
+    arguments.gen                 = 0;
     arguments.format              = "singmaster";
     arguments.number_of_solutions = 1;
 
@@ -85,6 +92,41 @@ int main(int argc, char** argv) {
      be reflected in arguments. */
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
     init_env();
+
+    if (arguments.gen == 1)
+    {
+        cube_tables_generate();
+
+        char        fname1[strlen(tabledir) + 100];
+        char        fname2[strlen(tabledir) + 100];
+
+        strcpy(fname1, tabledir);
+        strcat(fname1, "/");
+        strcat(fname1, "sym_table_e_index.dat");
+
+        strcpy(fname2, tabledir);
+        strcat(fname2, "/");
+        strcat(fname2, "H.dat");
+
+        if (file_exists(fname1))
+        {
+            fprintf(stderr, "%s already exists. I'm skipping it!\n", fname1);
+        }
+        else
+        {
+            gen_sym_table_e_index();
+        }
+
+        if (file_exists(fname2))
+        {
+            fprintf(stderr, "%s already exists. I'm skipping it!\n", fname2);
+        }
+        else
+        {
+            gen_ptable_H();
+        }
+        return 0;
+    }
 
     if (arguments.number_of_solutions >= 1)
     {
@@ -114,6 +156,7 @@ int main(int argc, char** argv) {
                 }
             }
 
+            cube_print_cube(&c);
             if (cube_solvers_solve_cube(c, solutions, arguments.number_of_solutions,
                                         arguments.verbose))
             {

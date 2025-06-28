@@ -64,3 +64,15 @@ void init_env(void) {
 
     initialized_env = true;
 }
+
+// return true if the file specified by the filename exists
+bool file_exists(const char* filename) {
+    FILE* fp       = fopen(filename, "r");
+    bool  is_exist = false;
+    if (fp != NULL)
+    {
+        is_exist = true;
+        fclose(fp);  // close the file
+    }
+    return is_exist;
+}
