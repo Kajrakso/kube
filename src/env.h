@@ -12,5 +12,6 @@
 extern char* tabledir;
 
 void init_env(void);
+bool file_exists(const char* filename);
 
 #endif
