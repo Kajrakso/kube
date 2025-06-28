@@ -8,6 +8,7 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 [\fB\-n\fR \fINUM\fR]
 [\fB\-v\fR]
 [\fB\-f\fR \fIFORMAT\fR]
+[\fB\-g\fR]
 
 .SH DESCRIPTION
 .B kube
@@ -26,7 +27,7 @@ specified by \fIFORMAT\fR.
 kube searches for \fINUM\fR solutions. Default is 1.
 .TP
 .BR \-v
-verbose output. kube will print some stats about the solving process.
+Verbose output. kube will print some stats about the solving process.
 .TP
 .BR \-f\fR\ \fIFORMAT\fR
 Specify scramble format. Default is "singmaster".
@@ -36,6 +37,10 @@ needed to solve the cube blindfolded using
 the Speffz letter scheme from buffers UFR/UF. 
 Corner memo first, then a ".", followed by edge memo.
 Ex.: "abuv.efnt".
+.TP
+.BR \-g
+Generate tables. This has to be done before 
+using the solver.
 .TP
 
 .SH EXAMPLES
