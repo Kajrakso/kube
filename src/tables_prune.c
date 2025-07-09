@@ -1,6 +1,9 @@
 #include "tables.h"
 #include "index.h"
 
+#include <time.h>
+
+
 void DLS_H(uint64_t  ece,
            uint64_t  eofb,
            uint64_t  coud,
@@ -47,6 +50,7 @@ void DLS_H(uint64_t  ece,
 }
 
 void gen_ptable_H() {
+    cube_tables_load_sym_table_e_index();
     uint64_t* sym_table_e_index = (uint64_t*) get_sym_table_e_index();
     if (!sym_table_e_index)
     {
@@ -55,33 +59,30 @@ void gen_ptable_H() {
     }
     cube_t cube = cube_create_new_cube();
 
-    const uint64_t size_ptable_h = SIZE_PTABLE_H;
-
-    fprintf(stderr, "Generating move tables\n");
-    fprintf(stderr, "gen_move_table_ece_index\n");
     gen_move_table_ece_index();
-    fprintf(stderr, "gen_move_table_coud_index\n");
     gen_move_table_coud_index();
-    fprintf(stderr, "gen_move_table_eofb_index\n");
     gen_move_table_eofb_index();
-    fprintf(stderr, "gen_move_table_ccu_index\n");
     gen_move_table_ccu_index();
-    fprintf(stderr, "gen_c_sym_index_tables\n");
     gen_c_sym_index_tables();
 
     fprintf(stderr, "Initializing ptable for group H\n");
-    uint8_t* ptable_H = malloc(size_ptable_h);
+    uint8_t* ptable_H = malloc(SIZE_PTABLE_H);
     if (ptable_H == NULL)
     {
         fprintf(stderr, "Could not allocate memory for ptable.\n");
         return;
     }
 
+    time_t start, end;
+
+    start = clock();
+
     // calculate the initial index
     uint64_t ccu  = cube_to_cc_index(&cube, UD);
     uint64_t coud = cube_to_co_index(&cube, UD);
     uint64_t ece  = cube_to_ec_index(&cube, UD);
     uint64_t eofb = cube_to_eo_index(&cube, UD);
+    uint64_t p    = cube_to_H_index(&cube, UD);
 
     fprintf(stderr, "Setting default values\n");
     for (uint64_t i = 0; i < SIZEH; i++)
@@ -89,7 +90,6 @@ void gen_ptable_H() {
         ptable_set_val(i, 15, ptable_H);
     }
 
-    uint64_t p = cube_to_H_index(&cube, UD);
     ptable_set_val(p, 0, ptable_H);
 
     /* TODO: improve table gen!
@@ -171,6 +171,10 @@ void gen_ptable_H() {
             }
         }
     }
+
+    end = clock();
+
+    printf("time for gen function: %f s\n", (float) (end - start) / CLOCKS_PER_SEC);
 
     /* end of TODO */
     char fname[strlen(tabledir) + 100];

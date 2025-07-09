@@ -14,6 +14,7 @@ Usage: kube [OPTION...]
 kube -- an optimal Rubik's cube solver
 
   -f, --format=FORMAT        Specify scramble format
+  -g, --gen                  Generate tables
   -n, --num=NUM              Try to find NUM solutions
   -v, --verbose              Produce verbose output
   -?, --help                 Give this help list

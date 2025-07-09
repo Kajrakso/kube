@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <argp.h>
+#include <time.h>
 
 #include "solver.h"
 #include "cli.h"
@@ -123,8 +124,17 @@ int main(int argc, char** argv) {
         }
         else
         {
+            clock_t start, end;
+            start = clock();
             gen_ptable_H();
+            end = clock();
+            printf("Total time used for table gen: %f s\n", (float)(end - start) / CLOCKS_PER_SEC);
         }
+
+
+        cube_tables_load();
+        check_Hdat();
+        cube_tables_free();
         return 0;
     }
 
