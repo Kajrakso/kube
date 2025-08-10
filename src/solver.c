@@ -1,22 +1,22 @@
 #include "solver.h"
 
-static const int GODS_NO = 20;
-static bool enable_niss = true;
+static const int GODS_NO     = 20;
+static bool      enable_niss = true;
 
 // stats (temp)
 
 struct stats {
-    int          depth;
-    int*         solution;
-    int*         solution_inv;
-    int          num_sol_found;
-    unsigned int no_nisses;
-    unsigned int no_nodes_visited;
-    unsigned int no_nodes_pruned;
-    unsigned int no_nodes_pruned_inv;
-    unsigned int no_inverse_computations;
-    int          no_equal_pvals_normal;
-    int          no_equal_pvals_inverse;
+    int           depth;
+    int*          solution;
+    int*          solution_inv;
+    int           num_sol_found;
+    unsigned long no_nisses;
+    unsigned long no_nodes_visited;
+    unsigned long no_nodes_pruned;
+    unsigned long no_nodes_pruned_inv;
+    unsigned long no_inverse_computations;
+    int           no_equal_pvals_normal;
+    int           no_equal_pvals_inverse;
 
     int* solutions;
 };
@@ -63,21 +63,21 @@ static void print_stats(struct stats* stats) {
         fprintf(stderr, "max depth: %i\n", stats->depth);
         fprintf(stderr, "sols found: %i\n", stats->num_sol_found);
         fprintf(stderr, "\n");
-        fprintf(stderr, "nodes visited: %i\n", stats->no_nodes_visited);
-        fprintf(stderr, "nodes pruned: %i (%.2f%%)\n", stats->no_nodes_pruned,
+        fprintf(stderr, "nodes visited: %lu\n", stats->no_nodes_visited);
+        fprintf(stderr, "nodes pruned: %lu (%.2f%%)\n", stats->no_nodes_pruned,
                 100 * (float) stats->no_nodes_pruned / (float) stats->no_nodes_visited);
-        fprintf(stderr, "nodes pruned inv: %i (%.2f%%)\n", stats->no_nodes_pruned_inv,
+        fprintf(stderr, "nodes pruned inv: %lu (%.2f%%)\n", stats->no_nodes_pruned_inv,
                 100 * (float) stats->no_nodes_pruned_inv / (float) stats->no_nodes_visited);
-        fprintf(stderr, "inverse computations: %i (%.2f%%)\n", stats->no_inverse_computations,
+        fprintf(stderr, "inverse computations: %lu (%.2f%%)\n", stats->no_inverse_computations,
                 100 * (float) stats->no_inverse_computations / (float) stats->no_nodes_visited);
-        fprintf(stderr, "nisses: %i (%.2f%%)\n", stats->no_nisses,
+        fprintf(stderr, "nisses: %lu (%.2f%%)\n", stats->no_nisses,
                 100 * (float) stats->no_nisses / (float) stats->no_nodes_visited);
         printf("\n");
     }
 }
 
 
-void save_solution_to_solutions(struct stats* s){
+void save_solution_to_solutions(struct stats* s) {
     int i = 0;
     for (int m = 0; m < GODS_NO; m++)
     {
@@ -90,8 +90,7 @@ void save_solution_to_solutions(struct stats* s){
     {
         if (0 <= s->solution_inv[m] && s->solution_inv[m] < 18)
         {
-            s->solutions[s->num_sol_found * GODS_NO + i++] =
-                get_inv_move(s->solution_inv[m]);
+            s->solutions[s->num_sol_found * GODS_NO + i++] = get_inv_move(s->solution_inv[m]);
         }
     }
 }
@@ -114,7 +113,7 @@ static bool TreeSearch(cube_t*       cube,
         {
             save_solution_to_solutions(stats);
             stats->num_sol_found++;
-            
+
             // keep searching if we
             // have not found enough
             // solutions
@@ -274,8 +273,7 @@ static bool TreeSearch(cube_t*       cube,
     return false;
 }
 
-void IDA(
-  cube_t cube, uint8_t* ptable, struct stats* stats, int max_num_sols, int verbose) {
+void IDA(cube_t cube, uint8_t* ptable, struct stats* stats, int max_num_sols, int verbose) {
     bool stop_search = false;
     if (verbose == 1)
     {
@@ -335,11 +333,12 @@ bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solution
     struct stats* stats = malloc(sizeof(struct stats));
     init_stats(stats, number_of_solutions);
 
-    // at the moment nissing does not play well with 
+    // at the moment nissing does not play well with
     // finding multiple solutions.
     // for instance: R (U R) would be a solution of length 3...
     // even though it is the same as just U'
-    if (number_of_solutions > 1){
+    if (number_of_solutions > 1)
+    {
         enable_niss = false;
     }
     // actually search.
