@@ -72,7 +72,7 @@ static void print_stats(struct stats* stats) {
                 100 * (float) stats->no_inverse_computations / (float) stats->no_nodes_visited);
         fprintf(stderr, "nisses: %lu (%.2f%%)\n", stats->no_nisses,
                 100 * (float) stats->no_nisses / (float) stats->no_nodes_visited);
-        printf("\n");
+        fprintf(stderr, "\n");
     }
 }
 
