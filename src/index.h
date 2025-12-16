@@ -40,6 +40,8 @@ uint64_t cclass_i_e_to_H_index(uint64_t cclass_i, uint64_t e_i);
 // the main index
 uint64_t cube_to_H_index(cube_t* cube, axes ax);
 
+uint64_t cube_to_DR_index(cube_t* cube, axes ax);
+
 uint64_t cube_to_c_index(cube_t* cube, axes ax);
 
 uint64_t cube_to_e_index(cube_t* cube, axes ax);

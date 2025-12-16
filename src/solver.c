@@ -76,6 +76,16 @@ static void print_stats(struct stats* stats) {
     }
 }
 
+/* struct that holds information we need during the search */
+struct search_data {
+    int remaining_moves;
+    int prev_move;
+    int prev_move_inv;
+    bool is_inv;
+    int max_num_sols;
+    // int max_num_nomves; // not implemented yet
+};
+
 
 void save_solution_to_solutions(struct stats* s) {
     int i = 0;
@@ -98,14 +108,19 @@ void save_solution_to_solutions(struct stats* s) {
 // work in progress
 
 static bool TreeSearch(cube_t*       cube,
-                       uint8_t*      ptable,
-                       int           remaining_moves,
-                       struct stats* stats,
-                       int           prev_move,
-                       int           prev_move_inv,
-                       bool          is_inv,
-                       int           max_num_sols) {
+                       ptable_data_t ptable_data,
+                       struct search_data s_data,
+                       struct stats* stats
+    ) {
     stats->no_nodes_visited++;
+    int remaining_moves = s_data.remaining_moves;
+    int prev_move = s_data.prev_move;
+    int prev_move_inv = s_data.prev_move_inv;
+    bool is_inv = s_data.is_inv;
+    int max_num_sols = s_data.max_num_sols;
+
+
+
 
     if (remaining_moves == 0)
     {
@@ -125,24 +140,24 @@ static bool TreeSearch(cube_t*       cube,
         }
     }
 
-    uint64_t      p1      = cube_to_H_index(cube, UD);
-    const uint8_t pval_UD = ptable_read_val(p1, ptable);
+    uint64_t      p1      = ptable_data.cube_to_index_func(cube, UD);
+    const uint8_t pval_UD = ptable_data.read_value_ptable_func(p1, ptable_data.ptable);
 
     if (pval_UD > remaining_moves)
     {
         stats->no_nodes_pruned++;
         return false;
     }
-    uint64_t      p2      = cube_to_H_index(cube, LR);
-    const uint8_t pval_LR = ptable_read_val(p2, ptable);
+    uint64_t      p2      = ptable_data.cube_to_index_func(cube, LR);
+    const uint8_t pval_LR = ptable_data.read_value_ptable_func(p2, ptable_data.ptable);
 
     if (pval_LR > remaining_moves)
     {
         stats->no_nodes_pruned++;
         return false;
     }
-    uint64_t      p3      = cube_to_H_index(cube, FB);
-    const uint8_t pval_FB = ptable_read_val(p3, ptable);
+    uint64_t      p3      = ptable_data.cube_to_index_func(cube, FB);
+    const uint8_t pval_FB = ptable_data.read_value_ptable_func(p3, ptable_data.ptable);
 
     if (pval_FB > remaining_moves)
     {
@@ -159,8 +174,8 @@ static bool TreeSearch(cube_t*       cube,
     cube_t inv = cube_operation_inverse(*cube);
     stats->no_inverse_computations++;
 
-    uint64_t      p1_inv      = cube_to_H_index(&inv, UD);
-    const uint8_t pval_UD_inv = ptable_read_val(p1_inv, ptable);
+    uint64_t      p1_inv      = ptable_data.cube_to_index_func(&inv, UD);
+    const uint8_t pval_UD_inv = ptable_data.read_value_ptable_func(p1_inv, ptable_data.ptable);
 
 
     if (pval_UD_inv > remaining_moves)
@@ -170,8 +185,8 @@ static bool TreeSearch(cube_t*       cube,
         return false;
     }
 
-    uint64_t      p2_inv      = cube_to_H_index(&inv, LR);
-    const uint8_t pval_LR_inv = ptable_read_val(p2_inv, ptable);
+    uint64_t      p2_inv      = ptable_data.cube_to_index_func(&inv, LR);
+    const uint8_t pval_LR_inv = ptable_data.read_value_ptable_func(p2_inv, ptable_data.ptable);
 
     if (pval_LR_inv > remaining_moves)
     {
@@ -180,8 +195,8 @@ static bool TreeSearch(cube_t*       cube,
         return false;
     }
 
-    uint64_t      p3_inv      = cube_to_H_index(&inv, FB);
-    const uint8_t pval_FB_inv = ptable_read_val(p3_inv, ptable);
+    uint64_t      p3_inv      = ptable_data.cube_to_index_func(&inv, FB);
+    const uint8_t pval_FB_inv = ptable_data.read_value_ptable_func(p3_inv, ptable_data.ptable);
 
     if (pval_FB_inv > remaining_moves)
     {
@@ -252,10 +267,14 @@ static bool TreeSearch(cube_t*       cube,
         else
             stats->solution_inv[GODS_NO - remaining_moves] = move;
 
-        bool found = TreeSearch(cube, ptable, remaining_moves - 1, stats,
-                                !is_inv ? move : prev_move,     // prev_move on normal
-                                is_inv ? move : prev_move_inv,  // prev_move on inverse
-                                is_inv, max_num_sols);
+        struct search_data s_data_next = {
+            .remaining_moves = remaining_moves - 1,
+            .prev_move = !is_inv ? move : prev_move,
+            .prev_move_inv = is_inv ? move : prev_move_inv,
+            .is_inv = is_inv,
+            .max_num_sols = max_num_sols
+        };
+        bool found = TreeSearch(cube, ptable_data, s_data_next, stats);
 
         cube_move_apply_move(cube, get_inv_move(move));
 
@@ -273,7 +292,9 @@ static bool TreeSearch(cube_t*       cube,
     return false;
 }
 
-void IDA(cube_t cube, uint8_t* ptable, struct stats* stats, int max_num_sols, int verbose) {
+void IDA(cube_t cube,
+        ptable_data_t ptable_data,
+        struct stats* stats, int max_num_sols, int verbose) {
     bool stop_search = false;
     if (verbose == 1)
     {
@@ -290,10 +311,16 @@ void IDA(cube_t cube, uint8_t* ptable, struct stats* stats, int max_num_sols, in
         {
             fprintf(stderr, "%i ", depth);
         }
+        
 
-        stop_search = TreeSearch(&cube, ptable, depth, stats, 18,
-                                 18,  // NULLMOVE. TODO: formalise
-                                 false, max_num_sols);
+        struct search_data s_data = {
+            .remaining_moves = depth,
+            .prev_move = 18,
+            .prev_move_inv = 18,
+            .is_inv = false,
+            .max_num_sols = max_num_sols,
+        };
+        stop_search = TreeSearch(&cube, ptable_data, s_data, stats);
 
         if (stop_search)
         {
@@ -312,11 +339,16 @@ void IDA(cube_t cube, uint8_t* ptable, struct stats* stats, int max_num_sols, in
 
 /* public */
 
-bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose) {
-    uint8_t* ptable = (uint8_t*) get_ptable_H();
-    if (!ptable)
-    {
-        fprintf(stderr, "Could not load pruning table. Have you initialized it?\n");
+bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose, ptable_data_t ptable_data) {
+    // ptable_data_t ptable_data = ptable_data_opt1; /* see tables_ptable_data.c for alternatives */
+    
+    if (verbose == 1){
+        fprintf(stderr, "Using pruning table %s\n", ptable_data.name);
+    }
+
+    cube_tables_load_ptable(&ptable_data);
+    if (!ptable_data.ptable_is_loaded){
+        fprintf(stderr, "ptable error?\n");
         return false;
     }
 
@@ -342,7 +374,7 @@ bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solution
         enable_niss = false;
     }
     // actually search.
-    IDA(cube, ptable, stats, number_of_solutions, verbose);
+    IDA(cube, ptable_data, stats, number_of_solutions, verbose);
 
     if (verbose == 1)
     {

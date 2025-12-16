@@ -119,6 +119,18 @@ uint64_t cube_to_H_index(cube_t* cube, axes ax) {
 }
 
 
+uint64_t cube_to_DR_index(cube_t* cube, axes ax) {
+    uint64_t*                 sym_table_e_index = get_sym_table_e_index();
+    uint64_t                  co_i, eo_i, ec_i;    // before sym red.
+
+    co_i = cube_to_co_index(cube, ax);
+    eo_i = cube_to_eo_index(cube, ax);
+    ec_i = cube_to_ec_index(cube, ax);
+
+    return co_i + NCO * (eo_i + NEO * ec_i);
+}
+
+
 /*
   TODO: remove?
   TODO: rewrite/refactor/delete!

@@ -11,8 +11,22 @@
 #include "utils.h"
 #include "env.h"
 
-#define SIZEH 10066636800ULL
-#define SIZE_PTABLE_H (5033318400ULL * (sizeof(uint8_t)))
+/* type used to store information about each
+ * type of pruning table. */
+typedef struct ptable_info_t {
+    char name[FILENAME_MAX];
+    unsigned long long ptable_size; /* in bytes */
+    unsigned long long number_of_elements; /* can be larger than ptable_size */
+    char filename[FILENAME_MAX];
+    uint64_t (*cube_to_index_func) (cube_t* cube, axes ax);
+    void (*gen_ptable_func)(void);
+    uint8_t (*read_value_ptable_func)(uint64_t i, uint8_t* ptable);
+    void (*set_value_ptable_func)(uint64_t i, uint8_t p, uint8_t* ptable);
+    bool ptable_is_loaded;
+    void* ptable;
+    /* moveset? */
+    /* prune function? */
+} ptable_data_t;
 
 /* moves */
 extern uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
@@ -70,18 +84,23 @@ int cube_tables_load();
 /* Call after use of ptables and sym_table_e_index */
 void cube_tables_free();
 
+
+void free_ptable(ptable_data_t* ptable_data);
+
 // todo: WIP
 void gen_ptable_H();
+void gen_ptable_DR();
 
 /* runs through the ptable and counts the number of cosets for each p-value. */
-void check_Hdat();
+void analyze_ptable(ptable_data_t ptable_data);
 
-int cube_tables_load_ptableH();
+int cube_tables_load_ptable(ptable_data_t* ptable_data);
+
 int cube_tables_load_sym_table_e_index();
 
 /* set and read value from ptable.
  * these are needed since we store 2 values per byte. */
-static inline void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
+static inline void ptable_H_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
   if (i % 2 == 0) {
     ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
   } else {
@@ -89,7 +108,7 @@ static inline void ptable_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
   }
 }
 
-static inline uint8_t ptable_read_val(uint64_t i, uint8_t* ptable) {
+static inline uint8_t ptable_H_read_val(uint64_t i, uint8_t* ptable) {
   uint8_t val = ptable[i >> 1];
   return (val >> ((i & 1) * 4)) & 0x0F;
 }

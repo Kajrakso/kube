@@ -10,7 +10,8 @@
 #include "core/cube.h"
 #include "core/cube_state.h"
 #include "index.h"
+#include "tables_ptable_data.h"
 
-bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose);
+bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose, ptable_data_t ptable_data);
 
 #endif /* SOLVER_H */

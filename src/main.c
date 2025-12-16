@@ -7,10 +7,12 @@
 #include "scrambler.h"
 #include "env.h"
 
+#include "tables_ptable_data.h"
+
 #define BUF_SIZE 4096
 
 const char* argp_program_version     = "kube 0.1";
-const char* argp_program_bug_address = "<kube@oskarfj.no>";
+const char* argp_program_bug_address = "<oskarfj@oskarfj.no>";
 
 /* Program documentation. */
 static char doc[] = "kube -- an optimal Rubik's cube solver";
@@ -23,6 +25,7 @@ static struct argp_option options[] = {{"verbose", 'v', 0, 0, "Produce verbose o
                                        {"num", 'n', "NUM", 0, "Try to find NUM solutions"},
                                        {"format", 'f', "FORMAT", 0, "Specify scramble format"},
                                        {"gen", 'g', 0, 0, "Generate tables"},
+                                       {"ptable_test", 't', 0, 0, "use testing ptable"},
                                        {0}};
 
 /* Used by main to communicate with parse_opt. */
@@ -31,6 +34,7 @@ struct arguments {
     int   verbose;
     int   gen;
     int   number_of_solutions;
+    int  ptable_test;
 };
 
 /* Parse a single option. */
@@ -71,6 +75,10 @@ static error_t parse_opt(int key, char* arg, struct argp_state* state) {
         }
         break;
 
+    case 't' :
+        arguments->ptable_test = 1;
+        break;
+
     default :
         return ARGP_ERR_UNKNOWN;
     }
@@ -88,6 +96,7 @@ int main(int argc, char** argv) {
     arguments.gen                 = 0;
     arguments.format              = "singmaster";
     arguments.number_of_solutions = 1;
+    arguments.ptable_test         = 0;
 
     /* Parse our arguments; every option seen by parse_opt will
      be reflected in arguments. */
@@ -98,16 +107,11 @@ int main(int argc, char** argv) {
     {
         cube_tables_generate();
 
-        char        fname1[strlen(tabledir) + 100];
-        char        fname2[strlen(tabledir) + 100];
-
+        char        fname1[strlen(tabledir) + FILENAME_MAX];
         strcpy(fname1, tabledir);
         strcat(fname1, "/");
         strcat(fname1, "sym_table_e_index.dat");
 
-        strcpy(fname2, tabledir);
-        strcat(fname2, "/");
-        strcat(fname2, "H.dat");
 
         if (file_exists(fname1))
         {
@@ -118,30 +122,44 @@ int main(int argc, char** argv) {
             gen_sym_table_e_index();
         }
 
-        if (file_exists(fname2))
-        {
-            fprintf(stderr, "%s already exists. I'm skipping it!\n", fname2);
-        }
-        else
-        {
-            clock_t start, end;
-            start = clock();
-            gen_ptable_H();
-            end = clock();
-            printf("Total time used for table gen: %f s\n", (float)(end - start) / CLOCKS_PER_SEC);
+
+        for (int i = 0; i < 2; i++){
+            char        fname2[strlen(tabledir) + FILENAME_MAX];
+            strcpy(fname2, tabledir);
+            strcat(fname2, "/");
+            strcat(fname2, enabled_ptables[i]->filename);
+
+            if (file_exists(fname2))
+            {
+                fprintf(stderr, "%s already exists. I'm skipping it!\n", fname2);
+            }
+            else
+            {
+                clock_t start, end;
+                start = clock();
+                enabled_ptables[i]->gen_ptable_func();
+                end = clock();
+                printf("Total time used for table gen: %f s\n", (float)(end - start) / CLOCKS_PER_SEC);
+            }
         }
 
+        cube_tables_load_ptable(&ptable_data_dr);
+        analyze_ptable(ptable_data_dr);
+        free_ptable(&ptable_data_dr);
 
-        cube_tables_load();
-        check_Hdat();
-        cube_tables_free();
         return 0;
     }
 
     if (arguments.number_of_solutions >= 1)
     {
         cube_tables_generate();  // generates tables for moves, symmetries, etc.
-        cube_tables_load();      // loads the pruning tables
+
+        ptable_data_t p_data = arguments.ptable_test
+            ? *enabled_ptables[1]
+            : *enabled_ptables[0];
+
+        cube_tables_load_ptable(&p_data);
+        cube_tables_load_sym_table_e_index();
 
         char* buf       = malloc(BUF_SIZE);
         int*  solutions = malloc(sizeof(int) * 20 * arguments.number_of_solutions);
@@ -167,7 +185,7 @@ int main(int argc, char** argv) {
             }
 
             if (cube_solvers_solve_cube(c, solutions, arguments.number_of_solutions,
-                                        arguments.verbose))
+                                        arguments.verbose, p_data))
             {
                 cube_print_solutions(solutions, arguments.number_of_solutions, arguments.verbose);
             }

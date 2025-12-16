@@ -6,11 +6,11 @@
 #include <unistd.h>
 
 #include "tables.h"
+#include "tables_ptable_data.h"
 
 int init_table(const char* path, size_t table_size, void** table_ptr);
-void free_table(void* table_ptr, size_t size);
 
-// The table pointers is only visible in this file.
+// The table pointers are only visible in this file.
 static void* ptable_H          = NULL;
 static void* sym_table_e_index = NULL;
 
@@ -87,9 +87,10 @@ void* get_ptable_H() { return ptable_H; }
 
 void* get_sym_table_e_index() { return sym_table_e_index; }
 
-void free_table(void* table_ptr, size_t size) {
-    munmap(table_ptr, size);
-    table_ptr = NULL;
+void free_ptable(ptable_data_t* ptable_data) {
+    munmap(ptable_data->ptable, ptable_data->ptable_size);
+    ptable_data->ptable_is_loaded = false;
+    ptable_data->ptable = NULL;
 }
 
 void cube_tables_generate() {
@@ -110,23 +111,30 @@ void cube_tables_generate() {
     gen_c_sym_index_tables();
 }
 
-int cube_tables_load_ptableH() {
-    char fname[strlen(tabledir) + 100];
+
+int cube_tables_load_ptable(ptable_data_t* ptable_data) {
+    if (ptable_data->ptable_is_loaded){
+        fprintf(stderr, "ptable %s is already loaded. skipping...\n", ptable_data->filename);
+        return 0;
+    }
+
+    char fname[strlen(tabledir) + FILENAME_MAX];
 
     strcpy(fname, tabledir);
     strcat(fname, "/");
-    strcat(fname, "H.dat");
+    strcat(fname, ptable_data->filename);
 
-    if (init_table(fname, SIZE_PTABLE_H, &ptable_H) != 0)
+    if (init_table(fname, ptable_data->ptable_size, &ptable_data->ptable) != 0)
     {
         fprintf(stderr, "Failed to load pruning table H.\n");
         return 1;
     }
+    ptable_data->ptable_is_loaded = true;
     return 0;
 }
 
 int cube_tables_load_sym_table_e_index() {
-    char fname[strlen(tabledir) + 100];
+    char fname[strlen(tabledir) + FILENAME_MAX];
 
     strcpy(fname, tabledir);
     strcat(fname, "/");
@@ -141,7 +149,7 @@ int cube_tables_load_sym_table_e_index() {
 }
 
 int cube_tables_load() {
-    if (cube_tables_load_ptableH() == 1)
+    if (cube_tables_load_ptable(&ptable_data_opt1) == 1)
         return 1;
     if (cube_tables_load_sym_table_e_index() == 1)
         return 1;
@@ -149,6 +157,8 @@ int cube_tables_load() {
 }
 
 void cube_tables_free() {
-    free_table(ptable_H, SIZE_PTABLE_H);
-    free_table(sym_table_e_index, sizeof(uint64_t) * NECE * NEO * NSYMS);
+    free_ptable(&ptable_data_opt1);
+
+    munmap(sym_table_e_index, sizeof(uint64_t) * NECE * NEO * NSYMS);
+    sym_table_e_index = NULL;
 }
