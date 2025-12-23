@@ -12,6 +12,8 @@
 #include "solver.h"
 #include "cli.h"
 
+#include "tables_ptable_data.h"
+
 #define NUM_MOVES 1000000UL
 #define NUM_SCRAMBLES 50
 

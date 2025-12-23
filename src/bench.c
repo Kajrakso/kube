@@ -126,7 +126,8 @@ void bench_moves_and_3_lookups_normal() {
         moves[i] = rand() % NMOVES;
     }
 
-    uint8_t* ptable = get_ptable_H();
+    cube_tables_load_ptable(&ptable_data_opt1);
+    uint8_t* ptable = ptable_data_opt1.ptable;
 
     // warm up
     for (size_t i = 0; i < NUM_MOVES; i++)
@@ -134,15 +135,15 @@ void bench_moves_and_3_lookups_normal() {
         cube_move_apply_move(&c, moves[i]);
 
         uint64_t p1 = cube_to_H_index(&c, UD);
-        ptable_H_read_val(p1, ptable);
+        ptable_read_val_2_values_per_byte(p1, ptable);
 
         cube_t   cube_z_rot = cube_operation_sym_conjugate(c, 7);
         uint64_t p2         = cube_to_H_index(&cube_z_rot, UD);
-        ptable_H_read_val(p2, ptable);
+        ptable_read_val_2_values_per_byte(p2, ptable);
 
         cube_t   cube_x_rot = cube_operation_sym_conjugate(c, 9);
         uint64_t p3         = cube_to_H_index(&cube_x_rot, UD);
-        ptable_H_read_val(p3, ptable);
+        ptable_read_val_2_values_per_byte(p3, ptable);
     }
     start = clock();
     for (size_t i = 0; i < NUM_MOVES; i++)
@@ -150,15 +151,15 @@ void bench_moves_and_3_lookups_normal() {
         cube_move_apply_move(&c, moves[i]);
 
         uint64_t p1 = cube_to_H_index(&c, UD);
-        ptable_H_read_val(p1, ptable);
+        ptable_read_val_2_values_per_byte(p1, ptable);
 
         cube_t   cube_z_rot = cube_operation_sym_conjugate(c, 7);
         uint64_t p2         = cube_to_H_index(&cube_z_rot, UD);
-        ptable_H_read_val(p2, ptable);
+        ptable_read_val_2_values_per_byte(p2, ptable);
 
         cube_t   cube_x_rot = cube_operation_sym_conjugate(c, 9);
         uint64_t p3         = cube_to_H_index(&cube_x_rot, UD);
-        ptable_H_read_val(p3, ptable);
+        ptable_read_val_2_values_per_byte(p3, ptable);
     }
     end = clock();
 
@@ -176,65 +177,65 @@ void bench_moves_and_6_lookups_normal_and_inverse() {
     {
         moves[i] = rand() % NMOVES;
     }
-
-    uint8_t* ptable = get_ptable_H();
+    cube_tables_load_ptable(&ptable_data_opt1);
+    uint8_t* ptable = ptable_data_opt1.ptable;
     // warm up
     for (size_t i = 0; i < NUM_MOVES; i++)
     {
         cube_move_apply_move(&c, moves[i]);
         uint64_t p1 = cube_to_H_index(&c, UD);
-        ptable_H_read_val(p1, ptable);
+        ptable_read_val_2_values_per_byte(p1, ptable);
 
         cube_t   cube_z_rot = cube_operation_sym_conjugate(c, 7);
         uint64_t p2         = cube_to_H_index(&cube_z_rot, UD);
-        ptable_H_read_val(p2, ptable);
+        ptable_read_val_2_values_per_byte(p2, ptable);
 
         cube_t   cube_x_rot = cube_operation_sym_conjugate(c, 9);
         uint64_t p3         = cube_to_H_index(&cube_x_rot, UD);
-        ptable_H_read_val(p3, ptable);
+        ptable_read_val_2_values_per_byte(p3, ptable);
 
 
         cube_t inv = cube_operation_inverse(c);
 
         uint64_t      p1_inv      = cube_to_H_index(&inv, UD);
-        const uint8_t pval_UD_inv = ptable_H_read_val(p1_inv, ptable);
+        const uint8_t pval_UD_inv = ptable_read_val_2_values_per_byte(p1_inv, ptable);
 
         cube_t        cube_z_rot_inv = cube_operation_sym_conjugate(inv, 7);
         uint64_t      p2_inv         = cube_to_H_index(&cube_z_rot_inv, UD);
-        const uint8_t pval_LR_inv    = ptable_H_read_val(p2_inv, ptable);
+        const uint8_t pval_LR_inv    = ptable_read_val_2_values_per_byte(p2_inv, ptable);
 
         cube_t        cube_x_rot_inv = cube_operation_sym_conjugate(inv, 9);
         uint64_t      p3_inv         = cube_to_H_index(&cube_x_rot_inv, UD);
-        const uint8_t pval_FB_inv    = ptable_H_read_val(p3_inv, ptable);
+        const uint8_t pval_FB_inv    = ptable_read_val_2_values_per_byte(p3_inv, ptable);
     }
     start = clock();
     for (size_t i = 0; i < NUM_MOVES; i++)
     {
         cube_move_apply_move(&c, moves[i]);
         uint64_t p1 = cube_to_H_index(&c, UD);
-        ptable_H_read_val(p1, ptable);
+        ptable_read_val_2_values_per_byte(p1, ptable);
 
         cube_t   cube_z_rot = cube_operation_sym_conjugate(c, 7);
         uint64_t p2         = cube_to_H_index(&cube_z_rot, UD);
-        ptable_H_read_val(p2, ptable);
+        ptable_read_val_2_values_per_byte(p2, ptable);
 
         cube_t   cube_x_rot = cube_operation_sym_conjugate(c, 9);
         uint64_t p3         = cube_to_H_index(&cube_x_rot, UD);
-        ptable_H_read_val(p3, ptable);
+        ptable_read_val_2_values_per_byte(p3, ptable);
 
 
         cube_t inv = cube_operation_inverse(c);
 
         uint64_t      p1_inv      = cube_to_H_index(&inv, UD);
-        const uint8_t pval_UD_inv = ptable_H_read_val(p1_inv, ptable);
+        const uint8_t pval_UD_inv = ptable_read_val_2_values_per_byte(p1_inv, ptable);
 
         cube_t        cube_z_rot_inv = cube_operation_sym_conjugate(inv, 7);
         uint64_t      p2_inv         = cube_to_H_index(&cube_z_rot_inv, UD);
-        const uint8_t pval_LR_inv    = ptable_H_read_val(p2_inv, ptable);
+        const uint8_t pval_LR_inv    = ptable_read_val_2_values_per_byte(p2_inv, ptable);
 
         cube_t        cube_x_rot_inv = cube_operation_sym_conjugate(inv, 9);
         uint64_t      p3_inv         = cube_to_H_index(&cube_x_rot_inv, UD);
-        const uint8_t pval_FB_inv    = ptable_H_read_val(p3_inv, ptable);
+        const uint8_t pval_FB_inv    = ptable_read_val_2_values_per_byte(p3_inv, ptable);
     }
     end = clock();
 
@@ -254,54 +255,56 @@ void bench_moves_and_6_lookups_normal_and_inverse_new() {
         moves[i] = rand() % NMOVES;
     }
 
-    uint8_t* ptable = get_ptable_H();
+
+    cube_tables_load_ptable(&ptable_data_opt1);
+    uint8_t* ptable = ptable_data_opt1.ptable;
     // warm up
     for (size_t i = 0; i < NUM_MOVES; i++)
     {
         cube_move_apply_move(&c, moves[i]);
         uint64_t p1 = cube_to_H_index(&c, UD);
-        ptable_H_read_val(p1, ptable);
+        ptable_read_val_2_values_per_byte(p1, ptable);
 
         uint64_t p2 = cube_to_H_index(&c, LR);
-        ptable_H_read_val(p2, ptable);
+        ptable_read_val_2_values_per_byte(p2, ptable);
 
         uint64_t p3 = cube_to_H_index(&c, FB);
-        ptable_H_read_val(p3, ptable);
+        ptable_read_val_2_values_per_byte(p3, ptable);
 
         cube_t inv = cube_operation_inverse(c);
 
         uint64_t      p1_inv      = cube_to_H_index(&inv, UD);
-        const uint8_t pval_UD_inv = ptable_H_read_val(p1_inv, ptable);
+        const uint8_t pval_UD_inv = ptable_read_val_2_values_per_byte(p1_inv, ptable);
 
         uint64_t      p2_inv      = cube_to_H_index(&inv, LR);
-        const uint8_t pval_LR_inv = ptable_H_read_val(p2_inv, ptable);
+        const uint8_t pval_LR_inv = ptable_read_val_2_values_per_byte(p2_inv, ptable);
 
         uint64_t      p3_inv      = cube_to_H_index(&inv, FB);
-        const uint8_t pval_FB_inv = ptable_H_read_val(p3_inv, ptable);
+        const uint8_t pval_FB_inv = ptable_read_val_2_values_per_byte(p3_inv, ptable);
     }
     start = clock();
     for (size_t i = 0; i < NUM_MOVES; i++)
     {
         cube_move_apply_move(&c, moves[i]);
         uint64_t p1 = cube_to_H_index(&c, UD);
-        ptable_H_read_val(p1, ptable);
+        ptable_read_val_2_values_per_byte(p1, ptable);
 
         uint64_t p2 = cube_to_H_index(&c, LR);
-        ptable_H_read_val(p2, ptable);
+        ptable_read_val_2_values_per_byte(p2, ptable);
 
         uint64_t p3 = cube_to_H_index(&c, FB);
-        ptable_H_read_val(p3, ptable);
+        ptable_read_val_2_values_per_byte(p3, ptable);
 
         cube_t inv = cube_operation_inverse(c);
 
         uint64_t      p1_inv      = cube_to_H_index(&inv, UD);
-        const uint8_t pval_UD_inv = ptable_H_read_val(p1_inv, ptable);
+        const uint8_t pval_UD_inv = ptable_read_val_2_values_per_byte(p1_inv, ptable);
 
         uint64_t      p2_inv      = cube_to_H_index(&inv, LR);
-        const uint8_t pval_LR_inv = ptable_H_read_val(p2_inv, ptable);
+        const uint8_t pval_LR_inv = ptable_read_val_2_values_per_byte(p2_inv, ptable);
 
         uint64_t      p3_inv      = cube_to_H_index(&inv, FB);
-        const uint8_t pval_FB_inv = ptable_H_read_val(p3_inv, ptable);
+        const uint8_t pval_FB_inv = ptable_read_val_2_values_per_byte(p3_inv, ptable);
     }
     end = clock();
 
@@ -348,7 +351,7 @@ void bench_solver_16_movers() {
         // prepare array  for solutions
         int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
-        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, ptable_data_opt1);
+        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, &fin);
 
         if (!solved)
             printf("Was not able to solve the cube :(\n");
@@ -376,7 +379,7 @@ void bench_solver_17_movers() {
         // prepare array  for solutions
         int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
-        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, ptable_data_opt1);
+        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, &fin);
 
         if (!solved)
             printf("Was not able to solve the cube :(\n");
@@ -405,7 +408,7 @@ void bench_solver_18_movers() {
         // prepare array  for solutions
         int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
-        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, ptable_data_opt1);
+        bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, &fin);
 
         if (!solved)
             printf("Was not able to solve the cube :(\n");
@@ -437,7 +440,7 @@ void bench_solver() {
         int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
         start_per_scramble = clock();
-        bool solved        = cube_solvers_solve_cube(cube, solutions, num_sols, 1, ptable_data_opt1);
+        bool solved        = cube_solvers_solve_cube(cube, solutions, num_sols, 1, &fin);
         end_per_scramble   = clock();
 
         if (!solved)
@@ -474,7 +477,7 @@ void bench_hardest_scramble() {
     int* solutions = malloc(sizeof(int) * 20 * num_sols);
 
     start       = clock();
-    bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, ptable_data_opt1);
+    bool solved = cube_solvers_solve_cube(cube, solutions, num_sols, 1, &fin);
     end         = clock();
 
     if (!solved)
