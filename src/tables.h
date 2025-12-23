@@ -11,6 +11,8 @@
 #include "utils.h"
 #include "env.h"
 
+#define FACTORIAL8 40320
+
 /* type used to store information about each
  * type of pruning table. */
 typedef struct ptable_info_t {
@@ -71,8 +73,8 @@ void gen_c_sym_index_tables();
 bool save_table_to_file(const char* path, void* table, const size_t table_size);
 
 /* Get the tables. Returns NULL if not loaded. */
-void* get_ptable_H();
 void* get_sym_table_e_index();
+void* get_dr_subsets();
 
 /* Initializes the move and symmetry tables.
 You have to call this function before applying moves to the cube.*/
@@ -88,7 +90,7 @@ void cube_tables_free();
 void free_ptable(ptable_data_t* ptable_data);
 
 // todo: WIP
-void gen_ptable_H();
+void gen_ptable_opt1();
 void gen_ptable_DR();
 
 /* runs through the ptable and counts the number of cosets for each p-value. */
@@ -97,10 +99,14 @@ void analyze_ptable(ptable_data_t ptable_data);
 int cube_tables_load_ptable(ptable_data_t* ptable_data);
 
 int cube_tables_load_sym_table_e_index();
+int cube_tables_load_dr_subsets();
+
+bool parse_cp_to_dr_subset_file_and_save_dr_subset_table(char* filename);
+
 
 /* set and read value from ptable.
  * these are needed since we store 2 values per byte. */
-static inline void ptable_H_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
+static inline void ptable_set_val_2_values_per_byte(uint64_t i, uint8_t p, uint8_t* ptable) {
   if (i % 2 == 0) {
     ptable[i >> 1] = (ptable[i >> 1] & 0xF0) | (p & 0x0F);
   } else {
@@ -108,7 +114,7 @@ static inline void ptable_H_set_val(uint64_t i, uint8_t p, uint8_t* ptable) {
   }
 }
 
-static inline uint8_t ptable_H_read_val(uint64_t i, uint8_t* ptable) {
+static inline uint8_t ptable_read_val_2_values_per_byte(uint64_t i, uint8_t* ptable) {
   uint8_t val = ptable[i >> 1];
   return (val >> ((i & 1) * 4)) & 0x0F;
 }

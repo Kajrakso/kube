@@ -11,8 +11,11 @@
 int init_table(const char* path, size_t table_size, void** table_ptr);
 
 // The table pointers are only visible in this file.
-static void* ptable_H          = NULL;
 static void* sym_table_e_index = NULL;
+static void* dr_subsets        = NULL;
+
+void* get_sym_table_e_index() { return sym_table_e_index; }
+void* get_dr_subsets() { return dr_subsets; }
 
 void* mmap_table(const char* path, size_t* out_size) {
     int fd = open(path, O_RDONLY);
@@ -83,14 +86,16 @@ int init_table(const char* path, size_t table_size, void** table_ptr) {
     return 0;
 }
 
-void* get_ptable_H() { return ptable_H; }
-
-void* get_sym_table_e_index() { return sym_table_e_index; }
 
 void free_ptable(ptable_data_t* ptable_data) {
-    munmap(ptable_data->ptable, ptable_data->ptable_size);
-    ptable_data->ptable_is_loaded = false;
-    ptable_data->ptable = NULL;
+    if (ptable_data != NULL){
+        munmap(ptable_data->ptable, ptable_data->ptable_size);
+        ptable_data->ptable_is_loaded = false;
+        ptable_data->ptable = NULL;
+    }
+    else{
+        fprintf(stderr, "Trying to free ptable_data, which is NULL...\n");
+    }
 }
 
 void cube_tables_generate() {
@@ -113,8 +118,12 @@ void cube_tables_generate() {
 
 
 int cube_tables_load_ptable(ptable_data_t* ptable_data) {
+    if (ptable_data == NULL) {
+        fprintf(stderr, "Trying to load ptable from NULL!\n");
+        return 1;
+    }
     if (ptable_data->ptable_is_loaded){
-        fprintf(stderr, "ptable %s is already loaded. skipping...\n", ptable_data->filename);
+        // fprintf(stderr, "ptable %s is already loaded. skipping...\n", ptable_data->filename);
         return 0;
     }
 
@@ -133,6 +142,9 @@ int cube_tables_load_ptable(ptable_data_t* ptable_data) {
     return 0;
 }
 
+//
+// old stuff that I need to improve
+//
 int cube_tables_load_sym_table_e_index() {
     char fname[strlen(tabledir) + FILENAME_MAX];
 
@@ -148,17 +160,34 @@ int cube_tables_load_sym_table_e_index() {
     return 0;
 }
 
-int cube_tables_load() {
-    if (cube_tables_load_ptable(&ptable_data_opt1) == 1)
+int cube_tables_load_dr_subsets() {
+    char fname[strlen(tabledir) + FILENAME_MAX];
+
+    strcpy(fname, tabledir);
+    strcat(fname, "/");
+    strcat(fname, "dr_subsets.dat");
+
+    if (init_table(fname, sizeof(int) * FACTORIAL8, &dr_subsets) != 0)
+    {
+        fprintf(stderr, "Failed to load dr_subsets.\n");
         return 1;
+    }
+    return 0;
+}
+
+
+int cube_tables_load() {
     if (cube_tables_load_sym_table_e_index() == 1)
+        return 1;
+    if (cube_tables_load_dr_subsets() == 1)
         return 1;
     return 0;
 }
 
 void cube_tables_free() {
-    free_ptable(&ptable_data_opt1);
-
     munmap(sym_table_e_index, sizeof(uint64_t) * NECE * NEO * NSYMS);
     sym_table_e_index = NULL;
+
+    munmap(dr_subsets, sizeof(int) * FACTORIAL8);
+    dr_subsets = NULL;
 }

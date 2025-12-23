@@ -9,7 +9,7 @@
 // genning a ptable is just one call
 // to the same function somehow
 
-void DLS_H(uint64_t  ece,
+void DLS_opt1(uint64_t  ece,
            uint64_t  eofb,
            uint64_t  coud,
            uint64_t  ccu,
@@ -50,12 +50,12 @@ void DLS_H(uint64_t  ece,
             ptable_data.set_value_ptable_func(p2, (uint8_t) (num_moves_done + 1), ptable);
         }
 
-        DLS_H(ece2, eofb2, coud2, ccu2, p2, remaining_moves - 1, m, num_moves_done + 1, ptable_data, ptable,
+        DLS_opt1(ece2, eofb2, coud2, ccu2, p2, remaining_moves - 1, m, num_moves_done + 1, ptable_data, ptable,
               sym_table_e_index);
     }
 }
 
-void gen_ptable_H() {
+void gen_ptable_opt1() {
     ptable_data_t ptable_data = ptable_data_opt1;
 
     cube_tables_load_sym_table_e_index();
@@ -106,7 +106,7 @@ void gen_ptable_H() {
     for (int depth = 0; depth < 10; depth++)
     {
         fprintf(stderr, "Searching at depth %i\n", depth);
-        DLS_H(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_data, ptable_H, sym_table_e_index);
+        DLS_opt1(ece, eofb, coud, ccu, p, depth, 18, 0, ptable_data, ptable_H, sym_table_e_index);
     }
 
     // we fill a cclass -> cindex_rep table here. TODO: reconsider this.
@@ -381,4 +381,61 @@ void gen_ptable_DR() {
     save_table_to_file(fname, ptable, ptable_data.ptable_size);
 
     free(ptable);
+}
+
+
+
+
+
+
+// I genned a file with cp <-> dr_subset for all cp using GAP.
+bool parse_cp_to_dr_subset_file_and_save_dr_subset_table(char* filename){
+    int cp_subsets[FACTORIAL8];
+
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("fopen");
+        return 1;
+    }
+
+    int count = 0;
+    while (count < FACTORIAL8) {
+        int arr[NCORNERS];
+        int label;
+
+        int n = fscanf(fp,
+            " [ %d , %d , %d , %d , %d , %d , %d , %d ] : %d",
+            &arr[0], &arr[1], &arr[2], &arr[3],
+            &arr[4], &arr[5], &arr[6], &arr[7],
+            &label
+        );
+
+        if (n != 9) {
+            break;  // EOF or malformed line
+        }
+
+        for (int i = 0; i < NCORNERS; i++){
+            arr[i]--; // GAP uses 1..8 instead of 0..7.
+        }
+
+        count++;
+
+        cp_subsets[perm_to_fact(arr, NCORNERS)] = label;
+    }
+
+
+    /* end of TODO */
+    char fname[strlen(tabledir) + FILENAME_MAX];
+
+    strcpy(fname, tabledir);
+    strcat(fname, "/");
+    strcat(fname, "dr_subsets.dat");
+
+    save_table_to_file(fname, cp_subsets, FACTORIAL8 * sizeof(int));
+
+    fclose(fp);
+
+    return 0;
+
+
 }

@@ -1,27 +1,6 @@
 #include "solver.h"
 
-static const int GODS_NO     = 20;
-static bool      enable_niss = true;
-
-// stats (temp)
-
-struct stats {
-    int           depth;
-    int*          solution;
-    int*          solution_inv;
-    int           num_sol_found;
-    unsigned long no_nisses;
-    unsigned long no_nodes_visited;
-    unsigned long no_nodes_pruned;
-    unsigned long no_nodes_pruned_inv;
-    unsigned long no_inverse_computations;
-    int           no_equal_pvals_normal;
-    int           no_equal_pvals_inverse;
-
-    int* solutions;
-};
-
-void init_stats(struct stats* stats, int max_num_sols) {
+void init_stats(struct solver_stats* stats, int max_num_sols) {
     stats->depth                   = 0;
     stats->no_nodes_visited        = 0;
     stats->no_nodes_pruned         = 0;
@@ -51,7 +30,7 @@ void init_stats(struct stats* stats, int max_num_sols) {
     }
 }
 
-static void print_stats(struct stats* stats) {
+void print_stats(struct solver_stats* stats) {
     if (stats->no_nodes_visited == 0)
     {
         fprintf(stderr, "No nodes visited\n");
@@ -76,18 +55,7 @@ static void print_stats(struct stats* stats) {
     }
 }
 
-/* struct that holds information we need during the search */
-struct search_data {
-    int remaining_moves;
-    int prev_move;
-    int prev_move_inv;
-    bool is_inv;
-    int max_num_sols;
-    // int max_num_nomves; // not implemented yet
-};
-
-
-void save_solution_to_solutions(struct stats* s) {
+void save_solution_to_solutions(struct solver_stats* s) {
     int i = 0;
     for (int m = 0; m < GODS_NO; m++)
     {
@@ -105,33 +73,30 @@ void save_solution_to_solutions(struct stats* s) {
     }
 }
 
+
 // work in progress
 
-static bool TreeSearch(cube_t*       cube,
-                       ptable_data_t ptable_data,
-                       struct search_data s_data,
-                       struct stats* stats
-    ) {
+
+static bool
+TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct solver_stats* stats) {
     stats->no_nodes_visited++;
-    int remaining_moves = s_data.remaining_moves;
-    int prev_move = s_data.prev_move;
-    int prev_move_inv = s_data.prev_move_inv;
-    bool is_inv = s_data.is_inv;
-    int max_num_sols = s_data.max_num_sols;
-
-
+    int  remaining_moves = s_data.remaining_moves;
+    int  prev_move       = s_data.prev_move;
+    int  prev_move_inv   = s_data.prev_move_inv;
+    bool is_inv          = s_data.is_inv;
+    int  max_num_sols    = s_data.max_num_sols;
+    bool enable_niss     = s_data.enable_niss;
 
 
     if (remaining_moves == 0)
     {
-        if (cube_state_is_solved(cube))
+        if (ss->cube_is_solved(cube))
         {
             save_solution_to_solutions(stats);
             stats->num_sol_found++;
 
             // keep searching if we
-            // have not found enough
-            // solutions
+            // have not found enough solutions
             return stats->num_sol_found == max_num_sols;
         }
         else
@@ -140,119 +105,17 @@ static bool TreeSearch(cube_t*       cube,
         }
     }
 
-    uint64_t      p1      = ptable_data.cube_to_index_func(cube, UD);
-    const uint8_t pval_UD = ptable_data.read_value_ptable_func(p1, ptable_data.ptable);
-
-    if (pval_UD > remaining_moves)
+    if (ss->p_data != NULL && ss->heuristic_func != NULL)
     {
-        stats->no_nodes_pruned++;
-        return false;
-    }
-    uint64_t      p2      = ptable_data.cube_to_index_func(cube, LR);
-    const uint8_t pval_LR = ptable_data.read_value_ptable_func(p2, ptable_data.ptable);
-
-    if (pval_LR > remaining_moves)
-    {
-        stats->no_nodes_pruned++;
-        return false;
-    }
-    uint64_t      p3      = ptable_data.cube_to_index_func(cube, FB);
-    const uint8_t pval_FB = ptable_data.read_value_ptable_func(p3, ptable_data.ptable);
-
-    if (pval_FB > remaining_moves)
-    {
-        stats->no_nodes_pruned++;
-        return false;
-    }
-    if ((pval_UD == remaining_moves) && (pval_UD == pval_LR) && (pval_LR == pval_FB))
-    {
-        stats->no_nodes_pruned++;
-        return false;
-    }
-
-    // we only look up inverse if we did not prune on normal
-    cube_t inv = cube_operation_inverse(*cube);
-    stats->no_inverse_computations++;
-
-    uint64_t      p1_inv      = ptable_data.cube_to_index_func(&inv, UD);
-    const uint8_t pval_UD_inv = ptable_data.read_value_ptable_func(p1_inv, ptable_data.ptable);
-
-
-    if (pval_UD_inv > remaining_moves)
-    {
-        stats->no_nodes_pruned++;
-        stats->no_nodes_pruned_inv++;
-        return false;
-    }
-
-    uint64_t      p2_inv      = ptable_data.cube_to_index_func(&inv, LR);
-    const uint8_t pval_LR_inv = ptable_data.read_value_ptable_func(p2_inv, ptable_data.ptable);
-
-    if (pval_LR_inv > remaining_moves)
-    {
-        stats->no_nodes_pruned++;
-        stats->no_nodes_pruned_inv++;
-        return false;
-    }
-
-    uint64_t      p3_inv      = ptable_data.cube_to_index_func(&inv, FB);
-    const uint8_t pval_FB_inv = ptable_data.read_value_ptable_func(p3_inv, ptable_data.ptable);
-
-    if (pval_FB_inv > remaining_moves)
-    {
-        stats->no_nodes_pruned++;
-        stats->no_nodes_pruned_inv++;
-        return false;
-    }
-
-    if ((pval_UD_inv == remaining_moves) && (pval_UD_inv == pval_LR_inv)
-        && (pval_LR_inv == pval_FB_inv))
-    {
-        stats->no_nodes_pruned++;
-        stats->no_nodes_pruned_inv++;
-        return false;
-    }
-
-    // find out if we niss or not!
-    bool _niss = false;
-    if (enable_niss)
-    {
-        int num_axis_to_check_normal  = 0;
-        int num_axis_to_check_inverse = 0;
-
-        if (pval_UD < remaining_moves)
-            num_axis_to_check_inverse++;
-        if (pval_LR < remaining_moves)
-            num_axis_to_check_inverse++;
-        if (pval_FB < remaining_moves)
-            num_axis_to_check_inverse++;
-        if (pval_UD_inv < remaining_moves)
-            num_axis_to_check_normal++;
-        if (pval_LR_inv < remaining_moves)
-            num_axis_to_check_normal++;
-        if (pval_FB_inv < remaining_moves)
-            num_axis_to_check_normal++;
-
-        _niss = num_axis_to_check_normal > num_axis_to_check_inverse;
-    }
-    // niss
-    if (_niss)
-    {
-        swap_cubes(cube, &inv);
-        is_inv = is_inv ? false : true;
-        stats->no_nisses++;
+        if (ss->heuristic_func(cube, ss->p_data) > remaining_moves)
+        {
+            stats->no_nodes_pruned++;
+            return false;
+        }
     }
 
     // we extract the move_mask for this node.
-    uint32_t mm = move_mask[is_inv ? prev_move_inv : prev_move];
-
-    // nissing magic
-    if (remaining_moves == (_niss ? pval_UD : pval_UD_inv))
-        mm &= ~((uint32_t) 63 << 0);
-    if (remaining_moves == (_niss ? pval_LR : pval_LR_inv))
-        mm &= ~((uint32_t) 63 << 6);
-    if (remaining_moves == (_niss ? pval_FB : pval_FB_inv))
-        mm &= ~((uint32_t) 63 << 12);
+    uint32_t mm = move_mask[prev_move];
 
     for (int move = 0; move < NMOVES; move++)
     {
@@ -262,42 +125,47 @@ static bool TreeSearch(cube_t*       cube,
 
         cube_move_apply_move(cube, move);
 
-        if (!is_inv)
-            stats->solution[GODS_NO - remaining_moves] = move;
-        else
-            stats->solution_inv[GODS_NO - remaining_moves] = move;
+        stats->solution[GODS_NO - remaining_moves] = move;
 
-        struct search_data s_data_next = {
-            .remaining_moves = remaining_moves - 1,
-            .prev_move = !is_inv ? move : prev_move,
-            .prev_move_inv = is_inv ? move : prev_move_inv,
-            .is_inv = is_inv,
-            .max_num_sols = max_num_sols
-        };
-        bool found = TreeSearch(cube, ptable_data, s_data_next, stats);
+        struct search_data s_data_next = {.remaining_moves = remaining_moves - 1,
+                                          .prev_move       = move,
+                                          .prev_move_inv   = prev_move_inv,
+                                          .is_inv          = is_inv,
+                                          .max_num_sols    = max_num_sols,
+                                          .enable_niss     = enable_niss};
+        bool               found       = TreeSearch(cube, ss, s_data_next, stats);
 
         cube_move_apply_move(cube, get_inv_move(move));
 
-        if (!is_inv)
-            stats->solution[GODS_NO - remaining_moves] = -1;
-        else
-            stats->solution_inv[GODS_NO - remaining_moves] = -1;
+        stats->solution[GODS_NO - remaining_moves] = -1;
 
         if (found)
+        {
             return true;
+        }
     }
 
-    if (_niss)
-        swap_cubes(cube, &inv);
     return false;
 }
 
-void IDA(cube_t cube,
-        ptable_data_t ptable_data,
-        struct stats* stats, int max_num_sols, int verbose) {
+void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, int max_num_sols, int verbose) {
+
     bool stop_search = false;
     if (verbose == 1)
     {
+        fprintf(stderr, "\tsolving_type: %i\n", ss->solving_type);
+
+        if (ss->p_data == NULL)
+        {
+            fprintf(stderr, "\tsolving_step does not have associated pruning_data\n");
+        }
+        // else
+        // {
+        //     fprintf(stderr, "\tp_data ptr: %lu\n", (unsigned long) ss->p_data);
+        //     fprintf(stderr, "\tp_data->ptable ptr: %lu\n", (unsigned long) ss->p_data->ptable);
+        //     fprintf(stderr, "\tptable is %sloaded!\n", ss->p_data->ptable_is_loaded ? "" : "not ");
+        // }
+
         fprintf(stderr, "Depth: ");
     }
 
@@ -311,16 +179,14 @@ void IDA(cube_t cube,
         {
             fprintf(stderr, "%i ", depth);
         }
-        
 
-        struct search_data s_data = {
-            .remaining_moves = depth,
-            .prev_move = 18,
-            .prev_move_inv = 18,
-            .is_inv = false,
-            .max_num_sols = max_num_sols,
-        };
-        stop_search = TreeSearch(&cube, ptable_data, s_data, stats);
+        struct search_data s_data = {.remaining_moves = depth,
+                                     .prev_move       = 18,
+                                     .prev_move_inv   = 18,
+                                     .is_inv          = false,
+                                     .max_num_sols    = max_num_sols,
+                                     .enable_niss     = false};
+        stop_search               = TreeSearch(&cube, ss, s_data, stats);
 
         if (stop_search)
         {
@@ -339,49 +205,74 @@ void IDA(cube_t cube,
 
 /* public */
 
-bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose, ptable_data_t ptable_data) {
-    // ptable_data_t ptable_data = ptable_data_opt1; /* see tables_ptable_data.c for alternatives */
-    
-    if (verbose == 1){
-        fprintf(stderr, "Using pruning table %s\n", ptable_data.name);
-    }
-
-    cube_tables_load_ptable(&ptable_data);
-    if (!ptable_data.ptable_is_loaded){
-        fprintf(stderr, "ptable error?\n");
-        return false;
-    }
-
-    // not in use here, but is used by the solver.
-    // hence, we need to make sure that it is loaded.
-    void* _t = get_sym_table_e_index();
-    if (!_t)
-    {
-        fprintf(stderr, "Could not load sym_table_e_index. Have you initialized it?\n");
-        return false;
-    }
-
+bool cube_solvers_solve_cube(
+  cube_t cube, int* solutions, int number_of_solutions, int verbose, solving_step* ss) {
     // we collect some stats along the way.
-    struct stats* stats = malloc(sizeof(struct stats));
+    struct solver_stats* stats = malloc(sizeof(struct solver_stats));
     init_stats(stats, number_of_solutions);
 
     // at the moment nissing does not play well with
     // finding multiple solutions.
     // for instance: R (U R) would be a solution of length 3...
     // even though it is the same as just U'
+    bool enable_niss = true;
     if (number_of_solutions > 1)
     {
         enable_niss = false;
     }
-    // actually search.
-    IDA(cube, ptable_data, stats, number_of_solutions, verbose);
 
+    // how to handle solving step with no p_data?
+    if (ss->p_data != NULL)
+    {
+        if (verbose == 1)
+        {
+            fprintf(stderr, "\tUsing pruning table %s\n", ss->p_data->name);
+        }
+
+        cube_tables_load_ptable(ss->p_data);
+        if (!ss->p_data->ptable_is_loaded)
+        {
+            fprintf(stderr, "\tptable error?\n");
+            return false;
+        }
+    }
+
+
+    // actually search
+    if (ss->solving_type == SOLVE_FIN)
+    {
+        // not in use here, but is used by the solver.
+        // hence, we need to make sure that it is loaded.
+        void* _t = get_sym_table_e_index();
+        if (!_t)
+        {
+            fprintf(stderr, "\tCould not load sym_table_e_index. Have you initialized it?\n");
+            return false;
+        }
+
+        // using the solver with fancy nissing tricks
+        IDA_fin(cube, ss->p_data, stats, number_of_solutions, verbose, enable_niss);
+    }
+    else
+    {
+        if (ss->solving_type == SOLVE_HTR || ss->solving_type == SOLVE_DR)
+        {
+            void* _t = get_dr_subsets();
+            if (!_t)
+            {
+                fprintf(stderr, "\tCould not load dr_subsets. Have you initialized it?\n");
+                return false;
+            }
+        }
+
+        IDA(cube, ss, stats, number_of_solutions, verbose);
+    }
     if (verbose == 1)
     {
         print_stats(stats);
     }
 
-    memcpy(solutions, stats->solutions, sizeof(int) * 20 * number_of_solutions);
+    memcpy(solutions, stats->solutions, sizeof(int) * GODS_NO * number_of_solutions);
 
     free(stats->solution);
     free(stats->solution_inv);

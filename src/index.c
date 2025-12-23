@@ -120,7 +120,6 @@ uint64_t cube_to_H_index(cube_t* cube, axes ax) {
 
 
 uint64_t cube_to_DR_index(cube_t* cube, axes ax) {
-    uint64_t*                 sym_table_e_index = get_sym_table_e_index();
     uint64_t                  co_i, eo_i, ec_i;    // before sym red.
 
     co_i = cube_to_co_index(cube, ax);
@@ -214,3 +213,5 @@ cube_t c_index_to_cube(uint64_t c_i) {
 
     return cube_operation_compose(cube1, cube2);
 }
+
+
