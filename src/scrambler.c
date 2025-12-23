@@ -86,6 +86,67 @@ cube_t cube_scrambler_get_scrambled_cube() {
     return cube;
 }
 
+
+
+
+
+cube_t cube_scrambler_get_scrambled_DR(){
+    int i, j;
+    int c_parity, e_parity;
+
+    cube_t cube = cube_create_new_cube();
+
+    // random permutation of the pieces
+    arr_shuffle(cube.corners, NCORNERS);
+    arr_shuffle(&cube.edges[0], 4);
+    arr_shuffle(&cube.edges[4], 4);
+    arr_shuffle(&cube.edges[8], 4);
+
+    c_parity = 0;
+    for (i = 0; i < NCORNERS; i++)
+    {
+        for (j = i + 1; j < NCORNERS; j++)
+        {
+            if (extract_corner_perm(cube.corners[i]) > extract_corner_perm(cube.corners[j]))
+                c_parity++;
+        }
+    }
+    c_parity %= 2;
+
+    e_parity = 0;
+    for (i = 0; i < NEDGES; i++)
+    {
+        for (j = i + 1; j < NEDGES; j++)
+        {
+            if (extract_edge_perm(cube.edges[i]) > extract_edge_perm(cube.edges[j]))
+                e_parity++;
+        }
+    }
+    e_parity %= 2;
+
+    // make sure the permutations results in a valid cube.
+    if (c_parity != e_parity)
+    {
+        swap_uint16(&cube.edges[0], &cube.edges[1]);
+    }
+
+    // calculate the orientations along the LR and UD axes.
+    fix_co_lr_fb(&cube);
+    fix_eo_lr_ud(&cube);
+
+    return cube;
+}
+
+
+
+
+
+
+
+
+
+
+
 int cube_scrambler_parse_speffz(cube_t* c, char* s) {
     int letter_syms[24] = {2, 3, 0, 1, 13, 14, 15, 12, 11, 8,  9,  10,
                            4, 5, 6, 7, 22, 23, 20, 21, 17, 18, 19, 16};
