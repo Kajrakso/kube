@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
                 cube_tables_load_sym_table_e_index();
             }
 
-            if (ss->solving_type == SOLVE_HTR || ss->solving_type == SOLVE_DR){
+            if (ss->solving_type == SOLVE_HTR){
                 cube_tables_load_dr_subsets();
             }
 

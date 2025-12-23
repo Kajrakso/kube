@@ -255,7 +255,7 @@ bool cube_solvers_solve_cube(
     }
     else
     {
-        if (ss->solving_type == SOLVE_HTR || ss->solving_type == SOLVE_DR)
+        if (ss->solving_type == SOLVE_HTR)
         {
             void* _t = get_dr_subsets();
             if (!_t)
