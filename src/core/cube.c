@@ -62,6 +62,37 @@ void fix_co_lr_ud(cube_t* cube) {
     }
 }
 
+
+// have to test this
+void fix_co_lr_fb(cube_t* cube) {
+    int i, perm, orien_ud;
+
+    for (i = 0; i < NCORNERS; i++)
+    {
+        perm     = extract_corner_perm(cube->corners[i]);
+        orien_ud = extract_corner_orien(cube->corners[i], UD);
+
+        if (perm % 2 == i % 2)
+        {
+            update_corner_orien(&cube->corners[i], orien_ud, orien_ud, orien_ud);
+        }
+        else
+        {
+            if (perm % 2 == 0)
+            {
+                update_corner_orien(&cube->corners[i], (2 + orien_ud) % 3,
+                                    (1 + orien_ud) % 3, orien_ud);
+            }
+            else
+            {
+                update_corner_orien(&cube->corners[i], (1 + orien_ud) % 3,
+                                    (2 + orien_ud) % 3, orien_ud);
+            }
+        }
+    }
+}
+
+
 // have to test this
 void fix_eo_lr_ud(cube_t* cube) {
     int i, perm, orien_fb;

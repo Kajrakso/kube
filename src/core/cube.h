@@ -121,6 +121,7 @@ void fix_co_lr_ud(cube_t* cube);
 
 // BIGBIG TODO: test this!
 void fix_eo_lr_ud(cube_t* cube);
+void fix_co_lr_fb(cube_t* cube);
 
 /* swaps two cubes */
 void swap_cubes(cube_t* c, cube_t* t);
