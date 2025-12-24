@@ -143,6 +143,15 @@ int main(int argc, char** argv) {
 
     if (arguments.gen == 1)
     {
+        // this is needed since kube currently
+        // does not generate this file itself
+        printf("Starting to gen tables...\n");
+
+        char        fname[strlen(tabledir) + FILENAME_MAX];
+        strcpy(fname, tabledir);
+        strcat(fname, "/");
+        printf("TEMP: If you want to solve to HTR you need to copy dr_subsets.dat to this location: %s\n", fname);
+
         clock_t start, end;
         start = clock();
         cube_tables_generate();
@@ -188,9 +197,13 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    if (arguments.step_count == 0){
+        printf("Please provide a step to solve!\n");
+        return 1;
+    }
 
     if (arguments.number_of_solutions > 1 && arguments.step_count > 1){
-        fprintf(stderr, "-n is not supported with multiple steps. Uses n = 1.");
+        printf("-n is not supported with multiple steps. Uses n = 1.");
         arguments.number_of_solutions = 1;
     }
 
