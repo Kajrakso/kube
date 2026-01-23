@@ -80,6 +80,6 @@ bool cube_state_is_edges_solved(cube_t* cube);
 // bool cube_state_is_xxxcross_D(cube_t* cube);
 // bool cube_state_is_xxxxcross_D(cube_t* cube);
 //
-// uint64_t cube_to_cp_index(cube_t* cube);
+uint64_t cube_to_cp_index(cube_t* cube);
 
 #endif /* CUBE_STATE_H */
