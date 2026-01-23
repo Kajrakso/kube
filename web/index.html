@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Kube Solver</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #111827;
+    --accent: #38bdf8;
+    --accent2: #22c55e;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --danger: #ef4444;
+    --border: #1f2933;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    background: linear-gradient(120deg, #020617, #020617 40%, #020617);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 900px;
+    background: var(--panel);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    padding: 28px;
+  }
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: 26px;
+    letter-spacing: .5px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: #020617;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .card h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #020617;
+    color: var(--text);
+    outline: none;
+    font-size: 15px;
+  }
+
+  input::placeholder { color: var(--muted); }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #020617;
+    transition: .2s;
+  }
+
+  .step.disabled {
+    opacity: .35;
+  }
+
+  .step label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .badge {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .badge.active {
+    color: var(--accent2);
+    border-color: var(--accent2);
+  }
+
+  .solve-btn {
+    margin-top: 20px;
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    color: #020617;
+    cursor: pointer;
+    transition: .15s;
+  }
+
+  .solve-btn:hover { transform: translateY(-1px); }
+
+  .output {
+    margin-top: 14px;
+    background: #020617;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 120px;
+    font-family: ui-monospace, monospace;
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+
+  .cmd {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+  }
+
+  .error { color: var(--danger); }
+  .ok { color: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🧩 Kube Solver</h1>
+  <div class="subtitle">Interactive Rubik’s Cube solving pipeline</div>
+
+  <div class="grid">
+    <!-- LEFT PANEL -->
+    <div class="card">
+      <h3>Scramble</h3>
+      <input id="scramble" placeholder="R U R' U' F2 D ..." />
+
+      <h3 style="margin-top:18px;">Solving Pipeline</h3>
+      <div class="steps" id="steps"></div>
+
+      <button class="solve-btn" onclick="solve()">Solve Cube</button>
+      <div class="cmd" id="cmdPreview"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="card">
+      <h3>Output</h3>
+      <div class="output" id="output"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ORDER = ["eo", "dr", "htr", "fin"];
+
+  const stepsState = {
+    eo: false,
+    dr: false,
+    htr: false,
+    fin: true
+  };
+
+  const stepsContainer = document.getElementById("steps");
+
+  function renderSteps() {
+    stepsContainer.innerHTML = "";
+
+    for (const step of ORDER) {
+      const enabled = stepsState[step];
+      const div = document.createElement("div");
+      div.className = "step" + (!enabled ? " disabled" : "");
+
+      div.innerHTML = `
+        <label>
+          <input type="checkbox" ${enabled ? "checked" : ""} />
+          <strong>${step}</strong>
+        </label>
+        <span class="badge ${enabled ? "active" : ""}">
+          ${enabled ? "enabled" : "disabled"}
+        </span>
+      `;
+
+      const checkbox = div.querySelector("input");
+
+      checkbox.addEventListener("change", () => {
+        // enforce ordering rule
+        const idx = ORDER.indexOf(step);
+        stepsState[ORDER[idx]] = checkbox.checked;
+        renderSteps();
+        renderCommand();
+      });
+
+      stepsContainer.appendChild(div);
+    }
+  }
+
+  function getActiveSteps() {
+    return ORDER.filter(s => stepsState[s]);
+  }
+
+  function renderCommand() {
+    const steps = getActiveSteps();
+    const cmd = "kube " + steps.map(s => `--step ${s}`).join(" ");
+    document.getElementById("cmdPreview").textContent = "Command: " + cmd;
+  }
+
+  async function solve() {
+    const scramble = document.getElementById("scramble").value.trim();
+    const output = document.getElementById("output");
+    const steps = getActiveSteps();
+
+    if (!scramble) {
+      output.innerHTML = "<span class='error'>Enter a scramble.</span>";
+      return;
+    }
+
+    output.textContent = "Solving...";
+
+    try {
+      const res = await fetch("/solve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scramble, steps })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        output.innerHTML = "<span class='error'>" + data.detail + "</span>";
+      } else {
+        const lines = data.solution.split("\n");
+        output.innerHTML = lines.map((l,i)=>`[${steps[i] ?? "out"}] ${l}`).join("\n");
+      }
+    } catch (e) {
+      output.innerHTML = "<span class='error'>Network error.</span>";
+    }
+  }
+
+  renderSteps();
+  renderCommand();
+</script>
+</body>
+</html>
+

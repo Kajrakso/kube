@@ -5,6 +5,8 @@ data/
 .vscode/
 *.zip
 
+__pycache__/
+
 # Prerequisites
 *.d
 
