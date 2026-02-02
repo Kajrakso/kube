@@ -217,3 +217,18 @@ int cube_scrambler_parse_speffz(cube_t* c, char* s) {
         return 1;
     }
 }
+
+
+int cube_scrambler_scramble_cube(cube_t* c, char* scramble, char* format){
+    if (strcmp(format, "speffz") == 0)
+    {
+        return cube_scrambler_parse_speffz(c, scramble);
+    }
+    else if (strcmp(format, "singmaster") == 0)
+    {
+        return cube_move_apply_move_string(c, scramble);
+    }
+    else {
+        return 1;
+    }
+}

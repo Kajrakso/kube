@@ -1,5 +1,9 @@
 #include "cli.h"
 
+/* ------------------------------------ */
+/* string representations and printing  */
+/* ------------------------------------ */
+
 static const char* corners_str_repr[NCORNERS] = {
   "ULB", "UBR", "URF", "UFL", "DLF", "DFR", "DRB", "DBL",
 };
@@ -170,7 +174,7 @@ void cube_print_solutions(int* solutions, int num_sols, int verbose) {
         for (int m = 0; m < 20; m++)
         {
             int move = solutions[20 * sol + m];
-            if (0 <= move && move < 18)
+            if (is_valid_move(move))
             {
                 printf("%s ", move_notation[move]);
                 len++;
@@ -185,4 +189,117 @@ void cube_print_solutions(int* solutions, int num_sols, int verbose) {
             printf("\n");
         }
     }
+}
+
+
+void cube_print_solution_set(SolutionSet* solution_set, int verbose){
+    int count = solution_set->count;
+    Solution* solutions = solution_set->data;
+    for (int solution_idx = 0; solution_idx < count; solution_idx++){
+        Solution solution = solutions[solution_idx]; 
+        for (int move_idx = 0; move_idx < solution.length; move_idx++){
+            int move = solution.moves[move_idx];
+            if (is_valid_move(move)) {
+                printf("%s ", move_notation[move]);
+            }
+            else {
+                printf("? ");
+            }
+        }
+        if (verbose == 1) {
+            printf("(%i)\n", solution.length);
+        }
+        else {
+            printf("\n");
+        }
+    }
+}
+
+
+/* ----------------------- */
+/* arg parser */
+/* ----------------------- */
+
+
+/* Parse a single option. */
+error_t parse_opt(int key, char* arg, struct argp_state* state) {
+    /* Get the input argument from argp_parse, which we
+     know is a pointer to our arguments structure. */
+    struct arguments* arguments = state->input;
+
+    // for parsing number of solutions
+    char* endptr;
+    long  num;
+
+    switch (key)
+    {
+    case 'g' :
+        arguments->gen = 1;
+        break;
+
+    case 'v' :
+        arguments->verbose = 1;
+        break;
+
+    case 'f' :
+        arguments->format = arg;
+        break;
+
+    case 's':
+        if (arguments->step_count >= MAX_STEPS)
+            argp_error(state, "Too many --step options");
+
+        struct step *st = &arguments->steps[arguments->step_count++];
+        st->max_depth = -1;   // default
+
+        // parse "eo:max=7,metric=htm"
+        char *spec = strdup(arg);
+        char *tok = strtok(spec, ":");
+
+        st->name = tok;
+
+        tok = strtok(NULL, ",");
+        while (tok) {
+            // we do not support extra options currently
+            //
+            // if (strncmp(tok, "max=", 4) == 0)
+            //     st->max_depth = atoi(tok + 4);
+            // else if (strncmp(tok, "metric=", 7) == 0)
+            //     st->metric = tok + 7;
+            // else
+                argp_error(state, "Unknown step option: %s", tok);
+
+            tok = strtok(NULL, ",");
+        }
+        break;
+
+    case 'n' :
+        num = strtol(arg, &endptr, 10);
+
+        if (*endptr != '\0')
+        {
+            // Error: not a valid integer string
+            printf("Conversion error, non-integer characters found: %s. Using n = %i\n", endptr, 1);
+        }
+        else
+        {
+            arguments->number_of_solutions = num;
+        }
+        break;
+
+    default :
+        return ARGP_ERR_UNKNOWN;
+    }
+    return 0;
+}
+
+
+void set_default_values_arguments(struct arguments* arguments){
+    /* Default values. */
+    arguments->verbose             = 0;
+    arguments->gen                 = 0;
+    arguments->format              = "singmaster";
+    // arguments->steps[0]            = (struct step){.name = "fin", .max_depth = -1};
+    arguments->step_count          = 0;
+    arguments->number_of_solutions = 1;
 }

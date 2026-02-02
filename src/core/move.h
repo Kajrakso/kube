@@ -50,4 +50,6 @@ bool cube_move_apply_move_string(cube_t* cube, const char* moves);
 
 int get_inv_move(int m);
 
+bool is_valid_move(int m);
+
 #endif /* MOVE_H */

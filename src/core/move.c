@@ -218,3 +218,5 @@ void gen_move_tables() {
 }
 
 int get_inv_move(int m) { return m - 2 * (m % 3) + 2; }
+
+bool is_valid_move(int m) { return (0 <= m) && (m < 18); }

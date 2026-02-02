@@ -1,3 +1,6 @@
+#ifndef SCRAMBLER_H
+#define SCRAMBLER_H
+
 #include <stdlib.h>
 
 #include "core/cube.h"
@@ -15,3 +18,8 @@ int cube_scrambler_parse_speffz(cube_t* c, char* s);
 
 /* Returns a random DR */
 cube_t cube_scrambler_get_scrambled_DR();
+
+/* Scramble a cube given a scramble and a scramble format (either Speffz or Singmaster) */
+int cube_scrambler_scramble_cube(cube_t* c, char* scramble, char* format);
+
+#endif /* SCRAMBLER_H */
