@@ -1,11 +1,25 @@
 #include "solver.h"
 
 // work in progress
+//
+
+Solution solution_merge_normal_and_inverse(Solution* temp_solution, Solution* temp_solution_inv){
+    Solution out = solution_copy(temp_solution);
+    for (int move_idx = temp_solution_inv->length - 1; move_idx >= 0; move_idx--){
+        int move_inv = temp_solution_inv->moves[move_idx];
+        int move = get_inv_move(move_inv);
+
+        solution_append(&out, move);
+    }
+
+    return out;
+}
 
 static bool TreeSearch_fin(cube_t*       cube,
                        ptable_data_t* ptable_data,
                        struct search_data s_data,
-                       struct solver_stats* stats
+                       struct solver_stats* stats,
+                       Solution* temp_solution_inv
     ) {
     stats->no_nodes_visited++;
     int remaining_moves = s_data.remaining_moves;
@@ -15,12 +29,17 @@ static bool TreeSearch_fin(cube_t*       cube,
     int max_num_sols = s_data.max_num_sols;
     bool enable_niss = s_data.enable_niss;
 
+    Solution* temp_solution = s_data.temp_solution;
+    SolutionSet* solution_set = s_data.solution_set;
+
 
     if (remaining_moves == 0)
     {
         if (cube_state_is_solved(cube))
         {
-            save_solution_to_solutions(stats);
+            Solution sol_out = solution_merge_normal_and_inverse(temp_solution, temp_solution_inv);
+            solutionset_add_copy(solution_set, &sol_out);
+            solution_free(&sol_out);
             stats->num_sol_found++;
 
             // keep searching if we
@@ -156,10 +175,13 @@ static bool TreeSearch_fin(cube_t*       cube,
 
         cube_move_apply_move(cube, move);
 
-        if (!is_inv)
-            stats->solution[GODS_NO - remaining_moves] = move;
-        else
-            stats->solution_inv[GODS_NO - remaining_moves] = move;
+        if (!is_inv){
+            solution_append(temp_solution, move);
+        }
+            
+        else{
+            solution_append(temp_solution_inv, move);
+        }
 
         struct search_data s_data_next = {
             .remaining_moves = remaining_moves - 1,
@@ -167,16 +189,21 @@ static bool TreeSearch_fin(cube_t*       cube,
             .prev_move_inv = is_inv ? move : prev_move_inv,
             .is_inv = is_inv,
             .max_num_sols = max_num_sols,
-            .enable_niss = enable_niss
+            .enable_niss = enable_niss,
+
+            .temp_solution   = temp_solution,
+            .solution_set    = solution_set
         };
-        bool found = TreeSearch_fin(cube, ptable_data, s_data_next, stats);
+        bool found = TreeSearch_fin(cube, ptable_data, s_data_next, stats, temp_solution_inv);
 
         cube_move_apply_move(cube, get_inv_move(move));
 
-        if (!is_inv)
-            stats->solution[GODS_NO - remaining_moves] = -1;
-        else
-            stats->solution_inv[GODS_NO - remaining_moves] = -1;
+        if (!is_inv) {
+            solution_pop(temp_solution);
+        }
+        else{
+            solution_pop(temp_solution_inv);
+        }
 
         if (found)
             return true;
@@ -189,7 +216,7 @@ static bool TreeSearch_fin(cube_t*       cube,
 
 void IDA_fin(cube_t cube,
         ptable_data_t* ptable_data,
-        struct solver_stats* stats, int max_num_sols, int verbose, bool niss) {
+        struct solver_stats* stats, SolutionSet* solution_set, int max_num_sols, int verbose, bool niss) {
 
     bool stop_search = false;
     if (verbose == 1)
@@ -197,36 +224,39 @@ void IDA_fin(cube_t cube,
         fprintf(stderr, "Depth: ");
     }
 
-    // in principle we could search beyond 20
-    // moves if we want to find multiple solutions,
-    // but I doubt this is very useful
-    for (int depth = 0; depth <= GODS_NO; depth++)
+    // iterative deepening until stop_search is set to true.
+    int depth = 0;
+    while (depth >= 0)
     {
         stats->depth = depth;
         if (verbose == 1)
         {
             fprintf(stderr, "%i ", depth);
         }
-        
 
+        Solution temp_solution, temp_solution_inv;
+        solution_init(&temp_solution);
+        solution_init(&temp_solution_inv);
         struct search_data s_data = {
             .remaining_moves = depth,
             .prev_move = 18,
             .prev_move_inv = 18,
             .is_inv = false,
             .max_num_sols = max_num_sols,
-            .enable_niss = niss
+            .enable_niss = niss,
+            .temp_solution   = &temp_solution,
+            .solution_set    = solution_set
         };
-        stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats);
+        stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats, &temp_solution_inv);
+        solution_free(&temp_solution);
+        solution_free(&temp_solution_inv);
 
         if (stop_search)
         {
-            if (verbose == 1)
-            {
-                fprintf(stderr, "\n");
-            }
-            return;
+            break;
         }
+
+        depth++;
     }
     if (verbose == 1)
     {

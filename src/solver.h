@@ -12,12 +12,11 @@
 #include "index.h"
 #include "solver_steps.h"
 
-static const int GODS_NO     = 20;
+#include "solutions.h"
+
 
 struct solver_stats {
     int           depth;
-    int*          solution;
-    int*          solution_inv;
     int           num_sol_found;
     unsigned long no_nisses;
     unsigned long no_nodes_visited;
@@ -26,13 +25,10 @@ struct solver_stats {
     unsigned long no_inverse_computations;
     int           no_equal_pvals_normal;
     int           no_equal_pvals_inverse;
-
-    int* solutions;
 };
 
 void init_stats(struct solver_stats* stats, int max_num_sols);
 void print_stats(struct solver_stats* stats);
-void save_solution_to_solutions(struct solver_stats* s);
 
 /* struct that holds information we need during the search */
 struct search_data {
@@ -43,12 +39,17 @@ struct search_data {
     int max_num_sols;
     bool enable_niss;
     // int max_num_nomves; // not implemented yet
+
+    // we use a temporary solution to store the current search
+    // and when we find a solution we add it to the solution set.
+    Solution* temp_solution;
+    SolutionSet* solution_set;
 };
 
 
 void IDA_fin(cube_t cube,
         ptable_data_t* ptable_data,
-        struct solver_stats* stats, int max_num_sols, int verbose, bool niss);
+        struct solver_stats* stats, SolutionSet* solution_set, int max_num_sols, int verbose, bool niss);
 
 // void IDA(
 //     cube_t cube,
@@ -60,6 +61,6 @@ void IDA_fin(cube_t cube,
 //     bool niss
 // );
 
-bool cube_solvers_solve_cube(cube_t cube, int* solutions, int number_of_solutions, int verbose, solving_step* ss);
+bool cube_solvers_solve_cube(cube_t cube, SolutionSet* solution_set, int number_of_solutions, int verbose, solving_step* ss);
 
 #endif /* SOLVER_H */

@@ -1,5 +1,9 @@
 #include "solver.h"
 
+/* =================== */
+/* STATS DURING SEARCH */
+/* =================== */
+
 void init_stats(struct solver_stats* stats, int max_num_sols) {
     stats->depth                   = 0;
     stats->no_nodes_visited        = 0;
@@ -11,23 +15,6 @@ void init_stats(struct solver_stats* stats, int max_num_sols) {
     stats->no_equal_pvals_inverse  = 0;
 
     stats->num_sol_found = 0;
-    stats->solution      = malloc(sizeof(int) * 20);
-    for (int i = 0; i < 20; i++)
-    {
-        stats->solution[i] = -1;
-    }
-
-    stats->solution_inv = malloc(sizeof(int) * 20);
-    for (int i = 0; i < 20; i++)
-    {
-        stats->solution_inv[i] = -1;
-    }
-
-    stats->solutions = malloc(sizeof(int) * 20 * max_num_sols);
-    for (int i = 0; i < 20 * max_num_sols; i++)
-    {
-        stats->solutions[i] = -1;
-    }
 }
 
 void print_stats(struct solver_stats* stats) {
@@ -55,28 +42,13 @@ void print_stats(struct solver_stats* stats) {
     }
 }
 
-void save_solution_to_solutions(struct solver_stats* s) {
-    int i = 0;
-    for (int m = 0; m < GODS_NO; m++)
-    {
-        if (0 <= s->solution[m] && s->solution[m] < NMOVES)
-        {
-            s->solutions[s->num_sol_found * GODS_NO + i++] = s->solution[m];
-        }
-    }
-    for (int m = GODS_NO - 1; m >= 0; m--)
-    {
-        if (0 <= s->solution_inv[m] && s->solution_inv[m] < 18)
-        {
-            s->solutions[s->num_sol_found * GODS_NO + i++] = get_inv_move(s->solution_inv[m]);
-        }
-    }
-}
+
+/* =================== */
+/* SEARCH */
+/* =================== */
 
 
 // work in progress
-
-
 static bool
 TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct solver_stats* stats) {
     stats->no_nodes_visited++;
@@ -86,13 +58,16 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     bool is_inv          = s_data.is_inv;
     int  max_num_sols    = s_data.max_num_sols;
     bool enable_niss     = s_data.enable_niss;
+    
+    Solution* temp_solution = s_data.temp_solution;
+    SolutionSet* solution_set = s_data.solution_set;
 
 
     if (remaining_moves == 0)
     {
         if (ss->cube_is_solved(cube))
         {
-            save_solution_to_solutions(stats);
+            solutionset_add_copy(solution_set, temp_solution);
             stats->num_sol_found++;
 
             // keep searching if we
@@ -125,19 +100,22 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
 
         cube_move_apply_move(cube, move);
 
-        stats->solution[GODS_NO - remaining_moves] = move;
+        solution_append(temp_solution, move);
 
         struct search_data s_data_next = {.remaining_moves = remaining_moves - 1,
                                           .prev_move       = move,
                                           .prev_move_inv   = prev_move_inv,
                                           .is_inv          = is_inv,
                                           .max_num_sols    = max_num_sols,
-                                          .enable_niss     = enable_niss};
+                                          .enable_niss     = enable_niss,
+                                          .temp_solution   = temp_solution,
+                                          .solution_set    = solution_set,
+        };
         bool               found       = TreeSearch(cube, ss, s_data_next, stats);
 
         cube_move_apply_move(cube, get_inv_move(move));
 
-        stats->solution[GODS_NO - remaining_moves] = -1;
+        solution_pop(temp_solution);
 
         if (found)
         {
@@ -148,7 +126,7 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     return false;
 }
 
-void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, int max_num_sols, int verbose) {
+void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, SolutionSet* solution_set, int max_num_sols, int verbose) {
 
     bool stop_search = false;
     if (verbose == 1)
@@ -169,33 +147,36 @@ void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, int max_num_
         fprintf(stderr, "Depth: ");
     }
 
-    // in principle we could search beyond 20
-    // moves if we want to find multiple solutions,
-    // but I doubt this is very useful
-    for (int depth = 0; depth <= GODS_NO; depth++)
-    {
+    // iterative deepening until stop_search is set to true.
+    int depth = 0;
+    while (depth >= 0){
         stats->depth = depth;
         if (verbose == 1)
         {
             fprintf(stderr, "%i ", depth);
         }
 
+        Solution temp_solution;
+        solution_init(&temp_solution);
         struct search_data s_data = {.remaining_moves = depth,
                                      .prev_move       = 18,
                                      .prev_move_inv   = 18,
                                      .is_inv          = false,
                                      .max_num_sols    = max_num_sols,
-                                     .enable_niss     = false};
-        stop_search               = TreeSearch(&cube, ss, s_data, stats);
+                                     .enable_niss     = false,
+                                     .temp_solution   = &temp_solution,
+                                     .solution_set    = solution_set,
+                                    };
+
+        stop_search = TreeSearch(&cube, ss, s_data, stats);
+        solution_free(&temp_solution);
 
         if (stop_search)
         {
-            if (verbose == 1)
-            {
-                fprintf(stderr, "\n");
-            }
-            return;
+            break;
         }
+
+        depth++;
     }
     if (verbose == 1)
     {
@@ -205,8 +186,9 @@ void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, int max_num_
 
 /* public */
 
+#include "cli.h"
 bool cube_solvers_solve_cube(
-  cube_t cube, int* solutions, int number_of_solutions, int verbose, solving_step* ss) {
+  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int verbose, solving_step* ss) {
     // we collect some stats along the way.
     struct solver_stats* stats = malloc(sizeof(struct solver_stats));
     init_stats(stats, number_of_solutions);
@@ -251,7 +233,7 @@ bool cube_solvers_solve_cube(
         }
 
         // using the solver with fancy nissing tricks
-        IDA_fin(cube, ss->p_data, stats, number_of_solutions, verbose, enable_niss);
+        IDA_fin(cube, ss->p_data, stats, solution_set, number_of_solutions, verbose, enable_niss);
     }
     else
     {
@@ -265,18 +247,13 @@ bool cube_solvers_solve_cube(
             }
         }
 
-        IDA(cube, ss, stats, number_of_solutions, verbose);
+        IDA(cube, ss, stats, solution_set, number_of_solutions, verbose);
     }
     if (verbose == 1)
     {
         print_stats(stats);
     }
 
-    memcpy(solutions, stats->solutions, sizeof(int) * GODS_NO * number_of_solutions);
-
-    free(stats->solution);
-    free(stats->solution_inv);
-    free(stats->solutions);
     free(stats);
 
     return true;

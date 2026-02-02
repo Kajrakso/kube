@@ -22,19 +22,19 @@ static char doc[] = "kube -- an optimal Rubik's cube solver";
 static char args_doc[] = "";
 
 /* The options we understand. */
-static struct argp_option options[] = {{"verbose", 'v', 0, 0, "Produce verbose output"},
-                                       {"num", 'n', "NUM", 0, "Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions."},
-                                       {"format", 'f', "FORMAT", 0, "Specify scramble format"},
-                                       {"gen", 'g', 0, 0, "Generate tables"},
+static struct argp_option options[] = {{"verbose", 'v', 0, 0, "Produce verbose output", 0},
+                                       {"num", 'n', "NUM", 0, "Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions.", 0},
+                                       {"format", 'f', "FORMAT", 0, "Specify scramble format", 0},
+                                       {"gen", 'g', 0, 0, "Generate tables", 0},
                                        {"step", 's', "STEP", 0,
                                         "Append a solving step (ordered). Can be repeated.\n"
                                         "Examples:\n"
-                                        "  -s eo:max=7 -s dr:max=10 -s fin"},
+                                        "  -s eo:max=7 -s dr:max=10 -s fin", 0},
                                        {0}};
 
 
 /* Our argp parser. */
-static struct argp argp = {options, parse_opt, args_doc, doc};
+static struct argp argp = {options, parse_opt, args_doc, doc, 0, 0, 0};
 
 int main(int argc, char** argv) {
     struct arguments arguments;
@@ -154,11 +154,6 @@ int main(int argc, char** argv) {
         }
 
         char* buf       = malloc(BUF_SIZE);
-        int*  solutions = malloc(sizeof(int) * 20 * arguments.number_of_solutions);
-
-        SolutionSet solution_set;
-        solutionset_init(&solution_set, arguments.number_of_solutions);
-
         while (fgets(buf, BUF_SIZE, stdin))
         {
             buf[strcspn(buf, "\r\n")] = 0;
@@ -168,17 +163,14 @@ int main(int argc, char** argv) {
 
             if (arguments.step_count == 1 || arguments.number_of_solutions == 1) {
                 // we invoke a simple pipeline solver:
-                solver_pipeline(c, solutions, arguments, steps);
+                solver_pipeline(c, arguments, steps);
             }
             else {
                 // we invoke a beam search since we have multiple steps and multiple solutions
-                solver_beam_search(c, solutions, arguments, steps);
+                solver_beam_search(c, arguments, steps);
             }
-
-            
-
-
         }
+
 
         // todo: make cleaning up tables easier
         cube_tables_free();
@@ -188,9 +180,7 @@ int main(int argc, char** argv) {
                 free_ptable(ss->p_data);
             }
         }
-        // free_ptable(p_data);
         free(buf);
-        free(solutions);
     }
 
     return 0;

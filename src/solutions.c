@@ -25,6 +25,16 @@ void solution_append(Solution* s, int move) {
     s->moves[s->length++] = move;
 }
 
+bool solution_pop(Solution* s) {
+    if (s->length == 0){
+        return false;
+    }
+    else {
+        s->length--;
+        return true;
+    }
+}
+
 Solution solution_copy(const Solution* src) {
     Solution dst;
     dst.length = src->length;
@@ -63,20 +73,21 @@ int solutionset_add_copy(SolutionSet* set, const Solution* s) {
    Example "solver"
    ========================= */
 
+#include "cli.h"
 void fake_solver(SolutionSet* out) {
     Solution s;
     solution_init(&s);
+
+    printf("%i %i\n", out->count, out->capacity);
+    cube_print_solution_set(out, 1);
 
     solution_append(&s, 1);
     solution_append(&s, 2);
     solution_append(&s, 3);
     solutionset_add_copy(out, &s);
 
-    solution_append(&s, 4);
-    solution_append(&s, 5);
 
-
-    solutionset_add_copy(out, &s);
+    cube_print_solution_set(out, 1);
 
     solution_free(&s);
 }
@@ -87,24 +98,14 @@ void fake_solver(SolutionSet* out) {
 
 #include "cli.h"
 
-int main_demo() {
+int main_old() {
     SolutionSet solutions;
-    solutionset_init(&solutions, 10);
+    solutionset_init(&solutions, 1);
 
     fake_solver(&solutions);
 
-
-    for (int i = 0; i < solutions.count; i++) {
-        Solution* s = &solutions.data[i];
-        printf("Solution %d: ", i);
-
-        for (int j = 0; j < s->length; j++) {
-            printf("%d ", s->moves[j]);
-        }
-        printf("\n");
-    }
-
     cube_print_solution_set(&solutions, 0);
+
 
     solutionset_free(&solutions);
     return 0;
