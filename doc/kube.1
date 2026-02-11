@@ -1,13 +1,14 @@
-.TH kube
+.TH kube 1
 
 .SH NAME
 kube \- an optimal solver for the 3x3x3 Rubik's cube
 
 .SH SYNOPSIS
 .B kube
-[\fB\-n\fR \fINUM\fR]
 [\fB\-v\fR]
+[\fB\-n\fR \fINUM\fR]
 [\fB\-f\fR \fIFORMAT\fR]
+[\fB\-s\fR \fISTEP\fR]...
 [\fB\-g\fR]
 
 .SH DESCRIPTION
@@ -15,87 +16,95 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 is an optimal solver for the 3x3x3 Rubik's cube.
 It finds a shortest solution to the given scramble
 in the half turn metric (HTM). The solving
-algorithm is heavily inspired by Tomas Rokicki's 
+algorithm is heavily inspired by Tomas Rokicki's
 nxopt solver.
-.BR
-kube reads scrambles from stdin on the format
-specified by \fIFORMAT\fR. 
+
+When multiple solving steps are specified,
+.B kube
+uses a beam search to find up to
+\fINUM\fR solutions.
+
+.PP
+.B kube
+reads scrambles from standard input using the format
+specified by \fIFORMAT\fR.
 
 .SH OPTIONS
 .TP
-.BR \-n\fR\ \fINUM\fR
-kube searches for \fINUM\fR solutions. Default is 1.
+.BR \-v ", " \-\-verbose
+Produce verbose output. kube prints statistics about
+the solving process.
+
 .TP
-.BR \-v
-Verbose output. kube will print some stats about the solving process.
+.BR \-n " " \fINUM\fR ", " \-\-num=NUM
+Try to find \fINUM\fR solutions. Default is 1.
+When multiple solving steps are provided,
+kube performs a beam search to find up to \fINUM\fR
+solutions.
+
 .TP
-.BR \-f\fR\ \fIFORMAT\fR
+.BR \-f " " \fIFORMAT\fR ", " \-\-format=FORMAT
 Specify scramble format. Default is "singmaster".
-Use standard notation for moves. Ex.: "R U R' F B2".
-Another option is "speffz". Specify the memo
-needed to solve the cube blindfolded using 
-the Speffz letter scheme from buffers UFR/UF. 
-Corner memo first, then a ".", followed by edge memo.
-Ex.: "abuv.efnt".
+
+Supported formats:
+
+.RS
 .TP
-.BR \-g
-Generate tables. This has to be done before 
+.B singmaster
+Standard move notation (e.g., "R U R' F B2").
+
+.TP
+.B speffz
+Blindfold memo using the Speffz letter scheme
+from buffers UFR/UF. Corner memo first, then a ".",
+followed by edge memo (e.g., "abuv.efnt").
+.RE
+
+.TP
+.BR \-s " " \fISTEP\fR ", " \-\-step=STEP
+Append a solving step. Steps are executed in the
+order they are given. This option may be repeated.
+
+Supported steps:
+.RS
+eo, dr, htr, fin
+.RE
+
+Example:
+.RS
+kube -s eo -s dr -s fin
+.RE
+
+.TP
+.BR \-g ", " \-\-gen
+Generate pruning tables. This must be done before
 using the solver.
-.TP
 
 .SH EXAMPLES
 .PP
-Find an optimal solution for the Ua-perm with verbose output
+Find an optimal solution for the Ua-perm with verbose output:
 .PP
 .nf
 .RS
 .B
-echo "R' U R' U' R' U' R' U R U R2" | kube -v
-.RE
-.fi
-.PP
-Output:
-.PP
-.nf
-.RS
-\fB
-Depth: 0 1 2 3 4 5 6 7 8 9
-
-Some statistics:
-max depth: 9
-sols found: 1
-
-nodes visited: 2026
-nodes pruned: 1697 (83.76%)
-nodes pruned inv: 531 (26.21%)
-inverse computations: 824 (40.67%)
-nisses: 50 (2.47%)
-
-B2 U' R L' B2 L R' U' B2 (9)
-\fR
+echo "R' U R' U' R' U' R' U R U R2" | kube -s fin -v
 .RE
 .fi
 
 .PP
-Find an optimal solution for an A-perm:
+Find an optimal solution for an A-perm using Speffz format:
 .PP
 .nf
 .RS
 .B
-echo "ab." | kube -f speffz
+echo "ab." | kube -s fin -f speffz
 .RE
 .fi
-.PP
-Output:
-.PP
-.nf
-.RS
-\fB
-R' F R' B2 R F' R' B2 R2
-\fR
 
 .SH AUTHORS
-Oskar Feed Jakobsen (kube@oskarfj.no)
+Oskar Feed Jakobsen (oskarfj@oskarfj.no)
 
 .SH SOURCE CODE
-Source code is available at \fIhttps://github.com/kajrakso/kube\fP
+Source code is available at:
+.I https://github.com/kajrakso/kube
+

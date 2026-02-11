@@ -29,7 +29,7 @@ static struct argp_option options[] = {{"verbose", 'v', 0, 0, "Produce verbose o
                                        {"step", 's', "STEP", 0,
                                         "Append a solving step (ordered). Can be repeated.\n"
                                         "Examples:\n"
-                                        "  -s eo:max=7 -s dr:max=10 -s fin", 0},
+                                        "  -s eo -s dr -s fin", 0},
                                        {0}};
 
 
