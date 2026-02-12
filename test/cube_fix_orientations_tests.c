@@ -1,23 +1,14 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
 
 #include "../src/core/cube.h"
 #include "../src/core/move.h"
-#include "../src/tables.h"
-
-// suits
-
-TestSuite(fix_orientation);
-
-// tests
+#include "../src/core/cube_operation.h"
 
 Test(fix_orientation, fix_co_lr_ud_several_moves) {
   cube_t cube1 = cube_create_new_cube();
   cube_t cube2 = cube_create_new_cube();
-
-  cube_tables_generate();
 
   int moves[] = {U1, R1, F1, R2, D3, U2, L2};
 
@@ -51,8 +42,6 @@ Test(fix_orientation, fix_co_lr_ud_several_moves) {
 Test(fix_orientation, fix_eo_lr_ud_several_moves) {
   cube_t cube1 = cube_create_new_cube();
   cube_t cube2 = cube_create_new_cube();
-
-  cube_tables_generate();
 
   int moves[] = {U1, R1, F1, R2, D3, U2, L2};
 

@@ -1,25 +1,12 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
-#include <stdio.h>
-#include <time.h>
 
 #include "../src/core/cube.h"
 #include "../src/index.h"
 #include "../src/scrambler.h"
-#include "../src/utils.h"
-
-// suites
-
-TestSuite(mtables);
-
-// tests
 
 Test(mtables, mtables) {
-    srand((unsigned int) time(NULL));
-    cube_tables_generate();
-    precompute_combinatorials();  // need to precompute these at the moment.
     gen_move_table_ece_index();
     gen_move_table_coud_index();
     gen_move_table_eofb_index();

@@ -1,23 +1,12 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
 
 #include "../src/core/cube.h"
 #include "../src/core/move.h"
 #include "../src/utils.h"
-#include "../src/tables.h"
-
-// suites
-
-TestSuite(standard_cube_moves);
-TestSuite(extended_cube_moves);
-
-// tests
 
 Test(standard_cube_moves, single_U_move) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
 
   /* A U move changes the eo on UD. */
@@ -43,8 +32,6 @@ Test(standard_cube_moves, single_U_move) {
 }
 
 Test(standard_cube_moves, single_D_move) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
 
   /* A D move changes the eo on UD. */
@@ -70,8 +57,6 @@ Test(standard_cube_moves, single_D_move) {
 }
 
 Test(standard_cube_moves, single_R_move) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
 
   /* A R move changes the eo on RL. */
@@ -97,8 +82,6 @@ Test(standard_cube_moves, single_R_move) {
 }
 
 Test(standard_cube_moves, single_L_move) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
 
   /* A L move changes the eo on RL. */
@@ -124,8 +107,6 @@ Test(standard_cube_moves, single_L_move) {
 }
 
 Test(standard_cube_moves, single_F_move) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
 
   /* A F move changes the eo on FB. */
@@ -151,8 +132,6 @@ Test(standard_cube_moves, single_F_move) {
 }
 
 Test(standard_cube_moves, single_B_move) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
 
   /* A B move changes the eo on FB. */

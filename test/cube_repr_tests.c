@@ -1,13 +1,8 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
 
 #include "../src/core/cube.h"
-
-// suites
-
-TestSuite(cube_repr);
 
 // tests
 

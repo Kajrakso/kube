@@ -1,18 +1,10 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
 
 #include "../src/core/cube.h"
 #include "../src/core/cube_state.h"
 #include "../src/core/move.h"
-#include "../src/tables.h"
-
-// suites
-
-TestSuite(cube_info);
-
-// tests
 
 Test(cube_info, is_solved) {
     cube_t cube = cube_create_new_cube();
@@ -20,8 +12,6 @@ Test(cube_info, is_solved) {
 }
 
 Test(cube_info, is_corners_solved) {
-    cube_tables_generate();
-
     cube_t cube = cube_create_new_cube();
     cr_assert(cube_state_is_corners_solved(&cube));
 
@@ -34,8 +24,6 @@ Test(cube_info, is_corners_solved) {
 }
 
 Test(cube_info, is_edges_solved) {
-    cube_tables_generate();
-
     cube_t cube = cube_create_new_cube();
     cr_assert(cube_state_is_edges_solved(&cube));
 
@@ -50,7 +38,6 @@ Test(cube_info, is_edges_solved) {
 
 Test(cube_info, is_solved_after_moves) {
     cube_t cube = cube_create_new_cube();
-    cube_tables_generate();
     cube_move_apply_move(&cube, R1);
     cube_move_apply_move(&cube, L1);
     cube_move_apply_move(&cube, R3);
@@ -84,7 +71,6 @@ Test(cube_info, is_not_solved_cp) {
 
 Test(cube_info, is_dr) {
     cube_t cube = cube_create_new_cube();
-    cube_tables_generate();
 
     cr_assert(cube_state_is_dr(&cube));
     cr_assert(cube_state_is_dr_FB(&cube));
@@ -120,7 +106,6 @@ Test(cube_info, is_dr) {
 
 Test(cube_info, is_eo) {
     cube_t cube = cube_create_new_cube();
-    cube_tables_generate();
 
     cr_assert(cube_state_is_eo(&cube));
     cr_assert(cube_state_is_eo_FB(&cube));
@@ -165,7 +150,6 @@ Test(cube_info, is_eo) {
 
 Test(cube_info, is_co) {
     cube_t cube = cube_create_new_cube();
-    cube_tables_generate();
 
     cr_assert(cube_state_is_co(&cube));
     cr_assert(cube_state_is_co_FB(&cube));
@@ -217,7 +201,6 @@ Test(cube_info, is_ep) {
 }
 
 Test(cube_info, is_cp) {
-    cube_tables_generate();
     cube_t cube = cube_create_new_cube();
     update_edge_perm(&cube.edges[UB], UF);
     update_edge_perm(&cube.edges[UF], UB);
@@ -225,7 +208,6 @@ Test(cube_info, is_cp) {
     cr_assert_not(cube_state_is_ep(&cube));
 
     cube = cube_create_new_cube();
-
     cube_move_apply_move_string(&cube, "R U R' U R U2 R' L' U' L U' L' U2 L");
     cr_assert(cube_state_is_cp(&cube));
 }

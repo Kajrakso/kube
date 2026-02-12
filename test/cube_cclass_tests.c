@@ -1,25 +1,12 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
-#include <time.h>
 
 #include "../src/scrambler.h"
 #include "../src/core/cube.h"
 #include "../src/index.h"
-#include "../src/utils.h"
-
-// suites
-
-TestSuite(cclass);
-
-// tests
 
 Test(cclass, cclass_invariant_under_UDsyms) {
-    srand((unsigned int) time(NULL));
-    cube_tables_generate();
-    precompute_combinatorials();
-
     static int UDsyms[] = {
       0,  1,  2,  3,  16, 17, 18, 19,  // no inversion
       24, 25, 26, 27, 40, 41, 42, 43   // inversion

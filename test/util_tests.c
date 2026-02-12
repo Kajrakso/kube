@@ -1,15 +1,8 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
 
 #include "../src/utils.h"
-
-// suites
-
-TestSuite(util_tests);
-
-// tests
 
 Test(util_tests, arr_eq) {
   uint16_t arr1[] = {1, 2, 3, 4};

@@ -1,21 +1,14 @@
 #include "criterion/criterion.h"
-#include "criterion/redirect.h"
 
 #include <stdint.h>
 
 #include "../src/core/cube.h"
-#include "../src/tables.h"
-
-// suites
-
-TestSuite(cube_operations);
-
-// tests
+#include "../src/core/move.h"
+#include "../src/core/cube_operation.h"
 
 Test(cube_operations, cube_equality) {
   cube_t cube = cube_create_new_cube();
   cube_t cube_copy = cube_create_new_cube();
-  cube_tables_generate();
 
   cr_assert(cube_operation_is_equal(cube, cube_copy));
 
@@ -31,8 +24,6 @@ Test(cube_operations, cube_equality) {
 }
 
 Test(cube_operations, inverse) {
-  cube_tables_generate();
-
   cube_t cube = cube_create_new_cube();
   cube_t cube_inverse = cube_operation_inverse(cube);
 
@@ -73,8 +64,6 @@ Test(cube_operations, inverse) {
 }
 
 Test(cube_operations, composition) {
-  cube_tables_generate();
-
   cube_t cube1 = cube_create_new_cube();
   cube_t cube2 = cube_create_new_cube();
   cube_t cube_result = cube_create_new_cube();
@@ -95,8 +84,6 @@ Test(cube_operations, composition) {
 }
 
 Test(cube_operations, composition2) {
-  cube_tables_generate();
-
   cube_t cube1 = cube_create_new_cube();
   cube_t cube2 = cube_create_new_cube();
   cube_t cube_result = cube_create_new_cube();
