@@ -186,7 +186,6 @@ void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, SolutionSet*
 
 /* public */
 
-#include "cli.h"
 bool cube_solvers_solve_cube(
   cube_t cube, SolutionSet* solution_set, int number_of_solutions, int verbose, solving_step* ss) {
     // we collect some stats along the way.
