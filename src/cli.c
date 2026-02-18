@@ -192,24 +192,112 @@ void cube_print_solutions(int* solutions, int num_sols, int verbose) {
 }
 
 
-void cube_print_solution_set(SolutionSet* solution_set, int verbose){
-    int count = solution_set->count;
+void cube_print_solution_set(SolutionSet* solution_set, int verbose) {
+    int       count     = solution_set->count;
     Solution* solutions = solution_set->data;
-    for (int solution_idx = 0; solution_idx < count; solution_idx++){
-        Solution solution = solutions[solution_idx]; 
-        for (int move_idx = 0; move_idx < solution.length; move_idx++){
+    for (int solution_idx = 0; solution_idx < count; solution_idx++)
+    {
+        Solution solution = solutions[solution_idx];
+        for (int move_idx = 0; move_idx < solution.length; move_idx++)
+        {
             int move = solution.moves[move_idx];
-            if (is_valid_move(move)) {
+            if (is_valid_move(move))
+            {
                 printf("%s ", move_notation[move]);
             }
-            else {
+            else
+            {
                 printf("? ");
             }
         }
-        if (verbose == 1) {
+        if (verbose == 1)
+        {
             printf("(%i)\n", solution.length);
         }
-        else {
+        else
+        {
+            printf("\n");
+        }
+    }
+}
+
+
+void cube_print_pipelinesolution(PipelineSolution* ps, int verbose){
+    char* step_separator = "\n";
+    // Print each step in the pipeline solution
+    for (int step_idx = 0; step_idx < ps->count; step_idx++)
+    {
+        PipelineSolutionStep* step = &ps->steps[step_idx];
+
+        // Optionally indicate if step starts on inverse
+        if (step->starts_on_inverse)
+        {
+            printf("(");
+        }
+
+        // Print the moves for this step
+        for (int move_idx = 0; move_idx < step->solution->length; move_idx++)
+        {
+            int move = step->solution->moves[move_idx];
+            if (is_valid_move(move))
+            {
+                printf("%s", move_notation[move]);
+                if (move_idx < step->solution->length - 1)
+                {
+                    printf(" ");
+                }
+            }
+            else
+            {
+                printf("?");
+            }
+        }
+
+        if (step->starts_on_inverse)
+        {
+            printf(")");
+        }
+
+        // Print step separator
+        if (ps->count > 0)
+        {
+            printf("%s", step_separator);
+        }
+    }
+
+    // Print verbose information
+    if (verbose == 1)
+    {
+        int total_moves = 0;
+        for (int step_idx = 0; step_idx < ps->count; step_idx++)
+        {
+            total_moves += ps->steps[step_idx].solution->length;
+        }
+        printf(" (total: %d moves, %d steps", total_moves, ps->count);
+
+        if (ps->heuristic_score >= 0)
+        {
+            printf(", score: %d", ps->heuristic_score);
+        }
+        printf(")");
+    }
+}
+
+void cube_print_pipelinesolution_set(PipelineSolutionSet* p, int verbose) {
+    for (int sol_idx = 0; sol_idx < p->count; sol_idx++)
+    {
+        PipelineSolution* ps = &p->data[sol_idx];
+
+        // Print solution number if there are multiple solutions
+        if (p->count > 1)
+        {
+            printf("Solution %d:\n", sol_idx + 1);
+        }
+        cube_print_pipelinesolution(ps, verbose);
+
+        // Add blank line between solutions for readability
+        if (sol_idx < p->count - 1)
+        {
             printf("\n");
         }
     }
@@ -245,21 +333,22 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->format = arg;
         break;
 
-    case 's':
+    case 's' :
         if (arguments->step_count >= MAX_STEPS)
             argp_error(state, "Too many --step options");
 
-        struct step *st = &arguments->steps[arguments->step_count++];
-        st->max_depth = -1;   // default
+        struct step* st = &arguments->steps[arguments->step_count++];
+        st->max_depth   = -1;  // default
 
         // parse "eo:max=7,metric=htm"
-        char *spec = strdup(arg);
-        char *tok = strtok(spec, ":");
+        char* spec = strdup(arg);
+        char* tok  = strtok(spec, ":");
 
         st->name = tok;
 
         tok = strtok(NULL, ",");
-        while (tok) {
+        while (tok)
+        {
             // we do not support extra options currently
             //
             // if (strncmp(tok, "max=", 4) == 0)
@@ -267,7 +356,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
             // else if (strncmp(tok, "metric=", 7) == 0)
             //     st->metric = tok + 7;
             // else
-                argp_error(state, "Unknown step option: %s", tok);
+            argp_error(state, "Unknown step option: %s", tok);
 
             tok = strtok(NULL, ",");
         }
@@ -294,11 +383,11 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
 }
 
 
-void set_default_values_arguments(struct arguments* arguments){
+void set_default_values_arguments(struct arguments* arguments) {
     /* Default values. */
-    arguments->verbose             = 0;
-    arguments->gen                 = 0;
-    arguments->format              = "singmaster";
+    arguments->verbose = 0;
+    arguments->gen     = 0;
+    arguments->format  = "singmaster";
     // arguments->steps[0]            = (struct step){.name = "fin", .max_depth = -1};
     arguments->step_count          = 0;
     arguments->number_of_solutions = 1;

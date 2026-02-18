@@ -23,6 +23,10 @@ void cube_print_solutions(int* solutions, int num_sols, int verbose);
 /* Prints a set of solutions in a human-readable format. */
 void cube_print_solution_set(SolutionSet* solution_set, int verbose);
 
+/* Prints a set of solutions used in pipeline mode in a human-readable format. */
+void cube_print_pipelinesolution_set(PipelineSolutionSet* p, int verbose);
+void cube_print_pipelinesolution(PipelineSolution* ps, int verbose);
+
 /* need to rewrite this function someday */
 int* parse_move_string(size_t* out_length, const char* move_string);
 
