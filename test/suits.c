@@ -36,18 +36,16 @@ void teardown_index(void) {
 // enabled
 
 TestSuite(solutions, .disabled=false);
+TestSuite(cube_repr, .disabled=false);
+TestSuite(util_tests, .disabled=false);
+TestSuite(scramble, .disabled=false, .init=setup);
+TestSuite(cube_info, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(cube_operations, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(mtables, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(standard_cube_moves, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(cube_index, .disabled=false, .init=setup_index, .fini=teardown_index);
+TestSuite(fix_orientation, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(cclass, .disabled=false, .init=setup, .fini=teardown);
 
 // disabled
-
-TestSuite(cube_repr, .disabled=true);
-TestSuite(util_tests, .disabled=true);
-TestSuite(scramble, .disabled=true, .init=setup);
-TestSuite(cube_info, .disabled=true, .init=setup, .fini=teardown);
-TestSuite(cube_operations, .disabled=true, .init=setup, .fini=teardown);
-TestSuite(mtables, .disabled=true, .init=setup, .fini=teardown);
-TestSuite(standard_cube_moves, .disabled=true, .init=setup, .fini=teardown);
-TestSuite(cube_index, .disabled=true, .init=setup_index, .fini=teardown_index);
-TestSuite(fix_orientation, .disabled=true, .init=setup, .fini=teardown);
-TestSuite(cclass, .disabled=true, .init=setup, .fini=teardown);
-
 
