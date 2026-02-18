@@ -164,8 +164,8 @@ void pipelinesolutionstep_free(PipelineSolutionStep* s) {
    ========================= */
 
 void pipelinesolution_init(PipelineSolution* pipeline_solution) {
-    pipeline_solution->capacity    = 8;  // default capacity
-    pipeline_solution->count       = 0;
+    pipeline_solution->capacity = 8;  // default capacity
+    pipeline_solution->count    = 0;
 
     pipeline_solution->heuristic_score = -1;
 
@@ -213,16 +213,19 @@ int pipelinesolution_add_copy(PipelineSolution*           set,
     return 0;
 }
 
-void apply_pipelinesolution(cube_t* cube, PipelineSolution* ps){
-    for (int i = 0; i < ps->count; i++) {
+void apply_pipelinesolution(cube_t* cube, PipelineSolution* ps) {
+    for (int i = 0; i < ps->count; i++)
+    {
         PipelineSolutionStep pss = ps->steps[i];
-        if (pss.starts_on_inverse) {
+        if (pss.starts_on_inverse)
+        {
             *cube = cube_operation_inverse(*cube);
         }
 
         cube_move_apply_multiple_moves(cube, pss.solution->moves, pss.solution->length);
 
-        if (pss.starts_on_inverse) {
+        if (pss.starts_on_inverse)
+        {
             *cube = cube_operation_inverse(*cube);
         }
     }
@@ -299,19 +302,23 @@ void pipelinesolutionset_merge_with_prefix(
 }
 
 
-
-void pipelinesolutionset_compute_scores(cube_t c, PipelineSolutionSet* next, solving_step* next_ss){
-    for (int i = 0; i < next->count; i++){
+void pipelinesolutionset_compute_scores(cube_t               c,
+                                        PipelineSolutionSet* next,
+                                        solving_step*        next_ss) {
+    for (int i = 0; i < next->count; i++)
+    {
         PipelineSolution* ps = &next->data[i];
-        
+
         int length = 0;
-        for (int j = 0; j < ps->count; j++){
+        for (int j = 0; j < ps->count; j++)
+        {
             length += ps->steps[j].solution->length;
         }
 
         // find the heur value and default to 0 if no heur is available
         int heur = 0;
-        if (next_ss != NULL && next_ss->heuristic_func != NULL && next_ss->p_data->ptable_is_loaded) {
+        if (next_ss != NULL && next_ss->heuristic_func != NULL && next_ss->p_data->ptable_is_loaded)
+        {
             heur = next_ss->heuristic_func(&c, next_ss->p_data);
         }
 
@@ -344,14 +351,17 @@ void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, int max_count) 
 }
 
 
-void append_copy_solutionset_to_pipelinesolutionset(PipelineSolutionSet* pss, SolutionSet* ss, bool starts_on_inverse){
-    for (int i = 0; i < ss->count; i++){
+void append_copy_solutionset_to_pipelinesolutionset(PipelineSolutionSet* pss,
+                                                    SolutionSet*         ss,
+                                                    bool                 starts_on_inverse) {
+    for (int i = 0; i < ss->count; i++)
+    {
         PipelineSolution sol;
         pipelinesolution_init(&sol);
         PipelineSolutionStep step;
         step.starts_on_inverse = starts_on_inverse;
-        step.solution = malloc(sizeof(Solution));
-        *step.solution = solution_copy(&ss->data[i]);
+        step.solution          = malloc(sizeof(Solution));
+        *step.solution         = solution_copy(&ss->data[i]);
         pipelinesolution_add_copy(&sol, &step);
         pipelinesolutionset_add_copy(pss, &sol);
     }

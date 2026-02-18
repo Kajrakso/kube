@@ -65,10 +65,6 @@ bool cube_state_is_corners_solved(cube_t* cube);
 bool cube_state_is_edges_solved(cube_t* cube);
 
 
-
-
-
-
 // temp
 /* Check if the cube has cross solved on any side. */
 // bool cube_state_is_cross(cube_t* cube);

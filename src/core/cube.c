@@ -80,13 +80,13 @@ void fix_co_lr_fb(cube_t* cube) {
         {
             if (perm % 2 == 0)
             {
-                update_corner_orien(&cube->corners[i], (2 + orien_ud) % 3,
-                                    (1 + orien_ud) % 3, orien_ud);
+                update_corner_orien(&cube->corners[i], (2 + orien_ud) % 3, (1 + orien_ud) % 3,
+                                    orien_ud);
             }
             else
             {
-                update_corner_orien(&cube->corners[i], (1 + orien_ud) % 3,
-                                    (2 + orien_ud) % 3, orien_ud);
+                update_corner_orien(&cube->corners[i], (1 + orien_ud) % 3, (2 + orien_ud) % 3,
+                                    orien_ud);
             }
         }
     }

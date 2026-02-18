@@ -58,9 +58,9 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     bool is_inv          = s_data.is_inv;
     int  max_num_sols    = s_data.max_num_sols;
     bool enable_niss     = s_data.enable_niss;
-    
-    Solution* temp_solution = s_data.temp_solution;
-    SolutionSet* solution_set = s_data.solution_set;
+
+    Solution*    temp_solution = s_data.temp_solution;
+    SolutionSet* solution_set  = s_data.solution_set;
 
 
     if (remaining_moves == 0)
@@ -102,16 +102,17 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
 
         solution_append(temp_solution, move);
 
-        struct search_data s_data_next = {.remaining_moves = remaining_moves - 1,
-                                          .prev_move       = move,
-                                          .prev_move_inv   = prev_move_inv,
-                                          .is_inv          = is_inv,
-                                          .max_num_sols    = max_num_sols,
-                                          .enable_niss     = enable_niss,
-                                          .temp_solution   = temp_solution,
-                                          .solution_set    = solution_set,
+        struct search_data s_data_next = {
+          .remaining_moves = remaining_moves - 1,
+          .prev_move       = move,
+          .prev_move_inv   = prev_move_inv,
+          .is_inv          = is_inv,
+          .max_num_sols    = max_num_sols,
+          .enable_niss     = enable_niss,
+          .temp_solution   = temp_solution,
+          .solution_set    = solution_set,
         };
-        bool               found       = TreeSearch(cube, ss, s_data_next, stats);
+        bool found = TreeSearch(cube, ss, s_data_next, stats);
 
         cube_move_apply_move(cube, get_inv_move(move));
 
@@ -126,7 +127,12 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     return false;
 }
 
-void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, SolutionSet* solution_set, int max_num_sols, int verbose) {
+void IDA(cube_t               cube,
+         solving_step*        ss,
+         struct solver_stats* stats,
+         SolutionSet*         solution_set,
+         int                  max_num_sols,
+         int                  verbose) {
 
     bool stop_search = false;
     if (verbose == 1)
@@ -149,7 +155,8 @@ void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, SolutionSet*
 
     // iterative deepening until stop_search is set to true.
     int depth = 0;
-    while (depth >= 0){
+    while (depth >= 0)
+    {
         stats->depth = depth;
         if (verbose == 1)
         {
@@ -158,15 +165,16 @@ void IDA(cube_t cube, solving_step* ss, struct solver_stats* stats, SolutionSet*
 
         Solution temp_solution;
         solution_init(&temp_solution);
-        struct search_data s_data = {.remaining_moves = depth,
-                                     .prev_move       = 18,
-                                     .prev_move_inv   = 18,
-                                     .is_inv          = false,
-                                     .max_num_sols    = max_num_sols,
-                                     .enable_niss     = false,
-                                     .temp_solution   = &temp_solution,
-                                     .solution_set    = solution_set,
-                                    };
+        struct search_data s_data = {
+          .remaining_moves = depth,
+          .prev_move       = 18,
+          .prev_move_inv   = 18,
+          .is_inv          = false,
+          .max_num_sols    = max_num_sols,
+          .enable_niss     = false,
+          .temp_solution   = &temp_solution,
+          .solution_set    = solution_set,
+        };
 
         stop_search = TreeSearch(&cube, ss, s_data, stats);
         solution_free(&temp_solution);

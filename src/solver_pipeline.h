@@ -17,4 +17,4 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
 void solver_beam_search(cube_t c, struct arguments arguments, solving_step** steps);
 
 
-#endif  /* SOLVER_PIPELINE_H */
+#endif /* SOLVER_PIPELINE_H */

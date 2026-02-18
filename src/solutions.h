@@ -99,7 +99,7 @@ typedef struct {
     int                   capacity;
 
     // we want to rank PipelineSolutions based on some heuristic (not just the length)
-    int heuristic_score; 
+    int heuristic_score;
 } PipelineSolution;
 
 void             pipelinesolution_init(PipelineSolution* pipeline_solution);
@@ -161,6 +161,8 @@ void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, int max_count);
 /* adds a solution set to a pipeline solution set,
  * such that each pipeline solution only has one step.
  * indicate if it is on normal or inverse via argument. */
-void append_copy_solutionset_to_pipelinesolutionset(PipelineSolutionSet* pss, SolutionSet* ss, bool starts_on_inverse);
+void append_copy_solutionset_to_pipelinesolutionset(PipelineSolutionSet* pss,
+                                                    SolutionSet*         ss,
+                                                    bool                 starts_on_inverse);
 
 #endif /* SOLUTIONS_H */
