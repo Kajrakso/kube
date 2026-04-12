@@ -53,7 +53,8 @@ void IDA_fin(cube_t               cube,
              SolutionSet*         solution_set,
              int                  max_num_sols,
              int                  verbose,
-             bool                 niss);
+             bool                 niss,
+             int                  max_depth);
 
 // void IDA(
 //     cube_t cube,
@@ -66,6 +67,6 @@ void IDA_fin(cube_t               cube,
 // );
 
 bool cube_solvers_solve_cube(
-  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int verbose, solving_step* ss);
+  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int max_depth, int verbose, solving_step* ss);
 
 #endif /* SOLVER_H */

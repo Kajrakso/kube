@@ -27,6 +27,7 @@ static struct argp_option options[] = {
   {"num", 'n', "NUM", 0,
    "Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions.",
    0},
+  {"max-depth", 'M', "MAX", 0, "limit the search depth", 0},
   {"format", 'f', "FORMAT", 0, "Specify scramble format", 0},
   {"gen", 'g', 0, 0, "Generate tables", 0},
   {"step", 's', "STEP", 0,
@@ -180,6 +181,9 @@ int main(int argc, char** argv) {
             cube_t c = cube_create_new_cube();
             cube_scrambler_scramble_cube(&c, buf, arguments.format);
 
+            clock_t start, end;
+            start = clock();
+
             if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
             {
                 // we invoke a simple pipeline solver:
@@ -189,6 +193,10 @@ int main(int argc, char** argv) {
             {
                 // we invoke a beam search since we have multiple steps and multiple solutions
                 solver_beam_search(c, arguments, steps);
+            }
+            end = clock();
+            if (arguments.verbose) {
+                printf("Time used (in seconds): %f\n", (float) (end - start) / CLOCKS_PER_SEC);
             }
         }
 

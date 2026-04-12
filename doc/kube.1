@@ -7,6 +7,7 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 .B kube
 [\fB\-v\fR]
 [\fB\-n\fR \fINUM\fR]
+[\fB\-M\fR \fIMAX\fR]
 [\fB\-f\fR \fIFORMAT\fR]
 [\fB\-s\fR \fISTEP\fR]...
 [\fB\-g\fR]
@@ -43,6 +44,10 @@ kube performs a beam search to find up to \fINUM\fR
 solutions.
 
 .TP
+.BR \-M " " \fIMAX\fR ", " \-\-max-depth=MAX
+Limit the search depth to \fIMAX\fR moves. Default is 1024.
+
+.TP
 .BR \-f " " \fIFORMAT\fR ", " \-\-format=FORMAT
 Specify scramble format. Default is "singmaster".
 
@@ -51,7 +56,7 @@ Supported formats:
 .RS
 .TP
 .B singmaster
-Standard move notation (e.g., "R U R' F B2").
+Standard move notation (e.g., "R U R' F B2"). Writing e.g. R1, R2, R3 instead of R, R2, R' is also supported.
 
 .TP
 .B speffz

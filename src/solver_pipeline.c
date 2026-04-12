@@ -11,6 +11,7 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
         solutionset_init(&solution_set, arguments.number_of_solutions);
 
         if (cube_solvers_solve_cube(c, &solution_set, arguments.number_of_solutions,
+                                    arguments.depth_limit,
                                     arguments.verbose, ss))
         {
             cube_print_solution_set(&solution_set, arguments.verbose);
@@ -89,6 +90,7 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
             solutionset_init(&expanded, beam_width);
 
             cube_solvers_solve_cube(cube, &expanded, arguments.number_of_solutions,
+                                    arguments.depth_limit,
                                     arguments.verbose, ss);
             append_copy_solutionset_to_pipelinesolutionset(&expanded_pipeline, &expanded, false);
 
@@ -97,6 +99,7 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
 
             cube_t cube_inv = cube_operation_inverse(cube);
             cube_solvers_solve_cube(cube_inv, &expanded_inv, arguments.number_of_solutions,
+                                    arguments.depth_limit,
                                     arguments.verbose, ss);
             append_copy_solutionset_to_pipelinesolutionset(&expanded_pipeline, &expanded_inv, true);
 

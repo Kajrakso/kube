@@ -91,6 +91,9 @@ int* parse_move_string(size_t* out_length, const char* move_string) {
       {"U", U1}, {"U2", U2}, {"U'", U3}, {"D", D1}, {"D2", D2}, {"D'", D3},
       {"L", L1}, {"L2", L2}, {"L'", L3}, {"R", R1}, {"R2", R2}, {"R'", R3},
       {"F", F1}, {"F2", F2}, {"F'", F3}, {"B", B1}, {"B2", B2}, {"B'", B3},
+      {"U1", U1}, {"U3", U3}, {"D1", D1}, {"D3", D3},
+      {"L1", L1}, {"L3", L3}, {"R1", R1}, {"R3", R2},
+      {"F1", F1}, {"F3", F3}, {"B1", B1}, {"B3", B3},
     };
 
     const size_t map_size = sizeof(move_map) / sizeof(move_map[0]);
@@ -180,14 +183,7 @@ void cube_print_solutions(int* solutions, int num_sols, int verbose) {
                 len++;
             }
         }
-        if (verbose == 1)
-        {
-            printf("(%i)\n", len);
-        }
-        else
-        {
-            printf("\n");
-        }
+        printf("(%i)\n", len);
     }
 }
 
@@ -210,14 +206,7 @@ void cube_print_solution_set(SolutionSet* solution_set, int verbose) {
                 printf("? ");
             }
         }
-        if (verbose == 1)
-        {
-            printf("(%i)\n", solution.length);
-        }
-        else
-        {
-            printf("\n");
-        }
+        printf("(%i)\n", solution.length);
     }
 }
 
@@ -318,6 +307,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
     // for parsing number of solutions
     char* endptr;
     long  num;
+    long  depth_limit;
 
     switch (key)
     {
@@ -376,6 +366,20 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         }
         break;
 
+    case 'M' :
+        depth_limit = strtol(arg, &endptr, 10);
+
+        if (*endptr != '\0')
+        {
+            // Error: not a valid integer string
+            printf("Conversion error, non-integer characters found: %s. Using m = %i\n", endptr, 1);
+        }
+        else
+        {
+            arguments->depth_limit = depth_limit;
+        }
+        break;
+
     default :
         return ARGP_ERR_UNKNOWN;
     }
@@ -391,4 +395,5 @@ void set_default_values_arguments(struct arguments* arguments) {
     // arguments->steps[0]            = (struct step){.name = "fin", .max_depth = -1};
     arguments->step_count          = 0;
     arguments->number_of_solutions = 1;
+    arguments->depth_limit = 1024;  // practically inifinite
 }

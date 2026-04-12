@@ -20,25 +20,25 @@ void init_stats(struct solver_stats* stats, int max_num_sols) {
 void print_stats(struct solver_stats* stats) {
     if (stats->no_nodes_visited == 0)
     {
-        fprintf(stderr, "No nodes visited\n");
+        printf("No nodes visited\n");
     }
     else
     {
-        fprintf(stderr, "\n");
-        fprintf(stderr, "Some statistics:\n");
-        fprintf(stderr, "max depth: %i\n", stats->depth);
-        fprintf(stderr, "sols found: %i\n", stats->num_sol_found);
-        fprintf(stderr, "\n");
-        fprintf(stderr, "nodes visited: %lu\n", stats->no_nodes_visited);
-        fprintf(stderr, "nodes pruned: %lu (%.2f%%)\n", stats->no_nodes_pruned,
+        printf("\n");
+        printf("Some statistics:\n");
+        printf("max depth: %i\n", stats->depth);
+        printf("sols found: %i\n", stats->num_sol_found);
+        printf("\n");
+        printf("nodes visited: %lu\n", stats->no_nodes_visited);
+        printf("nodes pruned: %lu (%.2f%%)\n", stats->no_nodes_pruned,
                 100 * (float) stats->no_nodes_pruned / (float) stats->no_nodes_visited);
-        fprintf(stderr, "nodes pruned inv: %lu (%.2f%%)\n", stats->no_nodes_pruned_inv,
+        printf("nodes pruned inv: %lu (%.2f%%)\n", stats->no_nodes_pruned_inv,
                 100 * (float) stats->no_nodes_pruned_inv / (float) stats->no_nodes_visited);
-        fprintf(stderr, "inverse computations: %lu (%.2f%%)\n", stats->no_inverse_computations,
+        printf("inverse computations: %lu (%.2f%%)\n", stats->no_inverse_computations,
                 100 * (float) stats->no_inverse_computations / (float) stats->no_nodes_visited);
-        fprintf(stderr, "nisses: %lu (%.2f%%)\n", stats->no_nisses,
+        printf("nisses: %lu (%.2f%%)\n", stats->no_nisses,
                 100 * (float) stats->no_nisses / (float) stats->no_nodes_visited);
-        fprintf(stderr, "\n");
+        printf("\n");
     }
 }
 
@@ -132,7 +132,8 @@ void IDA(cube_t               cube,
          struct solver_stats* stats,
          SolutionSet*         solution_set,
          int                  max_num_sols,
-         int                  verbose) {
+         int                  verbose,
+         int                  depth_limit) {
 
     bool stop_search = false;
     if (verbose == 1)
@@ -152,10 +153,13 @@ void IDA(cube_t               cube,
 
         fprintf(stderr, "Depth: ");
     }
+    if (depth_limit == -1) {
+        depth_limit = 1024; // practically infinite...
+    }
 
     // iterative deepening until stop_search is set to true.
     int depth = 0;
-    while (depth >= 0)
+    while (depth <= depth_limit)
     {
         stats->depth = depth;
         if (verbose == 1)
@@ -195,7 +199,7 @@ void IDA(cube_t               cube,
 /* public */
 
 bool cube_solvers_solve_cube(
-  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int verbose, solving_step* ss) {
+  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int depth_limit, int verbose, solving_step* ss) {
     // we collect some stats along the way.
     struct solver_stats* stats = malloc(sizeof(struct solver_stats));
     init_stats(stats, number_of_solutions);
@@ -240,7 +244,7 @@ bool cube_solvers_solve_cube(
         }
 
         // using the solver with fancy nissing tricks
-        IDA_fin(cube, ss->p_data, stats, solution_set, number_of_solutions, verbose, enable_niss);
+        IDA_fin(cube, ss->p_data, stats, solution_set, number_of_solutions, verbose, enable_niss, depth_limit);
     }
     else
     {
@@ -254,7 +258,7 @@ bool cube_solvers_solve_cube(
             }
         }
 
-        IDA(cube, ss, stats, solution_set, number_of_solutions, verbose);
+        IDA(cube, ss, stats, solution_set, number_of_solutions, verbose, depth_limit);
     }
     if (verbose == 1)
     {

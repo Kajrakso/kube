@@ -222,7 +222,8 @@ void IDA_fin(cube_t               cube,
              SolutionSet*         solution_set,
              int                  max_num_sols,
              int                  verbose,
-             bool                 niss) {
+             bool                 niss,
+             int                  depth_limit) {
 
     bool stop_search = false;
     if (verbose == 1)
@@ -230,9 +231,13 @@ void IDA_fin(cube_t               cube,
         fprintf(stderr, "Depth: ");
     }
 
+    if (depth_limit == -1) {
+        depth_limit = 1024; // practically infinite...
+    }
+
     // iterative deepening until stop_search is set to true.
     int depth = 0;
-    while (depth >= 0)
+    while (depth <= depth_limit)
     {
         stats->depth = depth;
         if (verbose == 1)

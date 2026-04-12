@@ -41,6 +41,7 @@ struct arguments {
     int   verbose;
     int   gen;
     int   number_of_solutions;
+    int   depth_limit;
 
     struct step steps[MAX_STEPS];
     int step_count;
