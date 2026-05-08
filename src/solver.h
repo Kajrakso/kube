@@ -42,7 +42,9 @@ struct search_data {
 
     // we use a temporary solution to store the current search
     // and when we find a solution we add it to the solution set.
+    // when we also search on inverse, we have to keep track of both paths.
     Solution*    temp_solution;
+    Solution*    temp_solution_inv;
     SolutionSet* solution_set;
 };
 

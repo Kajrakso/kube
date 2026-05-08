@@ -138,19 +138,6 @@ void IDA(cube_t               cube,
     bool stop_search = false;
     if (verbose == 1)
     {
-        fprintf(stderr, "\tsolving_type: %i\n", ss->solving_type);
-
-        if (ss->p_data == NULL)
-        {
-            fprintf(stderr, "\tsolving_step does not have associated pruning_data\n");
-        }
-        // else
-        // {
-        //     fprintf(stderr, "\tp_data ptr: %lu\n", (unsigned long) ss->p_data);
-        //     fprintf(stderr, "\tp_data->ptable ptr: %lu\n", (unsigned long) ss->p_data->ptable);
-        //     fprintf(stderr, "\tptable is %sloaded!\n", ss->p_data->ptable_is_loaded ? "" : "not ");
-        // }
-
         fprintf(stderr, "Depth: ");
     }
     if (depth_limit == -1) {
@@ -217,11 +204,6 @@ bool cube_solvers_solve_cube(
     // how to handle solving step with no p_data?
     if (ss->p_data != NULL)
     {
-        if (verbose == 1)
-        {
-            fprintf(stderr, "\tUsing pruning table %s\n", ss->p_data->name);
-        }
-
         cube_tables_load_ptable(ss->p_data);
         if (!ss->p_data->ptable_is_loaded)
         {

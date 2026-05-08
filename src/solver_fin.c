@@ -1,7 +1,6 @@
 #include "solver.h"
 
 // work in progress
-//
 
 Solution solution_merge_normal_and_inverse(Solution* temp_solution, Solution* temp_solution_inv) {
     Solution out = solution_copy(temp_solution);
@@ -19,8 +18,7 @@ Solution solution_merge_normal_and_inverse(Solution* temp_solution, Solution* te
 static bool TreeSearch_fin(cube_t*              cube,
                            ptable_data_t*       ptable_data,
                            struct search_data   s_data,
-                           struct solver_stats* stats,
-                           Solution*            temp_solution_inv) {
+                           struct solver_stats* stats) {
     stats->no_nodes_visited++;
     int  remaining_moves = s_data.remaining_moves;
     int  prev_move       = s_data.prev_move;
@@ -30,6 +28,7 @@ static bool TreeSearch_fin(cube_t*              cube,
     bool enable_niss     = s_data.enable_niss;
 
     Solution*    temp_solution = s_data.temp_solution;
+    Solution*    temp_solution_inv = s_data.temp_solution_inv;
     SolutionSet* solution_set  = s_data.solution_set;
 
 
@@ -179,7 +178,6 @@ static bool TreeSearch_fin(cube_t*              cube,
         {
             solution_append(temp_solution, move);
         }
-
         else
         {
             solution_append(temp_solution_inv, move);
@@ -193,8 +191,9 @@ static bool TreeSearch_fin(cube_t*              cube,
                                           .enable_niss     = enable_niss,
 
                                           .temp_solution = temp_solution,
+                                          .temp_solution_inv = temp_solution_inv,
                                           .solution_set  = solution_set};
-        bool found = TreeSearch_fin(cube, ptable_data, s_data_next, stats, temp_solution_inv);
+        bool found = TreeSearch_fin(cube, ptable_data, s_data_next, stats);
 
         cube_move_apply_move(cube, get_inv_move(move));
 
@@ -208,11 +207,15 @@ static bool TreeSearch_fin(cube_t*              cube,
         }
 
         if (found)
+        {
             return true;
+        }
     }
 
     if (_niss)
+    {
         swap_cubes(cube, &inv);
+    }
     return false;
 }
 
@@ -249,14 +252,15 @@ void IDA_fin(cube_t               cube,
         solution_init(&temp_solution);
         solution_init(&temp_solution_inv);
         struct search_data s_data = {.remaining_moves = depth,
-                                     .prev_move       = 18,
-                                     .prev_move_inv   = 18,
+                                     .prev_move       = NULLMOVE,
+                                     .prev_move_inv   = NULLMOVE,
                                      .is_inv          = false,
                                      .max_num_sols    = max_num_sols,
                                      .enable_niss     = niss,
                                      .temp_solution   = &temp_solution,
+                                     .temp_solution_inv = &temp_solution_inv,
                                      .solution_set    = solution_set};
-        stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats, &temp_solution_inv);
+        stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats);
         solution_free(&temp_solution);
         solution_free(&temp_solution_inv);
 
