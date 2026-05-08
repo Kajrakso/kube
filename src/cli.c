@@ -1,5 +1,7 @@
 #include "cli.h"
 
+#include "solver_pipeline.h"
+
 /* ------------------------------------ */
 /* string representations and printing  */
 /* ------------------------------------ */
@@ -396,4 +398,162 @@ void set_default_values_arguments(struct arguments* arguments) {
     arguments->step_count          = 0;
     arguments->number_of_solutions = 1;
     arguments->depth_limit = 1024;  // practically inifinite
+}
+
+
+void cli_gen() {
+    printf("Starting to gen tables...\n");
+    char fname[strlen(tabledir) + FILENAME_MAX];
+
+    // this is needed since kube currently
+    // does not generate this file itself
+    strcpy(fname, tabledir);
+    strcat(fname, "/");
+    printf(
+        "TEMP: If you want to solve to HTR you need to copy dr_subsets.dat to this location: %s\n",
+        fname);
+
+    clock_t start, end;
+    start = clock();
+    cube_tables_generate();
+
+    char fname1[strlen(tabledir) + FILENAME_MAX];
+    strcpy(fname1, tabledir);
+    strcat(fname1, "/");
+    strcat(fname1, "sym_table_e_index.dat");
+
+
+    if (file_exists(fname1))
+    {
+        fprintf(stderr, "%s already exists. I'm skipping it!\n", fname1);
+    }
+    else
+    {
+        gen_sym_table_e_index();
+    }
+
+
+    for (int i = 0; i < 2; i++)
+    {
+        char fname2[strlen(tabledir) + FILENAME_MAX];
+        strcpy(fname2, tabledir);
+        strcat(fname2, "/");
+        strcat(fname2, enabled_ptables[i]->filename);
+
+        if (file_exists(fname2))
+        {
+            fprintf(stderr, "%s already exists. I'm skipping it!\n", fname2);
+        }
+        else
+        {
+            enabled_ptables[i]->gen_ptable_func();
+        }
+    }
+
+    end = clock();
+    printf("Total time used for table gen: %f s\n", (float) (end - start) / CLOCKS_PER_SEC);
+}
+
+
+int cli_solver_prepare(struct arguments arguments, solving_step** steps){
+    cube_tables_generate();  // generates tables for moves, symmetries, etc.
+
+    // load all tables needed for all the steps.
+    for (int i = 0; i < arguments.step_count; i++)
+    {
+        struct step s = arguments.steps[i];
+
+        solving_step* ss = NULL;
+        if (strcmp(s.name, "fin") == 0)
+        {
+            ss = &fin;
+        }
+        if (strcmp(s.name, "dr") == 0)
+        {
+            ss = &dr;
+        }
+        if (strcmp(s.name, "eo") == 0)
+        {
+            ss = &eo;
+        }
+        if (strcmp(s.name, "htr") == 0)
+        {
+            ss = &htr;
+        }
+
+        if (ss == NULL)
+        {
+            printf("Did not understand step. exiting...\n");
+            return 1;
+        }
+
+        if (ss->p_data == NULL)
+        {
+            if (arguments.verbose == 1)
+                fprintf(stderr, "\tstep %s aint got ptable!\n", s.name);
+        }
+        else if (cube_tables_load_ptable(ss->p_data) == 1)
+        {
+            fprintf(stderr, "\tstep %s got ptable but ", s.name);
+            fprintf(stderr, "\tcould not load ptable! Trying to solve step: %i\n",
+                    ss->solving_type);
+        }
+
+        // load some special tables needed for some of the steps
+        if (ss->solving_type == SOLVE_FIN)
+        {
+            cube_tables_load_sym_table_e_index();
+        }
+
+        if (ss->solving_type == SOLVE_HTR)
+        {
+            cube_tables_load_dr_subsets();
+        }
+
+        steps[i] = ss;
+    }
+
+    return 0;
+}
+
+void cli_solver_cleanup(struct arguments arguments, solving_step** steps){
+    cube_tables_free();
+    for (int i = 0; i < arguments.step_count; i++)
+    {
+        solving_step* ss = steps[i];
+        if (ss->p_data != NULL)
+        {
+            free_ptable(ss->p_data);
+        }
+    }   
+}
+
+void cli_solver_solving_loop(struct arguments arguments, solving_step** steps){
+    char* buf = malloc(BUF_SIZE);
+    while (fgets(buf, BUF_SIZE, stdin))
+    {
+        buf[strcspn(buf, "\r\n")] = 0;
+
+        cube_t c = cube_create_new_cube();
+        cube_scrambler_scramble_cube(&c, buf, arguments.format);
+
+        clock_t start, end;
+        start = clock();
+
+        if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
+        {
+            // we invoke a simple pipeline solver:
+            solver_pipeline(c, arguments, steps);
+        }
+        else
+        {
+            // we invoke a beam search since we have multiple steps and multiple solutions
+            solver_beam_search(c, arguments, steps);
+        }
+        end = clock();
+        if (arguments.verbose) {
+            printf("Time used (in seconds): %f\n", (float) (end - start) / CLOCKS_PER_SEC);
+        }
+    }
+    free(buf);
 }

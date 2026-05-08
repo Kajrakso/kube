@@ -1,16 +1,7 @@
 #include <stdlib.h>
-#include <time.h>
 
-#include "solutions.h"
 #include "cli.h"
-#include "scrambler.h"
 #include "env.h"
-
-#include "tables_ptable_data.h"
-#include "solver_steps.h"
-#include "solver_pipeline.h"
-
-#define BUF_SIZE 4096
 
 const char* argp_program_version     = "kube 0.1";
 const char* argp_program_bug_address = "<oskarfj@oskarfj.no>";
@@ -49,56 +40,7 @@ int main(int argc, char** argv) {
 
     if (arguments.gen == 1)
     {
-        printf("Starting to gen tables...\n");
-        char fname[strlen(tabledir) + FILENAME_MAX];
-
-        // this is needed since kube currently
-        // does not generate this file itself
-        strcpy(fname, tabledir);
-        strcat(fname, "/");
-        printf(
-          "TEMP: If you want to solve to HTR you need to copy dr_subsets.dat to this location: %s\n",
-          fname);
-
-        clock_t start, end;
-        start = clock();
-        cube_tables_generate();
-
-        char fname1[strlen(tabledir) + FILENAME_MAX];
-        strcpy(fname1, tabledir);
-        strcat(fname1, "/");
-        strcat(fname1, "sym_table_e_index.dat");
-
-
-        if (file_exists(fname1))
-        {
-            fprintf(stderr, "%s already exists. I'm skipping it!\n", fname1);
-        }
-        else
-        {
-            gen_sym_table_e_index();
-        }
-
-
-        for (int i = 0; i < 2; i++)
-        {
-            char fname2[strlen(tabledir) + FILENAME_MAX];
-            strcpy(fname2, tabledir);
-            strcat(fname2, "/");
-            strcat(fname2, enabled_ptables[i]->filename);
-
-            if (file_exists(fname2))
-            {
-                fprintf(stderr, "%s already exists. I'm skipping it!\n", fname2);
-            }
-            else
-            {
-                enabled_ptables[i]->gen_ptable_func();
-            }
-        }
-
-        end = clock();
-        printf("Total time used for table gen: %f s\n", (float) (end - start) / CLOCKS_PER_SEC);
+        cli_gen();
         return 0;
     }
 
@@ -108,110 +50,19 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // if (arguments.number_of_solutions > 1 && arguments.step_count > 1){
-    //     printf("-n is not supported with multiple steps. Uses n = 1.");
-    //     arguments.number_of_solutions = 1;
-    // }
-
     if (arguments.number_of_solutions >= 1)
     {
-        cube_tables_generate();  // generates tables for moves, symmetries, etc.
-        solving_step* steps[arguments.step_count];
-
-        // load all tables needed for all the steps.
-        for (int i = 0; i < arguments.step_count; i++)
-        {
-            struct step s = arguments.steps[i];
-
-            solving_step* ss = NULL;
-            if (strcmp(s.name, "fin") == 0)
-            {
-                ss = &fin;
-            }
-            if (strcmp(s.name, "dr") == 0)
-            {
-                ss = &dr;
-            }
-            if (strcmp(s.name, "eo") == 0)
-            {
-                ss = &eo;
-            }
-            if (strcmp(s.name, "htr") == 0)
-            {
-                ss = &htr;
-            }
-
-            if (ss == NULL)
-            {
-                printf("Did not understand step. exiting...\n");
-                return 1;
-            }
-
-            if (ss->p_data == NULL)
-            {
-                if (arguments.verbose == 1)
-                    fprintf(stderr, "\tstep %s aint got ptable!\n", s.name);
-            }
-            else if (cube_tables_load_ptable(ss->p_data) == 1)
-            {
-                fprintf(stderr, "\tstep %s got ptable but ", s.name);
-                fprintf(stderr, "\tcould not load ptable! Trying to solve step: %i\n",
-                        ss->solving_type);
-            }
-
-            // load some special tables needed for some of the steps
-            if (ss->solving_type == SOLVE_FIN)
-            {
-                cube_tables_load_sym_table_e_index();
-            }
-
-            if (ss->solving_type == SOLVE_HTR)
-            {
-                cube_tables_load_dr_subsets();
-            }
-
-            steps[i] = ss;
+        solving_step** steps = malloc(arguments.step_count * sizeof(solving_step*));
+        if (steps == NULL) {
+            fprintf(stderr, "Could not allocate space for steps\n");
+            return 1;
         }
+        
+        cli_solver_prepare(arguments, steps);
+        cli_solver_solving_loop(arguments, steps);
+        cli_solver_cleanup(arguments, steps);
 
-        char* buf = malloc(BUF_SIZE);
-        while (fgets(buf, BUF_SIZE, stdin))
-        {
-            buf[strcspn(buf, "\r\n")] = 0;
-
-            cube_t c = cube_create_new_cube();
-            cube_scrambler_scramble_cube(&c, buf, arguments.format);
-
-            clock_t start, end;
-            start = clock();
-
-            if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
-            {
-                // we invoke a simple pipeline solver:
-                solver_pipeline(c, arguments, steps);
-            }
-            else
-            {
-                // we invoke a beam search since we have multiple steps and multiple solutions
-                solver_beam_search(c, arguments, steps);
-            }
-            end = clock();
-            if (arguments.verbose) {
-                printf("Time used (in seconds): %f\n", (float) (end - start) / CLOCKS_PER_SEC);
-            }
-        }
-
-
-        // todo: make cleaning up tables easier
-        cube_tables_free();
-        for (int i = 0; i < arguments.step_count; i++)
-        {
-            solving_step* ss = steps[i];
-            if (ss->p_data != NULL)
-            {
-                free_ptable(ss->p_data);
-            }
-        }
-        free(buf);
+        free(steps);
     }
 
     return 0;

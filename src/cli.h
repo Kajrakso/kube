@@ -1,17 +1,20 @@
 #ifndef CLI_H
 #define CLI_H
 
+#include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <argp.h>
+#include <time.h>
 
 #include "core/cube.h"
 #include "core/move.h"
 
+#include "scrambler.h"
 #include "solutions.h"
 
 #define MAX_STEPS 32
+#define BUF_SIZE 4096
 
 /* Prints the cube in a human-readable format. */
 void cube_print_cube(cube_t* cube);
@@ -51,5 +54,13 @@ struct arguments {
 error_t parse_opt(int key, char* arg, struct argp_state* state);
 
 void set_default_values_arguments(struct arguments* arguments);
+
+
+/* main should call these functions when we pass cli arguments */
+void cli_gen();
+int cli_solver_prepare(struct arguments arguments, solving_step** steps);
+void cli_solver_solving_loop(struct arguments arguments, solving_step** steps);
+void cli_solver_cleanup(struct arguments arguments, solving_step** steps);
+
 
 #endif /* CLI_H */
