@@ -140,13 +140,10 @@ void IDA(cube_t               cube,
     {
         fprintf(stderr, "Depth: ");
     }
-    if (depth_limit == -1) {
-        depth_limit = 1024; // practically infinite...
-    }
 
     // iterative deepening until stop_search is set to true.
     int depth = 0;
-    while (depth <= depth_limit)
+    while (depth <= (depth_limit == -1 ? 1024 : depth_limit))
     {
         stats->depth = depth;
         if (verbose == 1)
@@ -158,8 +155,8 @@ void IDA(cube_t               cube,
         solution_init(&temp_solution);
         struct search_data s_data = {
           .remaining_moves = depth,
-          .prev_move       = 18,
-          .prev_move_inv   = 18,
+          .prev_move       = NULLMOVE,
+          .prev_move_inv   = NULLMOVE,
           .is_inv          = false,
           .max_num_sols    = max_num_sols,
           .enable_niss     = false,

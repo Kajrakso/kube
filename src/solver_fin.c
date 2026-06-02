@@ -1,7 +1,5 @@
 #include "solver.h"
 
-// work in progress
-
 Solution solution_merge_normal_and_inverse(Solution* temp_solution, Solution* temp_solution_inv) {
     Solution out = solution_copy(temp_solution);
     for (int move_idx = temp_solution_inv->length - 1; move_idx >= 0; move_idx--)
@@ -234,13 +232,9 @@ void IDA_fin(cube_t               cube,
         fprintf(stderr, "Depth: ");
     }
 
-    if (depth_limit == -1) {
-        depth_limit = 1024; // practically infinite...
-    }
-
     // iterative deepening until stop_search is set to true.
     int depth = 0;
-    while (depth <= depth_limit)
+    while (depth <= ((depth_limit == -1) ? 1024 : depth_limit))
     {
         stats->depth = depth;
         if (verbose == 1)
