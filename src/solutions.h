@@ -22,6 +22,7 @@ typedef struct {
 void     solution_init(Solution* s);
 void     solution_free(Solution* s);
 void     solution_append(Solution* s, int move);
+void     solution_append_multiple(Solution* s, int* moves, int number_of_moves);
 bool     solution_pop(Solution* s);
 Solution solution_copy(const Solution* src);
 

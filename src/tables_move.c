@@ -1,5 +1,7 @@
 #include "index.h"
 
+struct move_sequence_cost ms[NUMBER_OF_4_MOVE_SEQUENCES];
+
 uint32_t move_mask[NMOVES + 1];
 uint64_t move_table_ccu_index[NCCU][NMOVES];
 uint64_t move_table_coud_index[NCO][NMOVES];
@@ -223,3 +225,53 @@ void gen_move_table_ccu_index() {
         }
     }
 }
+
+void gen_move_sequence_cost_array(){
+    size_t i = 0;
+    uint32_t mm1 = move_mask[NULLMOVE];
+
+    for (int move1 = 0; move1 < NMOVES; move1++)
+    {
+        if (!(mm1 & (1u << move1)))
+            continue;
+
+        uint32_t mm2 = move_mask[move1];
+
+        for (int move2 = 0; move2 < NMOVES; move2++)
+        {
+            if (!(mm2 & (1u << move2)))
+                continue;
+
+            uint32_t mm3 = move_mask[move2];
+
+            for (int move3 = 0; move3 < NMOVES; move3++)
+            {
+                if (!(mm3 & (1u << move3)))
+                    continue;
+
+                uint32_t mm4 = move_mask[move3];
+
+                for (int move4 = 0; move4 < NMOVES; move4++)
+                {
+                    if (!(mm4 & (1u << move4)))
+                        continue;
+
+                    ms[i++] = (struct move_sequence_cost){
+                        .moves = {move1, move2, move3, move4},
+                        .cost = 0
+                    };
+                }
+            }
+        }
+    }
+}
+
+int compare_move_sequence_cost(const void* a, const void* b){
+    uint64_t a_cost = ((struct move_sequence_cost*)a)->cost;
+    uint64_t b_cost = ((struct move_sequence_cost*)b)->cost;
+    
+    return (a_cost < b_cost) - (a_cost > b_cost);
+}
+
+
+

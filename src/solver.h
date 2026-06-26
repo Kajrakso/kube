@@ -48,6 +48,19 @@ struct search_data {
     SolutionSet* solution_set;
 };
 
+/* I have to add some info regarding a task to this. Should I separate the "search_data" from tha "task" struct? */ 
+typedef struct {
+    cube_t cube;
+    int moves[4];
+    uint64_t cost;
+} solver_task_t;
+
+bool cube_solvers_solve_cube(cube_t        cube,
+                             SolutionSet*  solution_set,
+                             int           number_of_solutions,
+                             int           max_depth,
+                             int           verbose,
+                             solving_step* ss);
 
 void IDA_fin(cube_t               cube,
              ptable_data_t*       ptable_data,
@@ -57,12 +70,5 @@ void IDA_fin(cube_t               cube,
              int                  verbose,
              bool                 niss,
              int                  max_depth);
-
-bool cube_solvers_solve_cube(cube_t        cube,
-                             SolutionSet*  solution_set,
-                             int           number_of_solutions,
-                             int           max_depth,
-                             int           verbose,
-                             solving_step* ss);
 
 #endif /* SOLVER_H */

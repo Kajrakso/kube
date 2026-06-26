@@ -12,6 +12,7 @@
 #include "env.h"
 
 #define FACTORIAL8 40320
+#define NUMBER_OF_4_MOVE_SEQUENCES 43254
 
 /* type used to store information about each
  * type of pruning table. */
@@ -60,6 +61,19 @@ extern uint64_t move_table_coud_index[NCO][NMOVES];
 extern uint64_t move_table_ece_index[NECE][NMOVES];
 extern uint64_t move_table_eofb_index[NEO][NMOVES];
 extern struct c_index_cclass_sym cclass_table[NCCU * NCO];
+
+/* we want to generate all sequences of 4 moves
+ * and then sort them based on information gained
+ * during search. */
+struct move_sequence_cost {
+    int moves[4];
+    uint64_t cost;
+};
+
+extern struct move_sequence_cost ms[NUMBER_OF_4_MOVE_SEQUENCES];
+
+void gen_move_sequence_cost_array();
+int compare_move_sequence_cost(const void* a, const void* b);
 
 /* todo: need to gen these before using them. */
 void gen_move_mask();

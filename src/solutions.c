@@ -26,6 +26,13 @@ void solution_append(Solution* s, int move) {
     s->moves[s->length++] = move;
 }
 
+
+void solution_append_multiple(Solution* s, int* moves, int number_of_moves){
+    for (int i = 0; i < number_of_moves; i++){
+        solution_append(s, moves[i]);
+    }
+}
+
 bool solution_pop(Solution* s) {
     if (s->length == 0)
     {

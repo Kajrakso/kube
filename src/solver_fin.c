@@ -245,16 +245,63 @@ void IDA_fin(cube_t               cube,
         Solution temp_solution, temp_solution_inv;
         solution_init(&temp_solution);
         solution_init(&temp_solution_inv);
-        struct search_data s_data = {.remaining_moves = depth,
-                                     .prev_move       = NULLMOVE,
-                                     .prev_move_inv   = NULLMOVE,
-                                     .is_inv          = false,
-                                     .max_num_sols    = max_num_sols,
-                                     .enable_niss     = niss,
-                                     .temp_solution   = &temp_solution,
-                                     .temp_solution_inv = &temp_solution_inv,
-                                     .solution_set    = solution_set};
-        stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats);
+
+        if (depth < 15) {
+            struct search_data s_data = {.remaining_moves = depth,
+                                         .prev_move       = NULLMOVE,
+                                         .prev_move_inv   = NULLMOVE,
+                                         .is_inv          = false,
+                                         .max_num_sols    = max_num_sols,
+                                         .enable_niss     = niss,
+                                         .temp_solution   = &temp_solution,
+                                         .temp_solution_inv = &temp_solution_inv,
+                                         .solution_set    = solution_set};
+            stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats);
+        }
+        else {
+            // we want to use the 4 move sequences as starting point
+            // and sort them based on number of nodes that got pruned
+            for (size_t i = 0; i < NUMBER_OF_4_MOVE_SEQUENCES; ++i){
+                int* move_sequence = ms[i].moves;
+
+                uint64_t visits_before = stats->no_nodes_visited;
+
+                for (int i = 0; i < 4; i++){
+                    cube_move_apply_move(&cube, (move_sequence[i]));
+                    solution_append(&temp_solution, move_sequence[i]);
+                }
+
+                struct search_data s_data = {.remaining_moves = depth - 4,
+                                             .prev_move       = move_sequence[3],
+                                             .prev_move_inv   = NULLMOVE,
+                                             .is_inv          = false,
+                                             .max_num_sols    = max_num_sols,
+                                             .enable_niss     = niss,
+                                             .temp_solution   = &temp_solution,
+                                             .temp_solution_inv = &temp_solution_inv,
+                                             .solution_set    = solution_set};
+                stop_search = TreeSearch_fin(&cube, ptable_data, s_data, stats);
+                if (stop_search) break;
+
+                for (int i = 3; i >= 0; i--){
+                    cube_move_apply_move(&cube, get_inv_move(move_sequence[i]));
+                    solution_pop(&temp_solution);
+                }
+                
+                // 58206 : 47525 *~= sqrt(3) : sqrt(2)
+                uint64_t f = (move_sequence[3] / 9 == 0) ? 47525 : 58206;
+                ms[i].cost = (stats->no_nodes_visited - visits_before) * f;
+            }
+
+            qsort(&ms, NUMBER_OF_4_MOVE_SEQUENCES, sizeof(struct move_sequence_cost), compare_move_sequence_cost);
+            if (verbose == 1){
+                fprintf(stderr, "(sort) ");
+            }
+
+            // printf("First four: %lu %lu %lu %lu\n", ms[0].cost, ms[1].cost, ms[2].cost, ms[3].cost);
+            // printf("Last four: %lu %lu %lu %lu\n", ms[NUMBER_OF_4_MOVE_SEQUENCES - 4].cost, ms[NUMBER_OF_4_MOVE_SEQUENCES - 3].cost, ms[NUMBER_OF_4_MOVE_SEQUENCES - 2].cost, ms[NUMBER_OF_4_MOVE_SEQUENCES - 1].cost);
+        }
+
         solution_free(&temp_solution);
         solution_free(&temp_solution_inv);
 

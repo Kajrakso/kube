@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "tables.h"
-#include "tables_ptable_data.h"
+
 
 int init_table(const char* path, size_t table_size, void** table_ptr);
 
@@ -86,7 +86,6 @@ int init_table(const char* path, size_t table_size, void** table_ptr) {
     return 0;
 }
 
-
 void free_ptable(ptable_data_t* ptable_data) {
     if (ptable_data != NULL){
         munmap(ptable_data->ptable, ptable_data->ptable_size);
@@ -98,6 +97,7 @@ void free_ptable(ptable_data_t* ptable_data) {
     }
 }
 
+
 void cube_tables_generate() {
     // gen moves
     initialize_move_tables();
@@ -107,7 +107,11 @@ void cube_tables_generate() {
     initialize_sym_tables();
     gen_sym_tables();
 
+    // move mask
     gen_move_mask();
+
+    // move sequences that are 4 moves long
+    gen_move_sequence_cost_array();
 
     // temp: combinatorials
     precompute_combinatorials();
