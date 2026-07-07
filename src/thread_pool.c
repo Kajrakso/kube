@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define QUEUE_CAPACITY 4096
-
 /* Per-worker context passed at thread creation. */
 typedef struct {
     int          thread_id;
@@ -20,8 +18,9 @@ struct ThreadPool {
     void*  local_buf;
     size_t local_size;
 
-    /* Shared task queue (ring buffer). */
-    void*  queue[QUEUE_CAPACITY];
+    /* Shared task queue (ring buffer, dynamically sized). */
+    void** queue;
+    int    queue_capacity;
     int    queue_count;
     int    queue_head;
 
@@ -51,7 +50,7 @@ static void* worker_loop(void* arg) {
 
         /* Grab one task from the queue. */
         void* task = pool->queue[pool->queue_head];
-        pool->queue_head = (pool->queue_head + 1) % QUEUE_CAPACITY;
+        pool->queue_head = (pool->queue_head + 1) % pool->queue_capacity;
         pool->queue_count--;
 
         pthread_mutex_unlock(&pool->mutex);
@@ -108,6 +107,7 @@ void thread_pool_destroy(ThreadPool* pool) {
     pthread_cond_destroy(&pool->work_avail);
     pthread_cond_destroy(&pool->work_done);
 
+    free(pool->queue);
     free(pool->threads);
     free(pool->contexts);
     free(pool->local_buf);
@@ -122,6 +122,11 @@ void thread_pool_execute(ThreadPool* pool, void** tasks, int num_tasks,
     pool->tasks_remaining = num_tasks;
     pool->queue_count     = num_tasks;
     pool->queue_head      = 0;
+
+    if (num_tasks > pool->queue_capacity) {
+        pool->queue = realloc(pool->queue, (size_t)num_tasks * sizeof(void*));
+        pool->queue_capacity = num_tasks;
+    }
 
     for (int i = 0; i < num_tasks; i++)
         pool->queue[i] = tasks[i];
