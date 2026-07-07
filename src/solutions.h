@@ -25,6 +25,7 @@ void     solution_append(Solution* s, int move);
 void     solution_append_multiple(Solution* s, int* moves, int number_of_moves);
 bool     solution_pop(Solution* s);
 Solution solution_copy(const Solution* src);
+Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solution_inverse);
 
 /* =========================
    Solution Set (many solutions)

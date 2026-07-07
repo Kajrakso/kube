@@ -54,6 +54,19 @@ Solution solution_copy(const Solution* src) {
     return dst;
 }
 
+Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solution_inv) {
+    Solution out = solution_copy(solution);
+    for (int move_idx = solution_inv->length - 1; move_idx >= 0; move_idx--)
+    {
+        int move_inv = solution_inv->moves[move_idx];
+        int move     = get_inv_move(move_inv);
+
+        solution_append(&out, move);
+    }
+
+    return out;
+}
+
 /* =========================
    Solution Set (many solutions)
    ========================= */
