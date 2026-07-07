@@ -17,6 +17,18 @@ void init_stats(struct solver_stats* stats, int max_num_sols) {
     stats->num_sol_found = 0;
 }
 
+void append_stats(struct solver_stats* src, struct solver_stats* dest){
+    dest->depth                   += src->depth                   ;
+    dest->no_nodes_visited        += src->no_nodes_visited        ;
+    dest->no_nodes_pruned         += src->no_nodes_pruned         ;
+    dest->no_nodes_pruned_inv     += src->no_nodes_pruned_inv     ;
+    dest->no_nisses               += src->no_nisses               ;
+    dest->no_inverse_computations += src->no_inverse_computations ;
+    dest->no_equal_pvals_normal   += src->no_equal_pvals_normal   ;
+    dest->no_equal_pvals_inverse  += src->no_equal_pvals_inverse  ;
+    dest->num_sol_found           += src->num_sol_found           ;
+}
+
 void print_stats(struct solver_stats* stats) {
     if (stats->no_nodes_visited == 0)
     {
@@ -183,7 +195,7 @@ void IDA(cube_t               cube,
 /* public */
 
 bool cube_solvers_solve_cube(
-  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int depth_limit, int verbose, solving_step* ss) {
+  cube_t cube, SolutionSet* solution_set, int number_of_solutions, int depth_limit, int verbose, int number_of_threads, solving_step* ss) {
     // we collect some stats along the way.
     struct solver_stats* stats = malloc(sizeof(struct solver_stats));
     init_stats(stats, number_of_solutions);
@@ -223,7 +235,7 @@ bool cube_solvers_solve_cube(
         }
 
         // using the solver with fancy nissing tricks
-        IDA_fin(cube, ss->p_data, stats, solution_set, number_of_solutions, verbose, enable_niss, depth_limit);
+        IDA_fin(cube, ss->p_data, stats, solution_set, number_of_solutions, verbose, enable_niss, number_of_threads, depth_limit);
     }
     else
     {

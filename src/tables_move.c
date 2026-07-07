@@ -269,7 +269,7 @@ void gen_move_sequence_cost_array(){
 int compare_move_sequence_cost(const void* a, const void* b){
     uint64_t a_cost = ((struct move_sequence_cost*)a)->cost;
     uint64_t b_cost = ((struct move_sequence_cost*)b)->cost;
-    
+
     return (a_cost < b_cost) - (a_cost > b_cost);
 }
 

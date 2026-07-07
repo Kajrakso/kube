@@ -19,6 +19,7 @@ static struct argp_option options[] = {
    "Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions.",
    0},
   {"max-depth", 'M', "MAX", 0, "limit the search depth", 0},
+  {"threads", 't', "NUM", 0, "specify number of threads to use during search. defaults to number of cpus on the system", 0},
   {"format", 'f', "FORMAT", 0, "Specify scramble format", 0},
   {"gen", 'g', 0, 0, "Generate tables", 0},
   {"step", 's', "STEP", 0,
@@ -53,12 +54,16 @@ int main(int argc, char** argv) {
 
     if (arguments.number_of_solutions >= 1)
     {
-        solving_step** steps = malloc(arguments.step_count * sizeof(solving_step*));
+        if (arguments.step_count < 0) {
+            printf("Step count is negative.");
+            return 1;
+        }
+        solving_step** steps = malloc((size_t)arguments.step_count * sizeof(solving_step*));
         if (steps == NULL) {
             fprintf(stderr, "Could not allocate space for steps\n");
             return 1;
         }
-        
+       
         cli_solver_prepare(arguments, steps);
         cli_solver_solving_loop(arguments, steps);
         cli_solver_cleanup(arguments, steps);

@@ -2,6 +2,7 @@
 
 #include "solver_pipeline.h"
 
+
 /* ------------------------------------ */
 /* string representations and printing  */
 /* ------------------------------------ */
@@ -325,6 +326,20 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         arguments->format = arg;
         break;
 
+    case 't' :
+        num = strtol(arg, &endptr, 10);
+
+        if (*endptr != '\0')
+        {
+            // Error: not a valid integer string
+            printf("Conversion error, non-integer characters found: %s. Using number_of_threads = %i\n", endptr, arguments->number_of_threads);
+        }
+        else
+        {
+            arguments->number_of_threads = num;
+        }
+        break;
+
     case 's' :
         if (arguments->step_count >= MAX_STEPS)
             argp_error(state, "Too many --step options");
@@ -398,6 +413,9 @@ void set_default_values_arguments(struct arguments* arguments) {
     arguments->step_count          = 0;
     arguments->number_of_solutions = 1;
     arguments->depth_limit = 1024;  // practically inifinite
+    
+    long n = sysconf(_SC_NPROCESSORS_ONLN);
+    arguments->number_of_threads = n > 0 ? (int)n : 1;
 }
 
 

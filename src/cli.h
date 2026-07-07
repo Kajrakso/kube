@@ -45,6 +45,7 @@ struct arguments {
     int   gen;
     int   number_of_solutions;
     int   depth_limit;
+    int   number_of_threads;
 
     struct step steps[MAX_STEPS];
     int step_count;

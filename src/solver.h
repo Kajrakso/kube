@@ -13,6 +13,7 @@
 #include "solver_steps.h"
 
 #include "solutions.h"
+#include "thread_pool.h"
 
 
 struct solver_stats {
@@ -29,6 +30,7 @@ struct solver_stats {
 
 void init_stats(struct solver_stats* stats, int max_num_sols);
 void print_stats(struct solver_stats* stats);
+void append_stats(struct solver_stats* src, struct solver_stats* dest);
 
 /* struct that holds information we need during the search */
 struct search_data {
@@ -46,20 +48,16 @@ struct search_data {
     Solution*    temp_solution;
     Solution*    temp_solution_inv;
     SolutionSet* solution_set;
-};
 
-/* I have to add some info regarding a task to this. Should I separate the "search_data" from tha "task" struct? */ 
-typedef struct {
-    cube_t cube;
-    int moves[4];
-    uint64_t cost;
-} solver_task_t;
+    bool* stop_flag;
+};
 
 bool cube_solvers_solve_cube(cube_t        cube,
                              SolutionSet*  solution_set,
                              int           number_of_solutions,
                              int           max_depth,
                              int           verbose,
+                             int           number_of_threads,
                              solving_step* ss);
 
 void IDA_fin(cube_t               cube,
@@ -69,6 +67,7 @@ void IDA_fin(cube_t               cube,
              int                  max_num_sols,
              int                  verbose,
              bool                 niss,
+             int                  number_of_threads,
              int                  max_depth);
 
 #endif /* SOLVER_H */

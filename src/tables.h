@@ -12,6 +12,7 @@
 #include "env.h"
 
 #define FACTORIAL8 40320
+#define INITIAL_MOVE_SEQUENCE_LENGTH 4
 #define NUMBER_OF_4_MOVE_SEQUENCES 43254
 
 /* type used to store information about each
