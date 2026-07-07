@@ -2,6 +2,10 @@
 
 
 void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps) {
+    if (arguments.number_of_threads > 1 && arguments.step_count > 1){
+        printf("NOTE: Number of threads = %i, but not all solvers takes advantage of that yet.\n\n", arguments.number_of_threads);
+    }
+
     for (int i = 0; i < arguments.step_count; i++)
     {
         solving_step* ss = steps[i];
@@ -38,6 +42,10 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
 
 
 void solver_beam_search(cube_t c, struct arguments arguments, solving_step** steps) {
+    if (arguments.number_of_threads > 1){
+        printf("NOTE: Number of threads = %i, but beam solver does not take advantage of that yet.\n\n", arguments.number_of_threads);
+    }
+
     /* Idea: For each step in steps, pick the arguments.numbers_of_solutions solutions with the lowest heuristic
      * so far and find the arguments.number_of_solutions shortest solutions to the next step.
      * Then, continue like this until the end, where we pick the arguments.number_of_solutions shortest ones */
