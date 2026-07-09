@@ -9,6 +9,7 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 [\fB\-n\fR \fINUM\fR]
 [\fB\-M\fR \fIMAX\fR]
 [\fB\-f\fR \fIFORMAT\fR]
+[\fB\-t\fR \fINUM\fR]
 [\fB\-s\fR \fISTEP\fR]...
 [\fB\-g\fR]
 
@@ -42,6 +43,11 @@ Try to find \fINUM\fR solutions. Default is 1.
 When multiple solving steps are provided,
 kube performs a beam search to find up to \fINUM\fR
 solutions.
+
+.TP
+.BR \-t " " \fINUM\fR
+Specify number of threads for the optimal solver.
+Defaults to the number of cpus on the system.
 
 .TP
 .BR \-M " " \fIMAX\fR ", " \-\-max-depth=MAX
