@@ -336,7 +336,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         }
         else
         {
-            arguments->number_of_threads = num;
+            arguments->number_of_threads = (int)num;
         }
         break;
 
@@ -379,7 +379,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         }
         else
         {
-            arguments->number_of_solutions = num;
+            arguments->number_of_solutions = (int)num;
         }
         break;
 
@@ -393,7 +393,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         }
         else
         {
-            arguments->depth_limit = depth_limit;
+            arguments->depth_limit = (int)depth_limit;
         }
         break;
 
@@ -555,8 +555,9 @@ void cli_solver_solving_loop(struct arguments arguments, solving_step** steps){
         cube_t c = cube_create_new_cube();
         cube_scrambler_scramble_cube(&c, buf, arguments.format);
 
-        clock_t start, end;
-        start = clock();
+
+        struct timespec start, end;
+        timespec_get(&start, TIME_UTC);
 
         if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
         {
@@ -568,9 +569,10 @@ void cli_solver_solving_loop(struct arguments arguments, solving_step** steps){
             // we invoke a beam search since we have multiple steps and multiple solutions
             solver_beam_search(c, arguments, steps);
         }
-        end = clock();
+        timespec_get(&end, TIME_UTC);
         if (arguments.verbose) {
-            printf("Time used (in seconds): %f\n", (float) (end - start) / CLOCKS_PER_SEC);
+            double elapsed = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
+            printf("Time used (in seconds): %f\n", elapsed);
         }
     }
     free(buf);
