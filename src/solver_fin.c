@@ -79,11 +79,6 @@ static inline uint32_t build_move_mask(
     return mm;
 }
 
-static inline bool move_in_move_mask(uint32_t mm, int m) {
-    return (mm & (1 << m));
-}
-
-
 static bool solution_submit(
     Solution* sol,
     struct search_data* s_data,

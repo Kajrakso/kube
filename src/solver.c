@@ -107,7 +107,7 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     for (int move = 0; move < NMOVES; move++)
     {
         // check if we actually need to do move.
-        if (!(mm & (1 << move)))
+        if (!move_in_move_mask(mm, move))
             continue;
 
         cube_move_apply_move(cube, move);

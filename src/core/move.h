@@ -52,4 +52,8 @@ int get_inv_move(int m);
 
 bool is_valid_move(int m);
 
+static inline bool move_in_move_mask(uint32_t mm, int m) {
+    return (mm & (1 << m));
+}
+
 #endif /* MOVE_H */
