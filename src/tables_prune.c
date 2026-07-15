@@ -3,23 +3,11 @@
 #include "tables_ptable_data.h"
 
 #include "thread_pool.h"
-
+#include <unistd.h>
 #include <time.h>
 
-// multithreading:
-
-typedef struct {
-    uint64_t start_index, end_index;
-    uint8_t  depth;
-    uint8_t* ptable;
-    uint64_t* cclass_index_cindex_rep;
-} NeighborScanHTask;
-
-typedef struct {
-    uint64_t start_index, end_index;
-    uint8_t  depth;
-    uint8_t* ptable;
-} NeighborScanDRTask;
+// dummy value to fill table with. this is the "NULL" value.
+#define DUMMY_PTABLE_VALUE 15
 
 // generic functions for genning pruning tables
 // first DLS to fill the smallest values, then
@@ -49,6 +37,12 @@ struct ptable_gen_ctx {
     uint64_t* cclass_index_cindex_rep;
 };
 
+typedef struct {
+    uint64_t start_index, end_index;
+    int  depth;
+    uint8_t* ptable;
+    struct ptable_gen_ctx* ctx;
+} NeighbourScanTask;
 
 // DLS = Depth limited search
 void table_prune_gen_DLS(
@@ -86,6 +80,40 @@ void table_prune_gen_DLS(
     } 
 }
 
+void neighbour_scan_task(int thread_id, void* task_ptr, void* local){
+    NeighbourScanTask* task = (NeighbourScanTask*)task_ptr;
+    struct ptable_gen_ctx* ctx = task->ctx;
+
+    for (uint64_t index = task->start_index; index < task->end_index; index++) {
+
+        // check if table already filled for this value (that is, if it is different than the dummy value)
+        if (ctx->ptable_data->read_value_ptable_func(index, task->ptable) != DUMMY_PTABLE_VALUE) continue;
+
+        uint64_t components[ctx->num_components];
+        ctx->decompose_index(ctx, index, components);
+        
+        bool found = false;
+        for (int move = 0; move < NMOVES; move++) {
+            uint64_t next_components[ctx->num_components];
+
+            memcpy(next_components, components, ctx->num_components * sizeof(uint64_t));
+            uint64_t next_index = ctx->apply_move(ctx, next_components, move);
+
+            if (ctx->ptable_data->read_value_ptable_func(next_index, task->ptable) == task->depth - 1) {
+                ctx->ptable_data->set_value_ptable_func(index, task->depth, task->ptable);
+                found = true; break;
+            }
+        }
+
+        // set the remaining cosets to the max depth
+        // NOTE: We need to know that max_depth is actually
+        // "gods number" for this particular table
+        if (!found && task->depth == ctx->nbhr_max_depth_excl - 1) {
+            ctx->ptable_data->set_value_ptable_func(index, ctx->nbhr_max_depth_excl, task->ptable);
+        }
+    }
+}
+
 void table_prune_gen(struct ptable_gen_ctx* ctx){
     if (!ctx->setup(ctx)){
         fprintf(stderr, "Setup for table generation failed. Aborting...\n");
@@ -102,13 +130,11 @@ void table_prune_gen(struct ptable_gen_ctx* ctx){
         return;
     }
 
-    time_t start, end;
-    start = clock();
+    struct timespec start, end;
+    timespec_get(&start, TIME_UTC);
 
-    // fill table with "NULL" values (which I set to be 15 = -1 for now)
-    const uint8_t dummy_value = 15;
     for (uint64_t i = 0; i < ctx->ptable_data->number_of_elements; i++) {
-        ctx->ptable_data->set_value_ptable_func(i, dummy_value, ptable);
+        ctx->ptable_data->set_value_ptable_func(i, DUMMY_PTABLE_VALUE, ptable);
     }
     ctx->ptable_data->set_value_ptable_func(index, 0, ptable);
     
@@ -119,49 +145,55 @@ void table_prune_gen(struct ptable_gen_ctx* ctx){
         table_prune_gen_DLS(0, depth, NULLMOVE, ctx, index, components, ptable);
     }
 
-    // start neighbour filling sweep
-    uint64_t part_of_total_number_of_elements = ctx->ptable_data->number_of_elements / 10;
+    // start multithreaded neighbour filling sweep
+    int num_threads = sysconf(_SC_NPROCESSORS_ONLN);
+    ThreadPool* pool = thread_pool_create(num_threads, 0);
+
+    uint64_t total = ctx->ptable_data->number_of_elements;
+    uint64_t chunk = (total + num_threads - 1) / num_threads;
+
+    NeighbourScanTask* tasks = malloc(num_threads * sizeof(NeighbourScanTask));
+    void** task_ptrs        = malloc(num_threads * sizeof(void*));
+
+    for (int i = 0; i < num_threads; i++) {
+        tasks[i] = (NeighbourScanTask){
+            .start_index = (uint64_t)i * chunk,
+            .end_index   = (i == num_threads - 1) ? total : (uint64_t)(i + 1) * chunk,
+            .depth       = (uint8_t)0,
+            .ptable      = ptable,
+            .ctx         = ctx,
+        };
+        task_ptrs[i] = &tasks[i];
+    }
+
     for (int depth = ctx->nbhr_min_depth; depth < ctx->nbhr_max_depth_excl; depth++) {
         fprintf(stderr, "Searching at depth %i\n", depth);
-        for (uint64_t index = 0; index < ctx->ptable_data->number_of_elements; index++) {
-            // give the user a progress update
-            if (index % part_of_total_number_of_elements == 0) {
-                fprintf(stderr, "Currently filling index: %lu\n", index);
-            }
 
-            // check if table already filled for this value (that is, if it is different than the dummy value)
-            if (ctx->ptable_data->read_value_ptable_func(index, ptable) != dummy_value) continue;
-
-            uint64_t components[ctx->num_components];
-            ctx->decompose_index(ctx, index, components);
-            
-            bool found = false;
-            for (int move = 0; move < NMOVES; move++) {
-                uint64_t next_components[ctx->num_components];
-
-                memcpy(next_components, components, ctx->num_components * sizeof(uint64_t));
-                uint64_t next_index = ctx->apply_move(ctx, next_components, move);
-
-                if (ctx->ptable_data->read_value_ptable_func(next_index, ptable) == depth - 1) {
-                    ctx->ptable_data->set_value_ptable_func(index, depth, ptable);
-                    found = true; break;
-                }
-            }
-
-            // set the remaining cosets to the max depth
-            // NOTE: We need to know that max_depth is actually
-            // "gods number" for this particular table
-            if (!found && depth == ctx->nbhr_max_depth_excl - 1) {
-                ctx->ptable_data->set_value_ptable_func(index, ctx->nbhr_max_depth_excl, ptable);
-            }
+        for (int i = 0; i < num_threads; i++) {
+            tasks[i].depth = depth;
         }
+
+        thread_pool_execute(pool, task_ptrs, num_threads, neighbour_scan_task);
     } 
 
-    end = clock();
-    fprintf(stderr, "Total time for gen function: %f seconds\n", (float) (end - start) / CLOCKS_PER_SEC);
+    timespec_get(&end, TIME_UTC);
+    double elapsed = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("Time used (in seconds): %f\n", elapsed);
     
     // Save and clean
-    save_table_to_file(ctx->ptable_data->filename, ptable, ctx->ptable_data->ptable_size);
+    char fname[strlen(tabledir) + FILENAME_MAX];
+
+    strcpy(fname, tabledir);
+    strcat(fname, "/");
+    strcat(fname, ctx->ptable_data->filename);
+
+    save_table_to_file(fname, ptable, ctx->ptable_data->ptable_size);
+
+    free(tasks);
+    free(task_ptrs);
+
+    thread_pool_destroy(pool);
+
     free(ptable);
     free(ctx->cclass_index_cindex_rep);
 }
@@ -311,7 +343,7 @@ void decompose_index_DR(struct ptable_gen_ctx* ctx, uint64_t index, uint64_t* co
     components[2] = ece;
 }
 
-void gen_ptable_DR_2(){
+void gen_ptable_DR(){
     struct ptable_gen_ctx ctx = {
         .ptable_data = &ptable_data_dr,
         .num_components = 3,
@@ -327,13 +359,13 @@ void gen_ptable_DR_2(){
     table_prune_gen(&ctx);
 }
 
-void gen_ptable_opt1_2(){
+void gen_ptable_opt1(){
     struct ptable_gen_ctx ctx = {
         .ptable_data = &ptable_data_opt1,
         .num_components = 4,
         .nbhr_max_depth_excl = 13,
-        .nbhr_min_depth = 10,
-        .dls_max_depth = 10,
+        .nbhr_min_depth = 9,
+        .dls_max_depth = 9,
         .apply_move = &apply_move_opt1,
         .init = &init_opt1,
         .setup = &setup_opt1,
@@ -342,7 +374,10 @@ void gen_ptable_opt1_2(){
 
     table_prune_gen(&ctx);
 }
-                                                                      //
+
+/* ------------------------------------------------------ */
+/* ------------------------- other ---------------------- */
+/* ------------------------------------------------------ */
 
 void analyze_ptable(ptable_data_t ptable_data){
     if (!ptable_data.ptable_is_loaded){

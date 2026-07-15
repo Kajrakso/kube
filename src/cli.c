@@ -431,8 +431,8 @@ void cli_gen() {
         "TEMP: If you want to solve to HTR you need to copy dr_subsets.dat to this location: %s\n",
         fname);
 
-    clock_t start, end;
-    start = clock();
+    struct timespec start, end;
+    timespec_get(&start, TIME_UTC);
     cube_tables_generate();
 
     char fname1[strlen(tabledir) + FILENAME_MAX];
@@ -468,8 +468,9 @@ void cli_gen() {
         }
     }
 
-    end = clock();
-    printf("Total time used for table gen: %f s\n", (float) (end - start) / CLOCKS_PER_SEC);
+    timespec_get(&end, TIME_UTC);
+    double elapsed = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("Total time used for table gen (in seconds): %f\n", elapsed);
 }
 
 
