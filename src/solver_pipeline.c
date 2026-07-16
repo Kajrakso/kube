@@ -12,7 +12,10 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
 
         // prepare a solution set
         SolutionSet solution_set;
-        solutionset_init(&solution_set, arguments.number_of_solutions);
+        if (arguments.number_of_solutions < 0) {
+            printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", arguments.number_of_solutions);
+        }
+        solutionset_init(&solution_set, (size_t)arguments.number_of_solutions);
 
         if (cube_solvers_solve_cube(c, &solution_set, arguments.number_of_solutions,
                                     arguments.depth_limit,
@@ -24,7 +27,7 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
             if (arguments.step_count > 1)
             {
                 Solution solution = solution_set.data[0];
-                for (int move_idx = 0; move_idx < solution.length; move_idx++)
+                for (size_t move_idx = 0; move_idx < solution.length; move_idx++)
                 {
                     int move = solution.moves[move_idx];
                     cube_move_apply_move(&c, move);
@@ -49,7 +52,10 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
     /* Idea: For each step in steps, pick the arguments.numbers_of_solutions solutions with the lowest heuristic
      * so far and find the arguments.number_of_solutions shortest solutions to the next step.
      * Then, continue like this until the end, where we pick the arguments.number_of_solutions shortest ones */
-    int beam_width = arguments.number_of_solutions;
+    if (arguments.number_of_solutions < 0) {
+        printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", arguments.number_of_solutions);
+    }
+    size_t beam_width = (size_t)arguments.number_of_solutions;
 
     // keep track of the solutions so far.
     PipelineSolutionSet current;
@@ -77,7 +83,7 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
         pipelinesolutionset_init(&next, beam_width * beam_width
                                           * 2);  // mult. by 2 since we search normal + inverse
 
-        int i = 0;
+        size_t i = 0;
         do
         {
             // currently we have to start from the scramble each time.

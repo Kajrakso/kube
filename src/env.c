@@ -4,7 +4,7 @@
 bool  initialized_env = false;
 char* tabledir;
 
-void mymkdir(char* d, int m) {
+void mymkdir(char* d, unsigned int m) {
 #ifdef _WIN32
     mkdir(d);
 #else

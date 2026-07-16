@@ -12,8 +12,8 @@
 // we need a way to calculate the combinatorials
 // for edges and corners. for now we just precompute
 // these and look them up.
-extern int ece_combinatorials_lookup[20736];
-extern int ccu_combinatorials_lookup[4096];
+extern uint64_t ece_combinatorials_lookup[20736];
+extern uint64_t ccu_combinatorials_lookup[4096];
 
 // When rotating the cube to another axis
 // the new positions of the pieces relative

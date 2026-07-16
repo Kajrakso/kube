@@ -27,10 +27,10 @@ struct ptable_gen_ctx {
     void     (*decompose_index)(struct ptable_gen_ctx*, uint64_t, uint64_t*);
 
     /* Configuration: */
-    int     dls_max_depth;        // H:10, DR:9
-    int     nbhr_min_depth;       // H:10, DR:9
-    int     nbhr_max_depth_excl;  // H:13, DR:12
-    int     num_components;       // H:4, DR:3
+    uint8_t     dls_max_depth;        // H:10, DR:9
+    uint8_t     nbhr_min_depth;       // H:10, DR:9
+    uint8_t     nbhr_max_depth_excl;  // H:13, DR:12
+    size_t      num_components;       // H:4, DR:3
 
     /* H-specific data (unused by DR): */
     uint64_t* sym_table_e_index;
@@ -39,7 +39,7 @@ struct ptable_gen_ctx {
 
 typedef struct {
     uint64_t start_index, end_index;
-    int  depth;
+    uint8_t  depth;
     uint8_t* ptable;
     struct ptable_gen_ctx* ctx;
 } NeighbourScanTask;
@@ -139,15 +139,18 @@ void table_prune_gen(struct ptable_gen_ctx* ctx){
     ctx->ptable_data->set_value_ptable_func(index, 0, ptable);
     
     // Start DLS sweep
-    for (int depth = 0; depth < ctx->dls_max_depth; depth++)
+    for (uint8_t depth = 0; depth < ctx->dls_max_depth; depth++)
     {
         fprintf(stderr, "Searching at depth %i\n", depth);
         table_prune_gen_DLS(0, depth, NULLMOVE, ctx, index, components, ptable);
     }
 
     // start multithreaded neighbour filling sweep
-    int num_threads = sysconf(_SC_NPROCESSORS_ONLN);
-    ThreadPool* pool = thread_pool_create(num_threads, 0);
+    long nproc = sysconf(_SC_NPROCESSORS_ONLN);
+    if (nproc <= 0) nproc = 1;
+    size_t num_threads = (size_t)nproc;
+
+    ThreadPool* pool = thread_pool_create((int)num_threads, 0);
 
     uint64_t total = ctx->ptable_data->number_of_elements;
     uint64_t chunk = (total + num_threads - 1) / num_threads;
@@ -155,25 +158,25 @@ void table_prune_gen(struct ptable_gen_ctx* ctx){
     NeighbourScanTask* tasks = malloc(num_threads * sizeof(NeighbourScanTask));
     void** task_ptrs        = malloc(num_threads * sizeof(void*));
 
-    for (int i = 0; i < num_threads; i++) {
+    for (size_t i = 0; i < num_threads; i++) {
         tasks[i] = (NeighbourScanTask){
-            .start_index = (uint64_t)i * chunk,
+            .start_index = i * chunk,
             .end_index   = (i == num_threads - 1) ? total : (uint64_t)(i + 1) * chunk,
-            .depth       = (uint8_t)0,
+            .depth       = 0,
             .ptable      = ptable,
             .ctx         = ctx,
         };
         task_ptrs[i] = &tasks[i];
     }
 
-    for (int depth = ctx->nbhr_min_depth; depth < ctx->nbhr_max_depth_excl; depth++) {
+    for (uint8_t depth = ctx->nbhr_min_depth; depth < ctx->nbhr_max_depth_excl; depth++) {
         fprintf(stderr, "Searching at depth %i\n", depth);
 
-        for (int i = 0; i < num_threads; i++) {
+        for (size_t i = 0; i < num_threads; i++) {
             tasks[i].depth = depth;
         }
 
-        thread_pool_execute(pool, task_ptrs, num_threads, neighbour_scan_task);
+        thread_pool_execute(pool, task_ptrs, (int)num_threads, neighbour_scan_task);
     } 
 
     timespec_get(&end, TIME_UTC);

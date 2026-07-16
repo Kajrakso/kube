@@ -1,5 +1,4 @@
 #include "solver.h"
-#include "parallel_search.h"
 
 /* Prune */
 

@@ -8,12 +8,12 @@ void do_y_rot(cube_t* cube);
 void do_z_rot(cube_t* cube);
 void do_inversion(cube_t* cube);
 
-int get_inv_sym(int s);
+uint8_t get_inv_sym(uint8_t s);
 
 /* Applies the symmetry sym to the cube.
 This function should probably not be used.
 Use `cube_operation_sym_conjugate` for conjugation
 by a symmetry.*/
-void cube_apply_symm(cube_t* cube, int sym);
+void cube_apply_symm(cube_t* cube, uint8_t sym);
 
 #endif /* SYM_H */

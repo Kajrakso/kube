@@ -50,7 +50,7 @@ void gen_sym_tables();
 struct c_index_cclass_sym {
   uint64_t cclass_i;
   uint64_t cclass;
-  int sym;
+  uint8_t sym;
 };
 
 /* a move mask prevents us from checking unnecessary move sequences.

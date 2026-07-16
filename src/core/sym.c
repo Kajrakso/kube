@@ -1,13 +1,13 @@
 #include "../tables.h"
 
 /* the symmetry at index i is i^(-1). */
-static const int sym_inv[NSYMS] = {0,  3,  2,  1,  8,  5,  23, 14, 4,  22, 13, 11, 12, 10, 7,  21,
+static const uint8_t sym_inv[NSYMS] = {0,  3,  2,  1,  8,  5,  23, 14, 4,  22, 13, 11, 12, 10, 7,  21,
                                    16, 17, 18, 19, 20, 15, 9,  6,  24, 27, 26, 25, 32, 29, 47, 38,
                                    28, 46, 37, 35, 36, 34, 31, 45, 40, 41, 42, 43, 44, 39, 33, 30};
 
-int get_inv_sym(int s) { return sym_inv[s]; }
+uint8_t get_inv_sym(uint8_t s) { return sym_inv[s]; }
 
-void cube_apply_symm(cube_t* cube, int sym) {
+void cube_apply_symm(cube_t* cube, uint8_t sym) {
     uint16_t* p;
 
     p = sym_table_corner_transformation[sym];

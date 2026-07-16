@@ -64,7 +64,7 @@ cube_t cube_operation_inverse(cube_t cube) {
     return inverse;
 }
 
-cube_t cube_operation_sym_conjugate(cube_t cube, int symmetry) {
+cube_t cube_operation_sym_conjugate(cube_t cube, uint8_t symmetry) {
     cube_t new_cube = cube_create_new_cube();
 
     cube_apply_symm(&new_cube, symmetry);

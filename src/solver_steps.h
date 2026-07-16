@@ -23,7 +23,7 @@ typedef struct solving_step {
     enum solving_step_type solving_type;
     bool (*cube_is_solved)(cube_t* c);
     ptable_data_t* p_data;
-    int (*heuristic_func)(cube_t* c, ptable_data_t* p_data);
+    size_t (*heuristic_func)(cube_t* c, ptable_data_t* p_data);
     /* do we want to restrict the moveset? */
     /* do we want to restrict the pruning table options? */
 } solving_step;

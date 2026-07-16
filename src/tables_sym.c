@@ -1,5 +1,8 @@
 #include "index.h"
 
+#define CCCLASS_UNDEFINED UINT64_MAX
+
+
 // todo: rethink how this should be done. works for now.
 
 uint16_t sym_table_corner_transformation[NSYMS][NCORNERCUBIES];
@@ -11,7 +14,7 @@ struct c_index_cclass_sym cclass_table[NCCU * NCO];
 
 // todo: temp! where to place? how to handle?
 /* these are the 16 symmetries that keep the UD-axis fixed in place. */
-static int UDsyms[] = {
+static uint8_t UDsyms[] = {
   0,  1,  2,  3,  16, 17, 18, 19,  // no inversion
   24, 25, 26, 27, 40, 41, 42, 43   // inversion
 };
@@ -20,7 +23,7 @@ static int UDsyms[] = {
 This have to be done before we generate the
 actual conjugations. */
 void initialize_sym_tables() {
-    for (int s = 0; s < NSYMS; s++)
+    for (uint8_t s = 0; s < NSYMS; s++)
     {
         for (uint16_t c = 0; c < NCORNERCUBIES; c++)
         {
@@ -181,7 +184,7 @@ void gen_sym_table_e_index() {
                                                             {
                                                                 for (int k = 0; k < 16; k++)
                                                                 {
-                                                                    int t = UDsyms[k];
+                                                                    uint8_t t = UDsyms[k];
 
                                                                     cube_t cube;
                                                                     int    e;
@@ -320,13 +323,13 @@ void gen_sym_table_e_index() {
 /* generates a table that maps a c-index to a pair (cclass_i, cclass, sym) */
 void gen_c_sym_index_tables() {
     cube_t   c1, c2;
-    int      sym, t;
+    uint8_t      sym, t;
     uint64_t best, idx;
 
     // fprintf(stderr, "initializing cclass_table with default values\n");
     for (uint64_t c_index = 0; c_index < NCCU * NCO; c_index++)
     {
-        cclass_table[c_index] = (struct c_index_cclass_sym) {-1, -1, -1};
+        cclass_table[c_index] = (struct c_index_cclass_sym) {CCCLASS_UNDEFINED, CCCLASS_UNDEFINED, 0};
     }
 
     // fprintf(stderr, "start to fill cclass_table with actual values\n");
@@ -347,12 +350,12 @@ void gen_c_sym_index_tables() {
                 sym  = t;
             }
         }
-        if (cclass_table[best].cclass == -1)
+        if (cclass_table[best].cclass == CCCLASS_UNDEFINED)
         {
             cclass_num++;
 
             cclass_table[c_index] =
-              (struct c_index_cclass_sym) {.cclass_i = cclass_num, .cclass = best, .sym = sym};
+              (struct c_index_cclass_sym) {.cclass_i = (uint64_t)cclass_num, .cclass = best, .sym = sym};
         }
         else
         {

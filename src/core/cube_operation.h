@@ -17,6 +17,6 @@ cube_t cube_operation_inverse(cube_t cube);
 
 /* Conjugate by the cube symmetry S. That is, for the cube `C`, return `S^-1 * C
  * * S`. */
-cube_t cube_operation_sym_conjugate(cube_t cube, int symmetry);
+cube_t cube_operation_sym_conjugate(cube_t cube, uint8_t symmetry);
 
 #endif /* CUBE_OPERATION_H */

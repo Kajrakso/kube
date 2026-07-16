@@ -56,15 +56,18 @@ int comb(int n, int k) {
     return factorial(n) / (factorial(n - k) * factorial(k));
 }
 
-int perm_to_fact(int* p, int n) {
-  int i, j, m, t = 0;
+uint64_t perm_to_fact(int* p, int n) {
+  int i, j;
+  uint64_t m, t = 0;
 
   for (i = 0; i < n; i++) {
     m = 0;
     for (j = i + 1; j < n; j++) {
       if (p[i] > p[j]) m++;
     }
-    t += m * factorial(n - 1 - i);
+    // a bit sus that factorial returns int
+    // and not some unsigned type
+    t += m * (uint64_t)factorial(n - 1 - i);
   }
 
   return t;
@@ -89,19 +92,19 @@ void fact_to_perm(int p, int n, int* r) {
   }
 }
 
-int ece_combinatorials_lookup[20736];
-int ccu_combinatorials_lookup[4096];
+uint64_t ece_combinatorials_lookup[20736];
+uint64_t ccu_combinatorials_lookup[4096];
 
 // naive way of precomputing the combinatorials, but
 // it lets me look up the e slice edges directly without any sorting
 void precompute_combinatorials() {
   // set dummy vals for those that are not set.
-  for (int i = 0; i < 20736; i++) {
-    ece_combinatorials_lookup[i] = -1;
+  for (size_t i = 0; i < 20736; i++) {
+    ece_combinatorials_lookup[i] = UINT64_MAX;
   }
 
-  for (int i = 0; i < 4096; i++) {
-    ccu_combinatorials_lookup[i] = -1;
+  for (size_t i = 0; i < 4096; i++) {
+    ccu_combinatorials_lookup[i] = UINT64_MAX;
   }
 
   // precompute the 24 permutations of 4 letters.
@@ -126,7 +129,7 @@ void precompute_combinatorials() {
             ece_combinatorials_lookup[arr[perms[perm][0]] * 1 +
                                       arr[perms[perm][1]] * 12 +
                                       arr[perms[perm][2]] * 12 * 12 +
-                                      arr[perms[perm][3]] * 12 * 12 * 12] = c;
+                                      arr[perms[perm][3]] * 12 * 12 * 12] = (uint64_t)c;
           }
         }
       }
@@ -149,7 +152,7 @@ void precompute_combinatorials() {
             ccu_combinatorials_lookup[arr[perms[perm][0]] * 1 +
                                       arr[perms[perm][1]] * 8 +
                                       arr[perms[perm][2]] * 8 * 8 +
-                                      arr[perms[perm][3]] * 8 * 8 * 8] = c;
+                                      arr[perms[perm][3]] * 8 * 8 * 8] = (uint64_t)c;
           }
         }
       }

@@ -19,7 +19,7 @@ void arr_shuffle(uint16_t* arr, int n);
 void swap_uint16(uint16_t* a, uint16_t* b);
 
 /* Converts a permutation `p` of length `n` to a factoriadic. */
-int perm_to_fact(int* p, int n);
+uint64_t perm_to_fact(int* p, int n);
 
 /* Converts a factoriadic `p` to a permutation `r` of size `n`. */
 void fact_to_perm(int p, int n, int* r);

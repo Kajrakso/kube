@@ -75,11 +75,11 @@ PipelineSolution create_test_pipelinesolution(int num_steps) {
     return ps;
 }
 
-PipelineSolutionSet create_test_pipelinesolutionset(int count) {
+PipelineSolutionSet create_test_pipelinesolutionset(size_t count) {
     PipelineSolutionSet set;
     pipelinesolutionset_init(&set, count);
 
-    for (int i = 0; i < count; i++)
+    for (size_t i = 0; i < count; i++)
     {
         PipelineSolution ps = create_test_pipelinesolution(1 + i % 3);  // Vary step counts
         pipelinesolutionset_add_copy(&set, &ps);
@@ -287,7 +287,7 @@ Test(solutions, pipelinesolution_lifecycle) {
     cr_assert_eq(ps.count, 0);
     cr_assert_gt(ps.capacity, 0);
     cr_assert_not_null(ps.steps);
-    cr_assert_eq(ps.heuristic_score, -1);
+    cr_assert_eq(ps.heuristic_score, SIZE_MAX);
 
     // Test adding steps
     PipelineSolutionStep step1 = create_test_pipelinesolutionstep(false);
@@ -341,7 +341,7 @@ Test(solutions, pipelinesolution_copy) {
     cr_assert_eq(copy.heuristic_score, original.heuristic_score);
 
     // Verify steps are deep copied
-    for (int i = 0; i < original.count; i++)
+    for (size_t i = 0; i < original.count; i++)
     {
         cr_assert_neq(copy.steps[i].solution, original.steps[i].solution);
         cr_assert_eq(copy.steps[i].starts_on_inverse, original.steps[i].starts_on_inverse);

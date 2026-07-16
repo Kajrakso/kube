@@ -192,12 +192,12 @@ void cube_print_solutions(int* solutions, int num_sols, int verbose) {
 
 
 void cube_print_solution_set(SolutionSet* solution_set, int verbose) {
-    int       count     = solution_set->count;
+    size_t    count     = solution_set->count;
     Solution* solutions = solution_set->data;
-    for (int solution_idx = 0; solution_idx < count; solution_idx++)
+    for (size_t solution_idx = 0; solution_idx < count; solution_idx++)
     {
         Solution solution = solutions[solution_idx];
-        for (int move_idx = 0; move_idx < solution.length; move_idx++)
+        for (size_t move_idx = 0; move_idx < solution.length; move_idx++)
         {
             int move = solution.moves[move_idx];
             if (is_valid_move(move))
@@ -209,7 +209,7 @@ void cube_print_solution_set(SolutionSet* solution_set, int verbose) {
                 printf("? ");
             }
         }
-        printf("(%i)\n", solution.length);
+        printf("(%lu)\n", solution.length);
     }
 }
 
@@ -217,7 +217,7 @@ void cube_print_solution_set(SolutionSet* solution_set, int verbose) {
 void cube_print_pipelinesolution(PipelineSolution* ps, int verbose){
     char* step_separator = "\n";
     // Print each step in the pipeline solution
-    for (int step_idx = 0; step_idx < ps->count; step_idx++)
+    for (size_t step_idx = 0; step_idx < ps->count; step_idx++)
     {
         PipelineSolutionStep* step = &ps->steps[step_idx];
 
@@ -228,7 +228,7 @@ void cube_print_pipelinesolution(PipelineSolution* ps, int verbose){
         }
 
         // Print the moves for this step
-        for (int move_idx = 0; move_idx < step->solution->length; move_idx++)
+        for (size_t move_idx = 0; move_idx < step->solution->length; move_idx++)
         {
             int move = step->solution->moves[move_idx];
             if (is_valid_move(move))
@@ -260,35 +260,35 @@ void cube_print_pipelinesolution(PipelineSolution* ps, int verbose){
     // Print verbose information
     if (verbose == 1)
     {
-        int total_moves = 0;
-        for (int step_idx = 0; step_idx < ps->count; step_idx++)
+        size_t total_moves = 0;
+        for (size_t step_idx = 0; step_idx < ps->count; step_idx++)
         {
             total_moves += ps->steps[step_idx].solution->length;
         }
-        printf(" (total: %d moves, %d steps", total_moves, ps->count);
+        printf(" (total: %lu moves, %lu steps", total_moves, ps->count);
 
-        if (ps->heuristic_score >= 0)
+        if (ps->heuristic_score != SIZE_MAX)
         {
-            printf(", score: %d", ps->heuristic_score);
+            printf(", score: %lu", ps->heuristic_score);
         }
         printf(")");
     }
 }
 
 void cube_print_pipelinesolution_set(PipelineSolutionSet* p, int verbose) {
-    for (int sol_idx = 0; sol_idx < p->count; sol_idx++)
+    for (size_t sol_idx = 0; sol_idx < p->count; sol_idx++)
     {
         PipelineSolution* ps = &p->data[sol_idx];
 
         // Print solution number if there are multiple solutions
         if (p->count > 1)
         {
-            printf("Solution %d:\n", sol_idx + 1);
+            printf("Solution %lu:\n", sol_idx + 1);
         }
         cube_print_pipelinesolution(ps, verbose);
 
         // Add blank line between solutions for readability
-        if (sol_idx < p->count - 1)
+        if (p->count > 0 && sol_idx < p->count - 1)
         {
             printf("\n");
         }

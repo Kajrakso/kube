@@ -29,8 +29,9 @@ void* mmap_table(const char* path, size_t* out_size) {
         return NULL;
     }
 
-    *out_size    = st.st_size;
-    void* mapped = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (st.st_size < 0) { close(fd); return NULL; }
+    *out_size    = (size_t)st.st_size;
+    void* mapped = mmap(NULL, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
     if (mapped == MAP_FAILED)

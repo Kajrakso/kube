@@ -94,7 +94,7 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
 
     if (ss->p_data != NULL && ss->heuristic_func != NULL)
     {
-        if (ss->heuristic_func(cube, ss->p_data) > remaining_moves)
+        if (ss->heuristic_func(cube, ss->p_data) > (size_t)remaining_moves)
         {
             stats->no_nodes_pruned++;
             return false;

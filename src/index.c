@@ -13,7 +13,7 @@ static int cs[NAXES][4] = {
 
 /* 0, ..., 70 - 1 = comb(8, 4) - 1 */
 uint64_t cube_to_cc_index(cube_t* cube, axes ax) {
-    return (uint64_t) ccu_combinatorials_lookup
+    return ccu_combinatorials_lookup
       [i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][0]])] * 1
        + i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][1]])] * 8
        + i_transform_axes_c[ax][extract_corner_perm(cube->corners[cs[ax][2]])] * 8 * 8
@@ -24,15 +24,14 @@ uint64_t cube_to_cc_index(cube_t* cube, axes ax) {
 uint64_t cube_to_ec_index(cube_t* cube, axes ax) {
     if (ax == UD)
     {
-        return (
-          uint64_t) ece_combinatorials_lookup[extract_edge_perm(cube->edges[FR]) * 1
+        return ece_combinatorials_lookup[extract_edge_perm(cube->edges[FR]) * 1
                                               + extract_edge_perm(cube->edges[FL]) * 12
                                               + extract_edge_perm(cube->edges[BL]) * 12 * 12
                                               + extract_edge_perm(cube->edges[BR]) * 12 * 12 * 12];
     }
     if (ax == FB)
     {
-        return (uint64_t) ece_combinatorials_lookup
+        return ece_combinatorials_lookup
           [i_transform_axes_e[ax][extract_edge_perm(cube->edges[UL])] * 1
            + i_transform_axes_e[ax][extract_edge_perm(cube->edges[UR])] * 12
            + i_transform_axes_e[ax][extract_edge_perm(cube->edges[DR])] * 12 * 12
@@ -40,7 +39,7 @@ uint64_t cube_to_ec_index(cube_t* cube, axes ax) {
     }
     if (ax == LR)
     {
-        return (uint64_t) ece_combinatorials_lookup
+        return ece_combinatorials_lookup
           [i_transform_axes_e[ax][extract_edge_perm(cube->edges[UB])] * 1
            + i_transform_axes_e[ax][extract_edge_perm(cube->edges[UF])] * 12
            + i_transform_axes_e[ax][extract_edge_perm(cube->edges[DF])] * 12 * 12
@@ -187,11 +186,12 @@ cube_t ccu_index_to_cube(uint64_t ccu_i) {
 cube_t coud_index_to_cube(uint64_t coud_i) {
     cube_t cube = cube_create_new_cube();
 
-    int c_i, co, co_sum = 0, pow = 1;
+    int c_i, co, co_sum = 0;
+    uint64_t pow = 1;
 
     for (int i = 0; i < NCORNERS - 1; i++)
     {
-        co  = (coud_i / pow) % 3;
+        co  = (int)((coud_i / pow) % 3);
         c_i = which_corner_at_pos(i, &cube);
 
         update_corner_orien(&cube.corners[c_i], co, 0, 0);

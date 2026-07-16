@@ -7,7 +7,7 @@
 #include "../src/index.h"
 
 Test(cclass, cclass_invariant_under_UDsyms) {
-    static int UDsyms[] = {
+    static uint8_t UDsyms[] = {
       0,  1,  2,  3,  16, 17, 18, 19,  // no inversion
       24, 25, 26, 27, 40, 41, 42, 43   // inversion
     };
@@ -22,7 +22,7 @@ Test(cclass, cclass_invariant_under_UDsyms) {
 
         for (int i = 1; i < 16; i++)
         {
-            int    t     = UDsyms[i];
+            uint8_t    t     = UDsyms[i];
             cube_t cube2 = cube_operation_sym_conjugate(cube, t);
 
             ci2 = cclass_table[cube_to_c_index(&cube2, UD)].cclass_i;

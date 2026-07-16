@@ -27,8 +27,8 @@ void solution_append(Solution* s, int move) {
 }
 
 
-void solution_append_multiple(Solution* s, int* moves, int number_of_moves){
-    for (int i = 0; i < number_of_moves; i++){
+void solution_append_multiple(Solution* s, int* moves, size_t number_of_moves){
+    for (size_t i = 0; i < number_of_moves; i++){
         solution_append(s, moves[i]);
     }
 }
@@ -56,11 +56,10 @@ Solution solution_copy(const Solution* src) {
 
 Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solution_inv) {
     Solution out = solution_copy(solution);
-    for (int move_idx = solution_inv->length - 1; move_idx >= 0; move_idx--)
-    {
+    for (size_t k = solution_inv->length; k > 0; k--){
+        size_t move_idx = k - 1;
         int move_inv = solution_inv->moves[move_idx];
         int move     = get_inv_move(move_inv);
-
         solution_append(&out, move);
     }
 
@@ -71,14 +70,14 @@ Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solutio
    Solution Set (many solutions)
    ========================= */
 
-void solutionset_init(SolutionSet* set, int capacity) {
+void solutionset_init(SolutionSet* set, size_t capacity) {
     set->count    = 0;
     set->capacity = capacity;
     set->data     = malloc(sizeof(Solution) * capacity);
 }
 
 void solutionset_free(SolutionSet* set) {
-    for (int i = 0; i < set->count; i++)
+    for (size_t i = 0; i < set->count; i++)
     {
         solution_free(&set->data[i]);
     }
@@ -96,7 +95,7 @@ int solutionset_add_copy(SolutionSet* set, const Solution* s) {
 
 
 void solutionset_append(SolutionSet* A, SolutionSet* B) {
-    for (int i = 0; i < B->count; i++)
+    for (size_t i = 0; i < B->count; i++)
     {
         solutionset_add_copy(A, &B->data[i]);
     }
@@ -107,17 +106,17 @@ void solutionset_merge_with_prefix(SolutionSet*       dest,
                                    const SolutionSet* src,
                                    const Solution*    prefix) {
     solutionset_init(dest, src->count);
-    for (int i = 0; i < src->count; i++)
+    for (size_t i = 0; i < src->count; i++)
     {
         solutionset_add_copy(dest, prefix);
     }
 
-    for (int i = 0; i < src->count; i++)
+    for (size_t i = 0; i < src->count; i++)
     {
         Solution suffix = src->data[i];
 
         // append suffix
-        for (int j = 0; j < suffix.length; j++)
+        for (size_t j = 0; j < suffix.length; j++)
         {
             solution_append(&dest->data[i], suffix.moves[j]);
         }
@@ -127,10 +126,12 @@ void solutionset_merge_with_prefix(SolutionSet*       dest,
 static int solution_cmp_len(const void* a, const void* b) {
     const Solution* sa = a;
     const Solution* sb = b;
-    return sa->length - sb->length;
+    if (sa->length < sb->length) return -1;
+    if (sa->length > sb->length) return 1;
+    return 0;
 }
 
-void solutionset_trim_shortest(SolutionSet* set, int max_count) {
+void solutionset_trim_shortest(SolutionSet* set, size_t max_count) {
     if (set->count <= max_count)
         return;
 
@@ -138,7 +139,7 @@ void solutionset_trim_shortest(SolutionSet* set, int max_count) {
     qsort(set->data, set->count, sizeof(Solution), solution_cmp_len);
 
     // free the discarded solutions
-    for (int i = max_count; i < set->count; i++)
+    for (size_t i = max_count; i < set->count; i++)
     {
         solution_free(&set->data[i]);
     }
@@ -187,13 +188,13 @@ void pipelinesolution_init(PipelineSolution* pipeline_solution) {
     pipeline_solution->capacity = 8;  // default capacity
     pipeline_solution->count    = 0;
 
-    pipeline_solution->heuristic_score = -1;
+    pipeline_solution->heuristic_score = SIZE_MAX;
 
     pipeline_solution->steps = malloc(sizeof(PipelineSolutionStep) * pipeline_solution->capacity);
 }
 
 void pipelinesolution_free(PipelineSolution* pipeline_solution) {
-    for (int i = 0; i < pipeline_solution->count; i++)
+    for (size_t i = 0; i < pipeline_solution->count; i++)
     {
         pipelinesolutionstep_free(&pipeline_solution->steps[i]);
     }
@@ -205,7 +206,7 @@ PipelineSolution pipelinesolution_copy(const PipelineSolution* src) {
     dst.count           = 0;
     dst.capacity        = src->capacity;
     dst.heuristic_score = src->heuristic_score;
-    for (int i = 0; i < src->count; i++)
+    for (size_t i = 0; i < src->count; i++)
     {
         pipelinesolution_add_copy(&dst, &src->steps[i]);
     }
@@ -234,7 +235,7 @@ int pipelinesolution_add_copy(PipelineSolution*           set,
 }
 
 void apply_pipelinesolution(cube_t* cube, PipelineSolution* ps) {
-    for (int i = 0; i < ps->count; i++)
+    for (size_t i = 0; i < ps->count; i++)
     {
         PipelineSolutionStep pss = ps->steps[i];
         if (pss.starts_on_inverse)
@@ -257,14 +258,14 @@ void apply_pipelinesolution(cube_t* cube, PipelineSolution* ps) {
    ========================= */
 
 
-void pipelinesolutionset_init(PipelineSolutionSet* set, int capacity) {
+void pipelinesolutionset_init(PipelineSolutionSet* set, size_t capacity) {
     set->capacity = capacity;
     set->data     = malloc(sizeof(PipelineSolution) * capacity);
     set->count    = 0;
 }
 
 void pipelinesolutionset_free(PipelineSolutionSet* set) {
-    for (int i = 0; i < set->count; i++)
+    for (size_t i = 0; i < set->count; i++)
     {
         pipelinesolution_free(&set->data[i]);
     }
@@ -282,7 +283,7 @@ int pipelinesolutionset_add_copy(PipelineSolutionSet* set, const PipelineSolutio
 
 
 void pipelinesolutionset_append(PipelineSolutionSet* A, PipelineSolutionSet* B) {
-    for (int i = 0; i < B->count; i++)
+    for (size_t i = 0; i < B->count; i++)
     {
         pipelinesolutionset_add_copy(A, &B->data[i]);
     }
@@ -297,20 +298,20 @@ void pipelinesolutionset_merge_with_prefix(
     // Initialize destination with capacity for all combinations
     pipelinesolutionset_init(dst, src->count);
 
-    for (int i = 0; i < src->count; i++)
+    for (size_t i = 0; i < src->count; i++)
     {
         // Create a new PipelineSolution that starts with prefix
         PipelineSolution merged;
         pipelinesolution_init(&merged);
 
         // Copy all prefix steps
-        for (int j = 0; j < prefix->count; j++)
+        for (size_t j = 0; j < prefix->count; j++)
         {
             pipelinesolution_add_copy(&merged, &prefix->steps[j]);
         }
 
         // Copy src solution steps
-        for (int j = 0; j < src->data[i].count; j++)
+        for (size_t j = 0; j < src->data[i].count; j++)
         {
             pipelinesolution_add_copy(&merged, &src->data[i].steps[j]);
         }
@@ -325,18 +326,18 @@ void pipelinesolutionset_merge_with_prefix(
 void pipelinesolutionset_compute_scores(cube_t               c,
                                         PipelineSolutionSet* next,
                                         solving_step*        next_ss) {
-    for (int i = 0; i < next->count; i++)
+    for (size_t i = 0; i < next->count; i++)
     {
         PipelineSolution* ps = &next->data[i];
 
-        int length = 0;
-        for (int j = 0; j < ps->count; j++)
+        size_t length = 0;
+        for (size_t j = 0; j < ps->count; j++)
         {
             length += ps->steps[j].solution->length;
         }
 
         // find the heur value and default to 0 if no heur is available
-        int heur = 0;
+        size_t heur = 0;
         if (next_ss != NULL && next_ss->heuristic_func != NULL && next_ss->p_data->ptable_is_loaded)
         {
             heur = next_ss->heuristic_func(&c, next_ss->p_data);
@@ -350,11 +351,12 @@ void pipelinesolutionset_compute_scores(cube_t               c,
 static int pipelinesolution_cmp(const void* a, const void* b) {
     const PipelineSolution* psa = a;
     const PipelineSolution* psb = b;
-
-    return psa->heuristic_score - psb->heuristic_score;
+    if (psa->heuristic_score < psb->heuristic_score) return -1;
+    if (psa->heuristic_score > psb->heuristic_score) return 1;
+    return 0;
 }
 
-void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, int max_count) {
+void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, size_t max_count) {
     if (set->count <= max_count)
         return;
 
@@ -362,7 +364,7 @@ void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, int max_count) 
     qsort(set->data, set->count, sizeof(PipelineSolution), pipelinesolution_cmp);
 
     // free the discarded solutions
-    for (int i = max_count; i < set->count; i++)
+    for (size_t i = max_count; i < set->count; i++)
     {
         pipelinesolution_free(&set->data[i]);
     }
@@ -374,7 +376,7 @@ void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, int max_count) 
 void append_copy_solutionset_to_pipelinesolutionset(PipelineSolutionSet* pss,
                                                     SolutionSet*         ss,
                                                     bool                 starts_on_inverse) {
-    for (int i = 0; i < ss->count; i++)
+    for (size_t i = 0; i < ss->count; i++)
     {
         PipelineSolution sol;
         pipelinesolution_init(&sol);
@@ -387,58 +389,3 @@ void append_copy_solutionset_to_pipelinesolutionset(PipelineSolutionSet* pss,
     }
 }
 
-/* =========================
-   Example "solver"
-   ========================= */
-
-#include "cli.h"
-void fake_solver(SolutionSet* out) {
-    Solution s;
-    solution_init(&s);
-    solution_append(&s, 1);
-    solution_append(&s, 2);
-    solution_append(&s, 3);
-    solutionset_add_copy(out, &s);
-    solution_append(&s, 4);
-    solutionset_add_copy(out, &s);
-    solution_free(&s);
-}
-
-void fake_solver2(SolutionSet* out) {
-    Solution s;
-    solution_init(&s);
-    solution_append(&s, 1);
-    solution_append(&s, 2);
-    solution_append(&s, 3);
-    solution_append(&s, 6);
-    solution_append(&s, 6);
-    solutionset_add_copy(out, &s);
-    solution_append(&s, 4);
-    solutionset_add_copy(out, &s);
-    solution_free(&s);
-}
-
-
-/* =========================
-   Demo
-   ========================= */
-
-#include "cli.h"
-
-int main_2() {
-    SolutionSet solutions;
-    solutionset_init(&solutions, 10);
-
-    fake_solver2(&solutions);
-    fake_solver(&solutions);
-
-
-    printf("number of sols before: %i\n", solutions.count);
-    cube_print_solution_set(&solutions, 0);
-    solutionset_trim_shortest(&solutions, 3);
-    printf("number of sols after: %i\n", solutions.count);
-    cube_print_solution_set(&solutions, 0);
-
-    solutionset_free(&solutions);
-    return 0;
-}

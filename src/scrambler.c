@@ -148,7 +148,7 @@ cube_t cube_scrambler_get_scrambled_DR(){
 
 
 int cube_scrambler_parse_speffz(cube_t* c, char* s) {
-    int letter_syms[24] = {2, 3, 0, 1, 13, 14, 15, 12, 11, 8,  9,  10,
+    uint8_t letter_syms[24] = {2, 3, 0, 1, 13, 14, 15, 12, 11, 8,  9,  10,
                            4, 5, 6, 7, 22, 23, 20, 21, 17, 18, 19, 16};
 
     int sticker_to_piece_c[24] = {UBL, UBR, UFR, UFL, UBL, UFL, DFL, DBL, UFL, UFR, DFR, DFL,
@@ -161,7 +161,7 @@ int cube_scrambler_parse_speffz(cube_t* c, char* s) {
 
     int  parity      = 0;
     bool parse_edges = false;
-    for (int i = 0; i < strlen(s); i++)
+    for (size_t i = 0; i < strlen(s); i++)
     {
         if (s[i] == '.')
         {
@@ -179,8 +179,8 @@ int cube_scrambler_parse_speffz(cube_t* c, char* s) {
                     int c1 = which_corner_at_pos(buf_c, c);
                     int c2 = which_corner_at_pos(sticker_to_piece_c[target], c);
 
-                    int sym1 = letter_syms[target];
-                    int sym2 = get_inv_sym(sym1);
+                    uint8_t sym1 = letter_syms[target];
+                    uint8_t sym2 = get_inv_sym(sym1);
 
                     // swap c1 and c2 by
                     // using precomputed sym_tables
@@ -194,8 +194,8 @@ int cube_scrambler_parse_speffz(cube_t* c, char* s) {
                     int e1 = which_edge_at_pos(buf_e, c);
                     int e2 = which_edge_at_pos(sticker_to_piece_e[target], c);
 
-                    int sym1 = letter_syms[target];
-                    int sym2 = get_inv_sym(sym1);
+                    uint8_t sym1 = letter_syms[target];
+                    uint8_t sym2 = get_inv_sym(sym1);
 
                     // swap e1 and e2 by
                     // using precomputed sym_tables

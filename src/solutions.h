@@ -15,14 +15,14 @@
 
 typedef struct {
     int* moves;
-    int  length;
-    int  capacity;
+    size_t  length;
+    size_t  capacity;
 } Solution;
 
 void     solution_init(Solution* s);
 void     solution_free(Solution* s);
 void     solution_append(Solution* s, int move);
-void     solution_append_multiple(Solution* s, int* moves, int number_of_moves);
+void     solution_append_multiple(Solution* s, int* moves, size_t number_of_moves);
 bool     solution_pop(Solution* s);
 Solution solution_copy(const Solution* src);
 Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solution_inverse);
@@ -32,12 +32,12 @@ Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solutio
    ========================= */
 
 typedef struct {
-    Solution* data;
-    int       count;
-    int       capacity;
+    Solution*    data;
+    size_t       count;
+    size_t       capacity;
 } SolutionSet;
 
-void solutionset_init(SolutionSet* set, int capacity);
+void solutionset_init(SolutionSet* set, size_t capacity);
 void solutionset_free(SolutionSet* set);
 int  solutionset_add_copy(SolutionSet* set, const Solution* s);
 
@@ -96,12 +96,12 @@ PipelineSolutionStep pipelinesolutionstep_copy(const PipelineSolutionStep* src);
    ========================= */
 
 typedef struct {
-    PipelineSolutionStep* steps;
-    int                   count;
-    int                   capacity;
+    PipelineSolutionStep*    steps;
+    size_t                   count;
+    size_t                   capacity;
 
     // we want to rank PipelineSolutions based on some heuristic (not just the length)
-    int heuristic_score;
+    size_t heuristic_score;
 } PipelineSolution;
 
 void             pipelinesolution_init(PipelineSolution* pipeline_solution);
@@ -119,11 +119,11 @@ void apply_pipelinesolution(cube_t* cube, PipelineSolution* ps);
 
 typedef struct {
     PipelineSolution* data;
-    int               count;
-    int               capacity;
+    size_t            count;
+    size_t            capacity;
 } PipelineSolutionSet;
 
-void pipelinesolutionset_init(PipelineSolutionSet* set, int capacity);
+void pipelinesolutionset_init(PipelineSolutionSet* set, size_t capacity);
 void pipelinesolutionset_free(PipelineSolutionSet* set);
 int  pipelinesolutionset_add_copy(PipelineSolutionSet* set, const PipelineSolution* s);
 
@@ -158,7 +158,7 @@ void pipelinesolutionset_merge_with_prefix(PipelineSolutionSet*       dst,
 
 void pipelinesolutionset_compute_scores(cube_t c, PipelineSolutionSet* next, solving_step* next_ss);
 
-void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, int max_count);
+void pipelinesolutionset_trim_shortest(PipelineSolutionSet* set, size_t max_count);
 
 /* adds a solution set to a pipeline solution set,
  * such that each pipeline solution only has one step.
