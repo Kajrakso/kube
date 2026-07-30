@@ -68,6 +68,7 @@ TestSuite(fix_orientation, .disabled=false, .init=setup, .fini=teardown);
 TestSuite(cclass, .disabled=false, .init=setup, .fini=teardown);
 
 TestSuite(solver_fin, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
+TestSuite(solver_multiple_solutions, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
 
 // disabled
 
