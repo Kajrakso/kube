@@ -27,10 +27,10 @@ Solution create_random_sample_solution() {
 
 SolutionSet create_random_solutionset() {
     SolutionSet solset;
-    int         capacity = 5 + rand() % 20;
+    size_t capacity = (size_t)(5 + rand() % 20);
     solutionset_init(&solset, capacity);
 
-    for (int i = 0; i < rand() % capacity; i++)
+    for (size_t i = 0; i < (size_t)(rand() % (int)capacity); i++)
     {
         Solution sol = create_random_sample_solution();
         solutionset_add_copy(&solset, &sol);
@@ -61,7 +61,6 @@ cube_t create_test_cube() {
 }
 
 PipelineSolution create_test_pipelinesolution(int num_steps) {
-    cube_t           cube = create_test_cube();
     PipelineSolution ps;
     pipelinesolution_init(&ps);
 
@@ -81,7 +80,7 @@ PipelineSolutionSet create_test_pipelinesolutionset(size_t count) {
 
     for (size_t i = 0; i < count; i++)
     {
-        PipelineSolution ps = create_test_pipelinesolution(1 + i % 3);  // Vary step counts
+        PipelineSolution ps = create_test_pipelinesolution((int)(1 + i % 3));  // Vary step counts
         pipelinesolutionset_add_copy(&set, &ps);
         pipelinesolution_free(&ps);
     }
@@ -154,8 +153,8 @@ Test(solutions, solution_set_add_copy) {
 Test(solutions, solution_set_append) {
     SolutionSet solset1 = create_random_solutionset();
     SolutionSet solset2 = create_random_solutionset();
-    int         count1  = solset1.count;
-    int         count2  = solset2.count;
+    size_t      count1  = solset1.count;
+    size_t      count2  = solset2.count;
 
     if (solset1.capacity >= count1 + count2)
     {
@@ -184,7 +183,7 @@ Test(solutions, solution_set_capacity_limits) {
     }
 
     // Try to append solset2 - it should only add what fits
-    int initial_count = solset1.count;
+    size_t initial_count = solset1.count;
     solutionset_append(&solset1, &solset2);
 
     // Should not exceed capacity (current implementation may not handle this gracefully)
@@ -226,7 +225,7 @@ Test(solutions, pipelinesolutionstep_append_and_pop) {
     PipelineSolutionStep step;
     pipelinesolutionstep_init(&step, false);  // Fix memory bug - proper initialization
 
-    int sol_len = step.solution->length;
+    size_t sol_len = step.solution->length;
     cr_assert_eq(sol_len, 0);  // Should start empty
 
     pipelinesolutionstep_append(&step, R1);
@@ -279,7 +278,6 @@ Test(solutions, pipelinesolutionstep_copy) {
    ========================= */
 
 Test(solutions, pipelinesolution_lifecycle) {
-    cube_t           cube = create_test_cube();
     PipelineSolution ps;
 
     // Test initialization
@@ -302,8 +300,8 @@ Test(solutions, pipelinesolution_lifecycle) {
     cr_assert_eq(ps.count, 2);
 
     // Test capacity expansion by adding many steps
-    int initial_capacity = ps.capacity;
-    for (int i = ps.count; i < initial_capacity + 5; i++)
+    size_t initial_capacity = ps.capacity;
+    for (size_t i = ps.count; i < initial_capacity + 5; i++)
     {
         PipelineSolutionStep temp_step = create_test_pipelinesolutionstep(i % 2 == 0);
         int                  result    = pipelinesolution_add_copy(&ps, &temp_step);
@@ -320,7 +318,6 @@ Test(solutions, pipelinesolution_lifecycle) {
 }
 
 Test(solutions, pipelinesolution_copy) {
-    cube_t           cube = create_test_cube();
     PipelineSolution original;
     pipelinesolution_init(&original);
 
@@ -389,7 +386,7 @@ Test(solutions, pipelinesolutionset_basic_operations) {
 
     // Test capacity limits
     PipelineSolution ps3 = create_test_pipelinesolution(1);
-    for (int i = set.count; i < set.capacity; i++)
+    for (size_t i = set.count; i < set.capacity; i++)
     {
         int result = pipelinesolutionset_add_copy(&set, &ps3);
         cr_assert_eq(result, 1);
@@ -410,8 +407,8 @@ Test(solutions, pipelinesolutionset_append) {
     PipelineSolutionSet set1 = create_test_pipelinesolutionset(3);
     PipelineSolutionSet set2 = create_test_pipelinesolutionset(2);
 
-    int count1 = set1.count;
-    int count2 = set2.count;
+    size_t count1 = set1.count;
+    size_t count2 = set2.count;
 
     // Append set2 to set1
     pipelinesolutionset_append(&set1, &set2);
@@ -421,17 +418,17 @@ Test(solutions, pipelinesolutionset_append) {
     cr_assert_geq(set1.count, count1);
 
     // If there was enough capacity, all solutions should be added
-    int max_possible   = set1.capacity;
-    int expected_added = (count1 + count2 <= max_possible) ? count2 : (max_possible - count1);
+    size_t max_possible   = set1.capacity;
+    size_t expected_added = (count1 + count2 <= max_possible) ? count2 : (max_possible - count1);
     if (expected_added > 0)
     {
         cr_assert_eq(set1.count, count1 + expected_added);
 
         // Verify the appended solutions are correct
-        for (int i = 0; i < expected_added; i++)
+        for (size_t i = 0; i < expected_added; i++)
         {
             // The last expected_added solutions should match set2's solutions
-            int set1_index = count1 + i;
+            size_t set1_index = count1 + i;
             cr_assert_eq(set1.data[set1_index].count, set2.data[i].count);
         }
     }
@@ -456,23 +453,23 @@ Test(solutions, pipelinesolutionset_merge_with_prefix) {
     // Verify results
     cr_assert_eq(dst.count, src.count);
 
-    for (int i = 0; i < dst.count; i++)
+    for (size_t i = 0; i < dst.count; i++)
     {
         // Each merged solution should have prefix steps + src steps
-        int expected_count = prefix.count + src.data[i].count;
+        size_t expected_count = prefix.count + src.data[i].count;
         cr_assert_eq(dst.data[i].count, expected_count);
 
         // Verify first steps are from prefix
-        for (int j = 0; j < prefix.count; j++)
+        for (size_t j = 0; j < prefix.count; j++)
         {
             cr_assert_eq(dst.data[i].steps[j].starts_on_inverse, prefix.steps[j].starts_on_inverse);
             cr_assert_eq(dst.data[i].steps[j].solution->length, prefix.steps[j].solution->length);
         }
 
         // Verify last steps are from src
-        for (int j = 0; j < src.data[i].count; j++)
+        for (size_t j = 0; j < src.data[i].count; j++)
         {
-            int dst_index = prefix.count + j;
+            size_t dst_index = prefix.count + j;
             cr_assert_eq(dst.data[i].steps[dst_index].starts_on_inverse,
                          src.data[i].steps[j].starts_on_inverse);
         }
@@ -492,7 +489,7 @@ Test(solutions, pipelinesolutionset_edge_cases) {
 
     // Test appending empty set to non-empty set
     PipelineSolutionSet nonempty       = create_test_pipelinesolutionset(2);
-    int                 original_count = nonempty.count;
+    size_t              original_count = nonempty.count;
     pipelinesolutionset_append(&nonempty, &empty);
     cr_assert_eq(nonempty.count, original_count);  // Should be unchanged
 
@@ -525,7 +522,6 @@ Test(solutions, cli_print_pipelinesolution_set) {
 
     // Create first pipeline solution with 2 steps
     PipelineSolution ps1;
-    cube_t           cube1 = create_test_cube();
     pipelinesolution_init(&ps1);
 
     // Add first step: R U F
@@ -547,7 +543,6 @@ Test(solutions, cli_print_pipelinesolution_set) {
 
     // Create second pipeline solution with 1 step
     PipelineSolution ps2;
-    cube_t           cube2 = cube_create_new_cube();
     pipelinesolution_init(&ps2);
 
     PipelineSolutionStep step2a;

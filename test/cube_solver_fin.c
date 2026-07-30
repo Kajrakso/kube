@@ -6,13 +6,13 @@
 
 Test(solver_fin, solved_is_solved){
     cube_t c = cube_create_new_cube();
-    size_t number_of_solutions = 1;
-    size_t max_depth = 20;
-    bool verbose = false;
-    size_t number_of_threads = 16;
+    int number_of_solutions = 1;
+    int max_depth = 20;
+    int verbose = false;
+    int number_of_threads = 16;
 
     SolutionSet ss;
-    solutionset_init(&ss, number_of_solutions);
+    solutionset_init(&ss, (size_t)number_of_solutions);
 
     cube_solvers_solve_cube(c, &ss, number_of_solutions, max_depth, verbose, number_of_threads, &fin);
     cr_assert_eq(ss.count, number_of_solutions); 
@@ -24,13 +24,13 @@ Test(solver_fin, solved_is_solved){
 
 Test(solver_fin, solver_finds_number_of_solutions){
     cube_t c = cube_create_new_cube();
-    size_t number_of_solutions = rand() % 20 + 1;
-    size_t max_depth = 20;
-    bool verbose = false;
-    size_t number_of_threads = 16;
+    int number_of_solutions = rand() % 20 + 1;
+    int max_depth = 20;
+    int verbose = false;
+    int number_of_threads = 16;
 
     SolutionSet ss;
-    solutionset_init(&ss, number_of_solutions);
+    solutionset_init(&ss, (size_t)number_of_solutions);
 
     cube_solvers_solve_cube(c, &ss, number_of_solutions, max_depth, verbose, number_of_threads, &fin);
     cr_assert_eq(ss.count, number_of_solutions); 
@@ -88,14 +88,14 @@ void solve_and_test_1_movers(int nthreads){
         {D3},
     };
 
-    size_t number_of_solutions = 1;
-    size_t max_depth = 20;
-    bool verbose = false;
-    size_t number_of_threads = (size_t)nthreads;
+    int number_of_solutions = 1;
+    int max_depth = 20;
+    int verbose = false;
+    int number_of_threads = nthreads;
     
     for (int i = 0; i < TEST_number_of_scrambles_solve_and_test_1_movers; i++){
         SolutionSet ss;
-        solutionset_init(&ss, number_of_solutions);
+        solutionset_init(&ss, (size_t)number_of_solutions);
 
         cube_solvers_solve_cube(cubes[i], &ss, number_of_solutions, max_depth, verbose, number_of_threads, &fin);
 
@@ -166,14 +166,14 @@ void solve_and_test_4_movers(int nthreads){
         {L3, F2, R3, D3},
     };
 
-    size_t number_of_solutions = 1;
-    size_t max_depth = 20;
-    bool verbose = false;
-    size_t number_of_threads = (size_t)nthreads;
+    int number_of_solutions = 1;
+    int max_depth = 20;
+    int verbose = false;
+    int number_of_threads = nthreads;
     
     for (int i = 0; i < TEST_number_of_scrambles_solve_and_test_4_movers; i++){
         SolutionSet ss;
-        solutionset_init(&ss, number_of_solutions);
+        solutionset_init(&ss, (size_t)number_of_solutions);
 
         cube_solvers_solve_cube(cubes[i], &ss, number_of_solutions, max_depth, verbose, number_of_threads, &fin);
 
@@ -644,14 +644,14 @@ void solve_and_test_15_movers(int nthreads){
 
 
 
-    size_t number_of_solutions = 1;
-    size_t max_depth = 20;
-    bool verbose = false;
-    size_t number_of_threads = (size_t)nthreads;
+    int number_of_solutions = 1;
+    int max_depth = 20;
+    int verbose = false;
+    int number_of_threads = nthreads;
     
     for (int i = 0; i < TEST_number_of_scrambles_solve_and_test_15_movers; i++){
         SolutionSet ss;
-        solutionset_init(&ss, number_of_solutions);
+        solutionset_init(&ss, (size_t)number_of_solutions);
 
         cube_solvers_solve_cube(cubes[i], &ss, number_of_solutions, max_depth, verbose, number_of_threads, &fin);
         cr_assert_eq(ss.data->length, 15);

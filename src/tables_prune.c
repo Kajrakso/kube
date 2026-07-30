@@ -176,7 +176,7 @@ void table_prune_gen(struct ptable_gen_ctx* ctx){
             tasks[i].depth = depth;
         }
 
-        thread_pool_execute(pool, task_ptrs, (int)num_threads, neighbour_scan_task);
+        thread_pool_execute(pool, task_ptrs, num_threads, neighbour_scan_task);
     } 
 
     timespec_get(&end, TIME_UTC);

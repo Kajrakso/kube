@@ -20,13 +20,13 @@ struct ThreadPool {
 
     /* Shared task queue (ring buffer, dynamically sized). */
     void** queue;
-    int    queue_capacity;
-    int    queue_count;
-    int    queue_head;
+    size_t queue_capacity;
+    size_t queue_count;
+    size_t queue_head;
 
     /* Current batch info. */
     void (*worker_func)(int, void*, void*);
-    int    tasks_remaining;
+    size_t tasks_remaining;
 
     pthread_mutex_t mutex;
     pthread_cond_t  work_avail; /* signalled when new tasks arrive */
@@ -114,7 +114,7 @@ void thread_pool_destroy(ThreadPool* pool) {
     free(pool);
 }
 
-void thread_pool_execute(ThreadPool* pool, void** tasks, int num_tasks,
+void thread_pool_execute(ThreadPool* pool, void** tasks, size_t num_tasks,
                          void (*worker_func)(int, void*, void*)) {
     pthread_mutex_lock(&pool->mutex);
 
@@ -124,11 +124,11 @@ void thread_pool_execute(ThreadPool* pool, void** tasks, int num_tasks,
     pool->queue_head      = 0;
 
     if (num_tasks > pool->queue_capacity) {
-        pool->queue = realloc(pool->queue, (size_t)num_tasks * sizeof(void*));
+        pool->queue = realloc(pool->queue, num_tasks * sizeof(void*));
         pool->queue_capacity = num_tasks;
     }
 
-    for (int i = 0; i < num_tasks; i++)
+    for (size_t i = 0; i < num_tasks; i++)
         pool->queue[i] = tasks[i];
 
     pthread_cond_broadcast(&pool->work_avail);

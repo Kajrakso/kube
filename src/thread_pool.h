@@ -16,7 +16,7 @@ void thread_pool_destroy(ThreadPool* pool);
 /* Execute `num_tasks` tasks in parallel.
    `worker_func(thread_id, task_ptr, local_data)` is called for each task.
    Blocks until all tasks finish. */
-void thread_pool_execute(ThreadPool* pool, void** tasks, int num_tasks,
+void thread_pool_execute(ThreadPool* pool, void** tasks, size_t num_tasks,
                          void (*worker_func)(int thread_id, void* task, void* local));
 
 /* Return the local storage for a specific thread (0 .. num_threads-1). */

@@ -16,9 +16,8 @@ Test(cclass, cclass_invariant_under_UDsyms) {
     {
         cube_t cube = cube_scrambler_get_handscrambled_cube();
 
-        uint32_t ci = cclass_table[cube_to_c_index(&cube, UD)].cclass_i;
-        uint32_t c  = cclass_table[cube_to_c_index(&cube, UD)].cclass;
-        uint32_t ci2, c2;
+        uint64_t ci = cclass_table[cube_to_c_index(&cube, UD)].cclass_i;
+        uint64_t ci2, c2;
 
         for (int i = 1; i < 16; i++)
         {
