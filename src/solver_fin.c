@@ -181,13 +181,10 @@ static bool TreeSearch_fin(cube_t*              cube,
         pval_FB_inv,
         remaining_moves
     );
-
-    for (int move = 0; move < NMOVES; move++)
-    {
-        if (!move_in_move_mask(mm, move)) {
-            continue;
-        }
-        
+    
+    while (mm) {
+        int move = __builtin_ctz(mm); // count trailing zeros
+        mm &= mm - 1;  // clear lowest set bit
 
         cube_move_apply_move(cube, move);
         solution_append(is_inv ? temp_solution_inv : temp_solution, move);

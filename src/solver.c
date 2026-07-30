@@ -104,11 +104,9 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     // we extract the move_mask for this node.
     uint32_t mm = move_mask[prev_move];
 
-    for (int move = 0; move < NMOVES; move++)
-    {
-        // check if we actually need to do move.
-        if (!move_in_move_mask(mm, move))
-            continue;
+    while (mm) {
+        int move = __builtin_ctz(mm); // count trailing zeros
+        mm &= mm - 1;  // clear lowest set bit
 
         cube_move_apply_move(cube, move);
 

@@ -60,9 +60,10 @@ void table_prune_gen_DLS(
 
     uint32_t mm = move_mask[previous_move];
 
-    for (int move = 0; move < NMOVES; move++)
-    {
-        if (!move_in_move_mask(mm, move)){ continue; }
+    while (mm) {
+        int move = __builtin_ctz(mm); // count trailing zeros
+        mm &= mm - 1;  // clear lowest set bit
+
 
         uint64_t components[ctx->num_components];
         memcpy(components, previous_components, ctx->num_components * sizeof(uint64_t));
