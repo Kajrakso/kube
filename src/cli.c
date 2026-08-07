@@ -336,7 +336,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
     // for parsing number of solutions
     char* endptr;
     long  num;
-    long  depth_limit;
+    // long  depth_limit;
 
     switch (key)
     {
@@ -376,55 +376,60 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
         struct step* st = &arguments->steps[arguments->step_count++];
         st->max_depth   = -1;  // default
 
-        // parse "eo:max=7,metric=htm"
+        // parse "eo:max=7,num=15"
         char* spec = strdup(arg);
         char* tok  = strtok(spec, ":");
 
         st->name = tok;
+        
+        // default values
+        st->max_depth = INT_MAX;
+        st->number_of_solutions = 1;
 
         tok = strtok(NULL, ",");
         while (tok)
         {
             // we do not support extra options currently
-            //
-            // if (strncmp(tok, "max=", 4) == 0)
-            //     st->max_depth = atoi(tok + 4);
+            if (strncmp(tok, "max=", 4) == 0)
+                st->max_depth = atoi(tok + 4);
+            else if (strncmp(tok, "num=", 4) == 0)
+                st->number_of_solutions = atoi(tok + 4);
             // else if (strncmp(tok, "metric=", 7) == 0)
             //     st->metric = tok + 7;
-            // else
-            argp_error(state, "Unknown step option: %s", tok);
+            else
+                argp_error(state, "Unknown step option: %s", tok);
 
             tok = strtok(NULL, ",");
         }
         break;
 
-    case 'n' :
-        num = strtol(arg, &endptr, 10);
-
-        if (*endptr != '\0')
-        {
-            // Error: not a valid integer string
-            printf("Conversion error, non-integer characters found: %s. Using n = %i\n", endptr, 1);
-        }
-        else
-        {
-            arguments->number_of_solutions = (int)num;
-        }
-        break;
-
-    case 'M' :
-        depth_limit = strtol(arg, &endptr, 10);
-
-        if (*endptr != '\0')
-        {
-            // Error: not a valid integer string
-            printf("Conversion error, non-integer characters found: %s. Using m = %i\n", endptr, 1);
-        }
-        else
-        {
-            arguments->depth_limit = (int)depth_limit;
-        }
-        break;
+    // case 'n' :
+    //     num = strtol(arg, &endptr, 10);
+    //
+    //     if (*endptr != '\0')
+    //     {
+    //         // Error: not a valid integer string
+    //         printf("Conversion error, non-integer characters found: %s. Using n = %i\n", endptr, 1);
+    //     }
+    //     else
+    //     {
+    //         arguments->number_of_solutions = (int)num;
+    //     }
+    //     break;
+    //
+    // case 'M' :
+    //     depth_limit = strtol(arg, &endptr, 10);
+    //
+    //     if (*endptr != '\0')
+    //     {
+    //         // Error: not a valid integer string
+    //         printf("Conversion error, non-integer characters found: %s. Using m = %i\n", endptr, 1);
+    //     }
+    //     else
+    //     {
+    //         arguments->depth_limit = (int)depth_limit;
+    //     }
+    //     break;
     case ARGP_KEY_ARG:
         arguments->scramble = strdup(arg);
         break;
@@ -445,8 +450,8 @@ void set_default_values_arguments(struct arguments* arguments) {
     arguments->format  = "singmaster";
     // arguments->steps[0]            = (struct step){.name = "fin", .max_depth = -1};
     arguments->step_count          = 0;
-    arguments->number_of_solutions = 1;
-    arguments->depth_limit = 1024;  // practically inifinite
+    // arguments->number_of_solutions = 1;
+    // arguments->depth_limit = 1024;  // practically inifinite
     
     long n = sysconf(_SC_NPROCESSORS_ONLN);
     arguments->number_of_threads = n > 0 ? (int)n : 1;
@@ -592,7 +597,7 @@ int solve(char* scr, struct arguments arguments, solving_step** steps){
     struct timespec start, end;
     timespec_get(&start, TIME_UTC);
 
-    if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
+    if (arguments.step_count == 1/*  || arguments.number_of_solutions == 1 */)
     {
         // we invoke a simple pipeline solver:
         solver_pipeline(c, arguments, steps);

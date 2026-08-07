@@ -8,17 +8,19 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
 
     for (int i = 0; i < arguments.step_count; i++)
     {
+        int max_depth = arguments.steps[i].max_depth;
+        int number_of_solutions = arguments.steps[i].number_of_solutions;
         solving_step* ss = steps[i];
 
         // prepare a solution set
         SolutionSet solution_set;
-        if (arguments.number_of_solutions < 0) {
-            printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", arguments.number_of_solutions);
+        if (number_of_solutions < 0) {
+            printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", number_of_solutions);
         }
-        solutionset_init(&solution_set, (size_t)arguments.number_of_solutions);
+        solutionset_init(&solution_set, (size_t)number_of_solutions);
 
-        if (cube_solvers_solve_cube(c, &solution_set, arguments.number_of_solutions,
-                                    arguments.depth_limit,
+        if (cube_solvers_solve_cube(c, &solution_set, number_of_solutions,
+                                    max_depth,
                                     arguments.verbose, arguments.number_of_threads, ss))
         {
             cube_print_solution_set(&solution_set, arguments.verbose);
@@ -52,10 +54,22 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
     /* Idea: For each step in steps, pick the arguments.numbers_of_solutions solutions with the lowest heuristic
      * so far and find the arguments.number_of_solutions shortest solutions to the next step.
      * Then, continue like this until the end, where we pick the arguments.number_of_solutions shortest ones */
-    if (arguments.number_of_solutions < 0) {
-        printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", arguments.number_of_solutions);
+    // if (arguments.number_of_solutions < 0) {
+    //     printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", arguments.number_of_solutions);
+    // }
+
+    size_t beam_width = 1;
+    for (int i = 0; i < arguments.step_count; i++){
+        if (arguments.steps[i].number_of_solutions < 0) {
+            printf("Stop bro, negative number of solutions? (arguments.number_of_solutions = %i)\n", arguments.steps[i].number_of_solutions);
+            return;
+        }
+
+        size_t num_sols = (size_t)arguments.steps[i].number_of_solutions;
+        if (num_sols > beam_width){
+            beam_width = num_sols;
+        }
     }
-    size_t beam_width = (size_t)arguments.number_of_solutions;
 
     // keep track of the solutions so far.
     PipelineSolutionSet current;
@@ -103,8 +117,8 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
             SolutionSet expanded;
             solutionset_init(&expanded, beam_width);
 
-            cube_solvers_solve_cube(cube, &expanded, arguments.number_of_solutions,
-                                    arguments.depth_limit,
+            cube_solvers_solve_cube(cube, &expanded, (int)beam_width,
+                                    arguments.steps[step_idx].max_depth,
                                     arguments.verbose,
                                     arguments.number_of_threads,
                                     ss);
@@ -114,8 +128,8 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
             solutionset_init(&expanded_inv, beam_width);
 
             cube_t cube_inv = cube_operation_inverse(cube);
-            cube_solvers_solve_cube(cube_inv, &expanded_inv, arguments.number_of_solutions,
-                                    arguments.depth_limit,
+            cube_solvers_solve_cube(cube_inv, &expanded_inv, (int)beam_width,
+                                    arguments.steps[step_idx].max_depth,
                                     arguments.verbose,
                                     arguments.number_of_threads,
                                     ss);

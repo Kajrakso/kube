@@ -16,17 +16,18 @@ static char args_doc[] = "[SCRAMBLE]";
 static struct argp_option options[] = {
   {"verbose", 'v', 0, 0, "Produce verbose output.", 0},
   {"stdin", 'i', 0, 0, "Read scrambles from standard input.", 0},
-  {"num", 'n', "NUM", 0,
-   "Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions.",
-   0},
-  {"max-depth", 'M', "MAX", 0, "Limit the search depth to MAX moves.", 0},
+  // {"num", 'n', "NUM", 0,
+   //"Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions.",
+   //0},
+  //{"max-depth", 'M', "MAX", 0, "Limit the search depth to MAX moves.", 0},
   {"threads", 't', "NUM", 0, "Specify number of threads to use during search. defaults to number of cpus on the system.", 0},
   {"format", 'f', "FORMAT", 0, "Specify scramble format.", 0},
   {"gen", 'g', 0, 0, "Generate tables.", 0},
   {"step", 's', "STEP", 0,
-   "Append a solving step (ordered). Can be repeated.\n"
+   "Append a solving step (ordered). Can be repeated. Max search depth can be specified by max=NUMBER, number of solutions can be specified by num=NUMBER.\n"
    "Examples:\n"
-   "  -s eo -s dr -s fin",
+   "  -s eo -s dr -s fin\n"
+   "  -s eo:max=5 -s dr:max=12,num=100 -s fin\n",
    0},
   {0}};
 
@@ -59,8 +60,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (arguments.number_of_solutions >= 1)
-    {
+    // if (arguments.number_of_solutions >= 1)
+    // {
         if (arguments.step_count < 0) {
             print_help_hint("Step count is negative.");
             return 1;
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
         cli_solver_cleanup(arguments, steps);
 
         free(steps);
-    }
+    // }
 
     return 0;
 }

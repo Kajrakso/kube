@@ -11,19 +11,20 @@ $ kube --help
 Usage: kube [OPTION...] [SCRAMBLE]
 kube -- an optimal Rubik's cube solver
 
-  -f, --format=FORMAT        Specify scramble format
-  -g, --gen                  Generate tables
-  -i, --stdin                Read scrambles from standard input
-  -M, --max-depth=MAX        limit the search depth
-  -n, --num=NUM              Try to find NUM solutions. When multiple steps are
-                             given, kube does a beam search to find NUM
-                             solutions.
+  -f, --format=FORMAT        Specify scramble format.
+  -g, --gen                  Generate tables.
+  -i, --stdin                Read scrambles from standard input.
   -s, --step=STEP            Append a solving step (ordered). Can be repeated.
+                             Max search depth can be specified by max=NUMBER,
+                             number of solutions can be specified by
+                             num=NUMBER.
                              Examples:
                                -s eo -s dr -s fin
-  -t, --threads=NUM          specify number of threads to use during search.
-                             defaults to number of cpus on the system
-  -v, --verbose              Produce verbose output
+                               -s eo:max=5 -s dr:max=12,num=100 -s fin
+
+  -t, --threads=NUM          Specify number of threads to use during search.
+                             defaults to number of cpus on the system.
+  -v, --verbose              Produce verbose output.
   -?, --help                 Give this help list
       --usage                Give a short usage message
   -V, --version              Print program version
@@ -32,7 +33,7 @@ Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
 Report bugs to <oskarfj@oskarfj.no>.
-`
+```
 
 
 ### Build from source

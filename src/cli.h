@@ -37,6 +37,7 @@ bool parse_move_string(Solution* s, const char* move_string);
 struct step {
     char *name;
     int max_depth;
+    int number_of_solutions;
 };
 
 /* Used by main to communicate with parse_opt. */
@@ -46,8 +47,8 @@ struct arguments {
     int   stdin_mode;
     int   verbose;
     int   gen;
-    int   number_of_solutions;
-    int   depth_limit;
+    // int   number_of_solutions;
+    // int   depth_limit;
     int   number_of_threads;
 
     struct step steps[MAX_STEPS];

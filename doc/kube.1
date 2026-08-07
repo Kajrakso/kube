@@ -8,13 +8,12 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 [\fB\-f\fR \fIFORMAT\fR]
 [\fB\-g\fR]
 [\fB\-i\fR]
-[\fB\-M\fR \fIMAX\fR]
-[\fB\-n\fR \fINUM\fR]
 [\fB\-s\fR \fISTEP\fR]...
 [\fB\-t\fR \fINUM\fR]
 [\fB\-v\fR]
 [\fB\-?\fR]
 [\fB\-V\fR]
+[\fISCRAMBLE\fR]
 
 .SH DESCRIPTION
 .B kube
@@ -26,8 +25,7 @@ nxopt solver.
 
 When multiple solving steps are specified,
 .B kube
-uses a beam search to find up to
-\fINUM\fR solutions.
+uses a beam search solutions.
 
 .PP
 .B kube
@@ -65,29 +63,31 @@ using the solver.
 Read scrambles from stdin instead. Separate scrambles with newlines.
 
 .TP
-.BR \-M " " \fIMAX\fR ", " \-\-max-depth=MAX
-Limit the search depth to \fIMAX\fR moves. Default is 1024.
-
-.TP
-.BR \-n " " \fINUM\fR ", " \-\-num=NUM
-Try to find \fINUM\fR solutions. Default is 1.
-When multiple solving steps are provided,
-kube performs a beam search to find up to \fINUM\fR
-solutions.
-
-.TP
 .BR \-s " " \fISTEP\fR ", " \-\-step=STEP
 Append a solving step. Steps are executed in the
 order they are given. This option may be repeated.
+Each step can be further configured with the following
+notation: STEP:KEY1=VAL1,KEY2=VAL2,...
 
 Supported steps:
+.RS
 .RS
 eo, dr, htr, fin
 .RE
 
+Supported options:
+.RS
+num, max
+.RE
+
+num defaults to 1, and max default to 1024.
+
 Example:
 .RS
 kube -s eo -s dr -s fin
+.RE
+.RS
+kube -s eo:max=5 -s dr:max=10 -s fin:max=18
 .RE
 
 .TP
@@ -122,23 +122,24 @@ kube -s fin "R U F // this is a comment and will be ignored by kube"
 .fi
 
 .PP
-Find an optimal solution to dr and then to solved with niss eo:
+Find optimal solution via dr and then to solved with niss eo:
 .PP
 .nf
 .RS
 .B
 kube --step dr --step fin "R' U' F L D2 B' U2 R2 B' D2 L2 B D2 L2 B2 R F D' B' D L2 B U R' U' F // scramble
+.B
 F' U (L U) // eo"
 .RE
 .fi
 
 .PP
-Find an optimal solution for the Ua-perm with verbose output:
+Find all sub 15 solutions for the Ua-perm with verbose output, but limit to 100 solutions:
 .PP
 .nf
 .RS
 .B
-echo "R' U R' U' R' U' R' U R U R2" | kube -s fin -v
+echo "R' U R' U' R' U' R' U R U R2" | kube -s fin:max=15,num=100 -v
 .RE
 .fi
 

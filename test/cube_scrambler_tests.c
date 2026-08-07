@@ -193,7 +193,6 @@ Test(scramble, parse_scramble_with_comment_with_moves){
 
 
 Test(scramble, parse_string_of_valid_moves_should_succeed){
-    cube_t c1 = cube_create_new_cube();
     char* scrs[10] = {
         "R L F B U D",
         "R1 L1 F1 B1 U1 D1",
