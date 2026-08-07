@@ -2,23 +2,27 @@
 
 An optimal solver for the 3x3x3 Rubik's cube.
 
-*Work in progress.*
-
 ### Usage
 
-kube reads scrambles from stdin.
+See manpage (`doc/kube.1`) or run `kube --help`.
 
 ```
 $ kube --help
-Usage: kube [OPTION...]
+Usage: kube [OPTION...] [SCRAMBLE]
 kube -- an optimal Rubik's cube solver
 
   -f, --format=FORMAT        Specify scramble format
   -g, --gen                  Generate tables
-  -n, --num=NUM              Try to find NUM solutions
+  -i, --stdin                Read scrambles from standard input
+  -M, --max-depth=MAX        limit the search depth
+  -n, --num=NUM              Try to find NUM solutions. When multiple steps are
+                             given, kube does a beam search to find NUM
+                             solutions.
   -s, --step=STEP            Append a solving step (ordered). Can be repeated.
                              Examples:
-                               -s eo:max=7 -s dr:max=10 -s fin
+                               -s eo -s dr -s fin
+  -t, --threads=NUM          specify number of threads to use during search.
+                             defaults to number of cpus on the system
   -v, --verbose              Produce verbose output
   -?, --help                 Give this help list
       --usage                Give a short usage message
@@ -28,7 +32,7 @@ Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
 Report bugs to <oskarfj@oskarfj.no>.
-```
+`
 
 
 ### Build from source

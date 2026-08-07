@@ -39,12 +39,16 @@ void cube_move_apply_multiple_moves(cube_t* cube, int* moves_arr, size_t number_
 }
 
 bool cube_move_apply_move_string(cube_t* cube, const char* moves) {
-    size_t length;
-    int*   parsed_moves = parse_move_string(&length, moves);
-    if (parsed_moves != NULL)
+    // allocate a Solution to hold the moves
+    Solution s;
+    solution_init(&s);
+    if (parse_move_string(&s, moves))
     {
-        cube_move_apply_multiple_moves(cube, parsed_moves, length);
-        free(parsed_moves);
+        // cube_move_apply_multiple_moves(cube, parsed_moves, length);
+        for (size_t i = 0; i < s.length; i++){
+            cube_move_apply_move(cube, s.moves[i]);
+        }
+        solution_free(&s);
         return 0;
     }
     else

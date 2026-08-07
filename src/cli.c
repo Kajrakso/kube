@@ -85,92 +85,118 @@ void cube_print_cube(cube_t* cube) {
            es[4][0], cs[5][0], es[7][0], es[5][0], cs[7][0], es[6][0], cs[6][0]);
 }
 
-int* parse_move_string(size_t* out_length, const char* move_string) {
-    // Mapping from Singmaster notation to enum move values
-    const struct {
-        const char* notation;
-        enum move   value;
-    } move_map[] = {
-      {"U", U1}, {"U2", U2}, {"U'", U3}, {"D", D1}, {"D2", D2}, {"D'", D3},
-      {"L", L1}, {"L2", L2}, {"L'", L3}, {"R", R1}, {"R2", R2}, {"R'", R3},
-      {"F", F1}, {"F2", F2}, {"F'", F3}, {"B", B1}, {"B2", B2}, {"B'", B3},
-      {"U1", U1}, {"U3", U3}, {"D1", D1}, {"D3", D3},
-      {"L1", L1}, {"L3", L3}, {"R1", R1}, {"R3", R3},
-      {"F1", F1}, {"F3", F3}, {"B1", B1}, {"B3", B3},
+bool parse_move_string(Solution* result, const char* move_string) {
+    // TODO: add support for rotations, wide moves, slice moves and inverse moves
+
+    const struct {const char move; enum move value;} valid_base_moves[6] = {
+      {'U', U1}, {'D', D1}, {'L', L1}, {'R', R1}, {'F', F1}, {'B', B1},
     };
 
-    const size_t map_size = sizeof(move_map) / sizeof(move_map[0]);
+    // keep track of moves both on nomal and inverse,
+    // and store them in two "Solution"s.
+    Solution s, s_inv;
+    solution_init(&s);
+    solution_init(&s_inv);
 
-    // Split the input string into tokens
-    size_t len        = strlen(move_string) + 1;  // +1 for the null terminator
-    char*  input_copy = malloc(len);
-    if (input_copy)
-    {
-        memcpy(input_copy, move_string, len);
-    }
-    else
-    {
-        perror("Failed to allocate memory");
-        return NULL;
-    }
+    bool is_on_inv = false;
+    bool is_in_comment = false;
+    
+    size_t i = 0;
+    while(i < strlen(move_string)){
+    // for (size_t i = 0; i < strlen(move_string); i++){
+        char c = move_string[i];
+        char c_next = move_string[i + 1];
 
-    char* token = strtok(input_copy, " ");
+        if (c == '\n') {
+            is_in_comment = false;
+        }
 
-    // Allocate an initial array to store results (resize if needed)
-    size_t capacity = 16;  // Initial capacity
-    size_t length   = 0;   // Actual number of moves
-    int*   result   = malloc(capacity * sizeof(int));
-    if (!result)
-    {
-        perror("Failed to allocate memory");
-        free(input_copy);
-        return NULL;
-    }
+        if (is_in_comment || c == ' ' || c == '\n' || c == '\t' || c == '\r'){
+            i += 1;
+            continue;
+        }
 
-    // Process each token
-    while (token != NULL)
-    {
-        // Find the corresponding enum value
-        int found = 0;
-        for (size_t i = 0; i < map_size; i++)
-        {
-            if (strcmp(token, move_map[i].notation) == 0)
-            {
-                // Add to result array
-                if (length >= capacity)
-                {
-                    // Resize the array
-                    capacity *= 2;
-                    result = realloc(result, capacity * sizeof(int));
-                    if (!result)
-                    {
-                        perror("Failed to reallocate memory");
-                        free(input_copy);
-                        return NULL;
-                    }
+
+        if (c == '(') {
+            if (is_on_inv) {
+                fprintf(stderr, "Parsing error: Found ( following a (\n");
+                solution_free(&s); solution_free(&s_inv);
+                return false;
+            }
+            is_on_inv = true;
+            i += 1;
+            continue;
+        }
+
+        if (c == ')') {
+            if (!is_on_inv) {
+                fprintf(stderr, "Parsing error: Found ) without matching (\n");
+                solution_free(&s); solution_free(&s_inv);
+                return false;
+            }
+            is_on_inv = false;
+            i += 1;
+            continue;
+        }
+
+        if (c == '/') {
+            is_in_comment = true;
+            i += 1;
+            continue;
+        }
+
+        bool valid_move = false;
+        for (size_t j = 0; j < 6; j += 1) {
+            if (c == valid_base_moves[j].move) {
+                int move = valid_base_moves[j].value;
+
+                // check next char also!
+                if (c_next == '1'){
+                    move += 0;
+                    i += 1;
                 }
-                result[length++] = move_map[i].value;
-                found            = 1;
+                if (c_next == '2'){
+                    move += 1;
+                    i += 1;
+                }
+                if (c_next == '\'' || c_next == '3'){
+                    move += 2;
+                    i += 1;
+                }
+
+                valid_move = true;
+                solution_append(is_on_inv ? &s_inv : &s, move);
+                i += 1;
                 break;
             }
         }
 
-        // Handle invalid move
-        if (!found)
-        {
-            fprintf(stderr, "Invalid move: %s\n", token);
-            free(result);
-            return NULL;
+        if (!valid_move) {
+            fprintf(stderr, "Parsing error: Invalid move: %c\n", c);
+            solution_free(&s);
+            solution_free(&s_inv);
+            return false;
         }
 
-        // Get the next token
-        token = strtok(NULL, " ");
+
     }
 
+    if (is_on_inv) {
+        // then ( was not closed, raise!
+        fprintf(stderr, "Parsing error: ( was not closed\n");
+        solution_free(&s);
+        solution_free(&s_inv);
+        return false;
+    }
+
+    // for a scramble we do moves on inverse as premoves
+    *result = solution_merge_inverse_and_normal(&s_inv, &s);
+
     // Clean up and set output length
-    free(input_copy);
-    *out_length = length;
-    return result;
+    solution_free(&s);
+    solution_free(&s_inv);
+
+    return true;
 }
 
 void cube_print_solutions(int* solutions, int num_sols, int verbose) {
@@ -317,6 +343,9 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
     case 'g' :
         arguments->gen = 1;
         break;
+    case 'i' :
+        arguments->stdin_mode = 1;
+        break;
 
     case 'v' :
         arguments->verbose = 1;
@@ -396,6 +425,9 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
             arguments->depth_limit = (int)depth_limit;
         }
         break;
+    case ARGP_KEY_ARG:
+        arguments->scramble = strdup(arg);
+        break;
 
     default :
         return ARGP_ERR_UNKNOWN;
@@ -407,6 +439,8 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
 void set_default_values_arguments(struct arguments* arguments) {
     /* Default values. */
     arguments->verbose = 0;
+    arguments->stdin_mode = 0;
+    arguments->scramble = "";
     arguments->gen     = 0;
     arguments->format  = "singmaster";
     // arguments->steps[0]            = (struct step){.name = "fin", .max_depth = -1};
@@ -547,34 +581,51 @@ void cli_solver_cleanup(struct arguments arguments, solving_step** steps){
     }   
 }
 
+int solve(char* scr, struct arguments arguments, solving_step** steps){
+    cube_t c = cube_create_new_cube();
+    if (cube_scrambler_scramble_cube(&c, scr, arguments.format) != 0){
+        fprintf(stderr, "Error reading scramble.\n");
+        return 1;
+    };
+
+
+    struct timespec start, end;
+    timespec_get(&start, TIME_UTC);
+
+    if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
+    {
+        // we invoke a simple pipeline solver:
+        solver_pipeline(c, arguments, steps);
+    }
+    else
+    {
+        // we invoke a beam search since we have multiple steps and multiple solutions
+        solver_beam_search(c, arguments, steps);
+    }
+    timespec_get(&end, TIME_UTC);
+    if (arguments.verbose) {
+        double elapsed = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
+        printf("Time used (in seconds): %f\n", elapsed);
+    }
+
+    return 0;
+}
+
+void cli_solver_solve(struct arguments arguments, solving_step** steps){
+    solve(arguments.scramble, arguments, steps);
+}
+
 void cli_solver_solving_loop(struct arguments arguments, solving_step** steps){
     char* buf = malloc(BUF_SIZE);
     while (fgets(buf, BUF_SIZE, stdin))
     {
         buf[strcspn(buf, "\r\n")] = 0;
 
-        cube_t c = cube_create_new_cube();
-        cube_scrambler_scramble_cube(&c, buf, arguments.format);
-
-
-        struct timespec start, end;
-        timespec_get(&start, TIME_UTC);
-
-        if (arguments.step_count == 1 || arguments.number_of_solutions == 1)
-        {
-            // we invoke a simple pipeline solver:
-            solver_pipeline(c, arguments, steps);
+        if (solve(buf, arguments, steps) != 0) {
+            free(buf);
+            return;
         }
-        else
-        {
-            // we invoke a beam search since we have multiple steps and multiple solutions
-            solver_beam_search(c, arguments, steps);
-        }
-        timespec_get(&end, TIME_UTC);
-        if (arguments.verbose) {
-            double elapsed = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
-            printf("Time used (in seconds): %f\n", elapsed);
-        }
+
     }
     free(buf);
 }

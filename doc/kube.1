@@ -5,13 +5,16 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 
 .SH SYNOPSIS
 .B kube
-[\fB\-v\fR]
-[\fB\-n\fR \fINUM\fR]
-[\fB\-M\fR \fIMAX\fR]
 [\fB\-f\fR \fIFORMAT\fR]
-[\fB\-t\fR \fINUM\fR]
-[\fB\-s\fR \fISTEP\fR]...
 [\fB\-g\fR]
+[\fB\-i\fR]
+[\fB\-M\fR \fIMAX\fR]
+[\fB\-n\fR \fINUM\fR]
+[\fB\-s\fR \fISTEP\fR]...
+[\fB\-t\fR \fINUM\fR]
+[\fB\-v\fR]
+[\fB\-?\fR]
+[\fB\-V\fR]
 
 .SH DESCRIPTION
 .B kube
@@ -28,30 +31,11 @@ uses a beam search to find up to
 
 .PP
 .B kube
-reads scrambles from standard input using the format
-specified by \fIFORMAT\fR.
+reads the scramble provided as the [SCRAMBLE] argument.
+Multiple scrambles can by provided via stdin if the \fI-i\fR flag is set. They are separated by newlines.
+The scrambles format is specified by \fIFORMAT\fR.
 
 .SH OPTIONS
-.TP
-.BR \-v ", " \-\-verbose
-Produce verbose output. kube prints statistics about
-the solving process.
-
-.TP
-.BR \-n " " \fINUM\fR ", " \-\-num=NUM
-Try to find \fINUM\fR solutions. Default is 1.
-When multiple solving steps are provided,
-kube performs a beam search to find up to \fINUM\fR
-solutions.
-
-.TP
-.BR \-t " " \fINUM\fR
-Specify number of threads for the optimal solver.
-Defaults to the number of cpus on the system.
-
-.TP
-.BR \-M " " \fIMAX\fR ", " \-\-max-depth=MAX
-Limit the search depth to \fIMAX\fR moves. Default is 1024.
 
 .TP
 .BR \-f " " \fIFORMAT\fR ", " \-\-format=FORMAT
@@ -72,6 +56,26 @@ followed by edge memo (e.g., "abuv.efnt").
 .RE
 
 .TP
+.BR \-g ", " \-\-gen
+Generate pruning tables. This must be done before
+using the solver.
+
+.TP
+.BR \-i ", " \-\-stdin
+Read scrambles from stdin instead. Separate scrambles with newlines.
+
+.TP
+.BR \-M " " \fIMAX\fR ", " \-\-max-depth=MAX
+Limit the search depth to \fIMAX\fR moves. Default is 1024.
+
+.TP
+.BR \-n " " \fINUM\fR ", " \-\-num=NUM
+Try to find \fINUM\fR solutions. Default is 1.
+When multiple solving steps are provided,
+kube performs a beam search to find up to \fINUM\fR
+solutions.
+
+.TP
 .BR \-s " " \fISTEP\fR ", " \-\-step=STEP
 Append a solving step. Steps are executed in the
 order they are given. This option may be repeated.
@@ -87,11 +91,47 @@ kube -s eo -s dr -s fin
 .RE
 
 .TP
-.BR \-g ", " \-\-gen
-Generate pruning tables. This must be done before
-using the solver.
+.BR \-t " " \fINUM\fR
+Specify number of threads for the optimal solver.
+Defaults to the number of cpus on the system.
+
+.TP
+.BR \-v ", " \-\-verbose
+Produce verbose output. kube prints statistics about
+the solving process.
+
+.TP
+.BR \-? ", " \-\-help
+Gives a help list.
+
+.TP
+.BR \-V ", " \-\-version
+Print program version
+
 
 .SH EXAMPLES
+
+.PP
+Find an optimal solution for a simple scramble with comment:
+.PP
+.nf
+.RS
+.B
+kube -s fin "R U F // this is a comment and will be ignored by kube"
+.RE
+.fi
+
+.PP
+Find an optimal solution to dr and then to solved with niss eo:
+.PP
+.nf
+.RS
+.B
+kube --step dr --step fin "R' U' F L D2 B' U2 R2 B' D2 L2 B D2 L2 B2 R F D' B' D L2 B U R' U' F // scramble
+F' U (L U) // eo"
+.RE
+.fi
+
 .PP
 Find an optimal solution for the Ua-perm with verbose output:
 .PP

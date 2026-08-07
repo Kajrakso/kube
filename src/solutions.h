@@ -25,7 +25,10 @@ void     solution_append(Solution* s, int move);
 void     solution_append_multiple(Solution* s, int* moves, size_t number_of_moves);
 bool     solution_pop(Solution* s);
 Solution solution_copy(const Solution* src);
+// inverse moves appended
 Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solution_inverse);
+// inverse moves as premoves
+Solution solution_merge_inverse_and_normal(Solution* solution_inv, Solution* solution);
 
 /* =========================
    Solution Set (many solutions)

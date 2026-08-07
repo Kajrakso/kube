@@ -66,6 +66,19 @@ Solution solution_merge_normal_and_inverse(Solution* solution, Solution* solutio
     return out;
 }
 
+Solution solution_merge_inverse_and_normal(Solution* solution_inv, Solution* solution) {
+    Solution out;
+    solution_init(&out);
+    for (size_t k = solution_inv->length; k > 0; k--){
+        size_t move_idx = k - 1;
+        int move_inv = solution_inv->moves[move_idx];
+        int move     = get_inv_move(move_inv);
+        solution_append(&out, move);
+    }
+    solution_append_multiple(&out, solution->moves, solution->length);
+    return out;
+}
+
 /* =========================
    Solution Set (many solutions)
    ========================= */

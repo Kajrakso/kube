@@ -30,8 +30,9 @@ void cube_print_solution_set(SolutionSet* solution_set, int verbose);
 void cube_print_pipelinesolution_set(PipelineSolutionSet* p, int verbose);
 void cube_print_pipelinesolution(PipelineSolution* ps, int verbose);
 
-/* need to rewrite this function someday */
-int* parse_move_string(size_t* out_length, const char* move_string);
+/* Parse a string of moves and store the result in a Solution s.
+ * Supports moves on inverse in parentheses and comments using //. */
+bool parse_move_string(Solution* s, const char* move_string);
 
 struct step {
     char *name;
@@ -41,6 +42,8 @@ struct step {
 /* Used by main to communicate with parse_opt. */
 struct arguments {
     char* format;
+    char* scramble;
+    int   stdin_mode;
     int   verbose;
     int   gen;
     int   number_of_solutions;
@@ -60,6 +63,7 @@ void set_default_values_arguments(struct arguments* arguments);
 /* main should call these functions when we pass cli arguments */
 void cli_gen();
 int cli_solver_prepare(struct arguments arguments, solving_step** steps);
+void cli_solver_solve(struct arguments arguments, solving_step** steps);
 void cli_solver_solving_loop(struct arguments arguments, solving_step** steps);
 void cli_solver_cleanup(struct arguments arguments, solving_step** steps);
 
