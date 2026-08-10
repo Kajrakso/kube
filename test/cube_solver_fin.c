@@ -2,7 +2,7 @@
 
 #include "../src/cli.h"
 #include "../src/solver.h"
-#include "../src/utils.h"
+#include "../src/utils/utils.h"
 
 Test(solver_fin, solved_is_solved){
     cube_t c = cube_create_new_cube();

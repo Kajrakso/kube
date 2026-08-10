@@ -14,22 +14,22 @@ static char args_doc[] = "[SCRAMBLE]";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-  {"verbose", 'v', 0, 0, "Produce verbose output.", 0},
-  {"stdin", 'i', 0, 0, "Read scrambles from standard input.", 0},
-  // {"num", 'n', "NUM", 0,
-   //"Try to find NUM solutions. When multiple steps are given, kube does a beam search to find NUM solutions.",
-   //0},
-  //{"max-depth", 'M', "MAX", 0, "Limit the search depth to MAX moves.", 0},
-  {"threads", 't', "NUM", 0, "Specify number of threads to use during search. defaults to number of cpus on the system.", 0},
-  {"format", 'f', "FORMAT", 0, "Specify scramble format.", 0},
-  {"gen", 'g', 0, 0, "Generate tables.", 0},
-  {"step", 's', "STEP", 0,
-   "Append a solving step (ordered). Can be repeated. Max search depth can be specified by max=NUMBER, number of solutions can be specified by num=NUMBER.\n"
-   "Examples:\n"
-   "  -s eo -s dr -s fin\n"
-   "  -s eo:max=5 -s dr:max=12,num=100 -s fin\n",
-   0},
-  {0}};
+    {"define", 'D', "NAME=EXPR@MOVESET", 0,
+        "Define a custom solved state as a DSL expression (repeatable).\n"
+        "Example: -D f2l=solved:Dw -s f2l -s fin\n"
+        "See `man kube` for the DSL reference.", 0},
+    {"verbose", 'v', 0, 0, "Produce verbose output.", 0},
+    {"stdin", 'i', 0, 0, "Read scrambles from standard input.", 0},
+    {"threads", 't', "NUM", 0, "Specify number of threads to use during search. defaults to number of cpus on the system.", 0},
+    {"format", 'f', "FORMAT", 0, "Specify scramble format.", 0},
+    {"gen", 'g', 0, 0, "Generate tables.", 0},
+    {"step", 's', "STEP", 0,
+        "Append a solving step (ordered). Can be repeated. Max search depth can be specified by max=NUMBER, number of solutions can be specified by num=NUMBER.\n"
+            "Examples:\n"
+            "  -s eo -s dr -s fin\n"
+            "  -s eo:max=5 -s dr:max=12,num=100 -s fin\n",
+        0},
+    {0}};
 
 
 /* Our argp parser. */
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
     if (arguments.gen == 1)
     {
-        cli_gen();
+        cli_gen(arguments);
         return 0;
     }
 
@@ -60,38 +60,40 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // if (arguments.number_of_solutions >= 1)
-    // {
-        if (arguments.step_count < 0) {
-            print_help_hint("Step count is negative.");
-            return 1;
-        }
-        solving_step** steps = malloc((size_t)arguments.step_count * sizeof(solving_step*));
-        if (steps == NULL) {
-            fprintf(stderr, "Could not allocate space for steps\n");
-            return 1;
-        }
-       
-        cli_solver_prepare(arguments, steps);
-        if (arguments.stdin_mode == 1) {
-            if (strcmp(arguments.scramble, "") != 0) {
-                print_help_hint("Providing scrambles through both cli argument and stdin is not supported."); 
-            }
-            else {
-                cli_solver_solving_loop(arguments, steps);
-            }
-        }
-        else if (strcmp(arguments.scramble, "") != 0) {
-            cli_solver_solve(arguments, steps);
+    if (arguments.step_count < 0) {
+        print_help_hint("Step count is negative.");
+        return 1;
+    }
+
+    solving_step** steps = malloc((size_t)arguments.step_count * sizeof(solving_step*));
+    if (steps == NULL) {
+        fprintf(stderr, "Could not allocate space for steps\n");
+        return 1;
+    }
+   
+    if (cli_solver_prepare(arguments, steps) != 0){
+        free(steps);
+        return 1;
+    }
+
+    if (arguments.stdin_mode == 1) {
+        if (strcmp(arguments.scramble, "") != 0) {
+            print_help_hint("Providing scrambles through both cli argument and stdin is not supported."); 
         }
         else {
-            print_help_hint("No scramble provided");
+            cli_solver_solving_loop(arguments, steps);
         }
+    }
+    else if (strcmp(arguments.scramble, "") != 0) {
+        cli_solver_solve(arguments, steps);
+    }
+    else {
+        print_help_hint("No scramble provided");
+    }
 
-        cli_solver_cleanup(arguments, steps);
+    cli_solver_cleanup(arguments, steps);
 
-        free(steps);
-    // }
+    free(steps);
 
     return 0;
 }

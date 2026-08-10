@@ -10,7 +10,8 @@ ptable_data_t ptable_data_opt1 = {
     .read_value_ptable_func = &ptable_read_val_2_values_per_byte,
     .set_value_ptable_func = &ptable_set_val_2_values_per_byte,
     .ptable_is_loaded = false,
-    .ptable = NULL              // be careful! always check if the table is loaded before use!
+    .ptable = NULL,             // be careful! always check if the table is loaded before use!
+    .moveset_mask = MOVESET_HTM,
 };
 
 ptable_data_t ptable_data_dr = {
@@ -23,7 +24,8 @@ ptable_data_t ptable_data_dr = {
     .read_value_ptable_func = &ptable_read_val_2_values_per_byte,
     .set_value_ptable_func = &ptable_set_val_2_values_per_byte,
     .ptable_is_loaded = false,
-    .ptable = NULL              // be careful! always check if the table is loaded before use!
+    .ptable = NULL,              // be careful! always check if the table is loaded before use!
+    .moveset_mask = MOVESET_HTM,
 };
 
 ptable_data_t* enabled_ptables[] = {

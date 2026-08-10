@@ -1,10 +1,12 @@
+#include <time.h>
+#include <unistd.h>
+
+#include "utils/thread_pool.h"
+
 #include "tables.h"
 #include "index.h"
+#include "moveset.h"
 #include "tables_ptable_data.h"
-
-#include "thread_pool.h"
-#include <unistd.h>
-#include <time.h>
 
 // dummy value to fill table with. this is the "NULL" value.
 #define DUMMY_PTABLE_VALUE 15
@@ -58,8 +60,7 @@ void table_prune_gen_DLS(
         return;
     }
 
-    uint32_t mm = move_mask[previous_move];
-
+    uint32_t mm = moveset_follow(ctx->ptable_data->moveset_mask, previous_move);
     while (mm) {
         int move = __builtin_ctz(mm); // count trailing zeros
         mm &= mm - 1;  // clear lowest set bit
@@ -94,7 +95,12 @@ void neighbour_scan_task(int thread_id, void* task_ptr, void* local){
         ctx->decompose_index(ctx, index, components);
         
         bool found = false;
-        for (int move = 0; move < NMOVES; move++) {
+
+        uint32_t mm = ctx->ptable_data->moveset_mask;
+        while (mm) {
+            int move = __builtin_ctz(mm);
+            mm &= mm - 1;
+
             uint64_t next_components[ctx->num_components];
 
             memcpy(next_components, components, ctx->num_components * sizeof(uint64_t));

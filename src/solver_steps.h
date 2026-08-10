@@ -11,6 +11,7 @@ enum solving_step_type {
     SOLVE_HTR,
     SOLVE_DR,
     SOLVE_EO,
+    SOLVE_CUSTOM,
     SOLVE_CROSS_D,
     SOLVE_XCROSS_D,
     SOLVE_XXCROSS_D,
@@ -19,14 +20,28 @@ enum solving_step_type {
 };
 
 typedef struct solving_step {
-    // char name[FILENAME_MAX];
+    char* name;
     enum solving_step_type solving_type;
-    bool (*cube_is_solved)(cube_t* c);
+    //bool (*cube_is_solved)(cube_t* c);
+    bool (*cube_is_solved)(cube_t* c, void* data);
     ptable_data_t* p_data;
     size_t (*heuristic_func)(cube_t* c, ptable_data_t* p_data);
-    /* do we want to restrict the moveset? */
+    uint32_t moveset_mask;
+
     /* do we want to restrict the pruning table options? */
+
+    void* custom_data;
+    bool is_custom;
+    /* pruning tables for DSL (custom) steps: either one combined table or
+     * one table per T1 component; the heuristic is max-composed over them */
+    ptable_data_t** custom_ptables;
+    uint8_t n_custom_ptables;
+
 } solving_step;
+
+
+
+
 
 extern solving_step fin;
 extern solving_step htr;

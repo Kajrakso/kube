@@ -1,10 +1,46 @@
 #include "cli.h"
-
 #include "solver_pipeline.h"
+
+#include "moveset.h"
+#include "dsl.h"
+#include "dsl_compile.h"
+
+/* ------------------------------------ */
+/* global variables for the -D flag     */
+/* ------------------------------------ */
+
+dsl_compile_definition_t* custom_solved_definitions = NULL;
+int custom_solved_definitions_count = 0;
+
+/* ------------------------------------------ */
+/* functions related to handeling the -D flag */
+/* ------------------------------------------ */
+
+static bool valid_identifier(const char* s) {
+    if (!(isalpha((unsigned char)s[0]) || s[0] == '_')) return false;
+    for (const char* c = s + 1; *c; c++)
+        if (!(isalnum((unsigned char)*c) || *c == '_')) return false;
+    return true;
+}
+
+static bool is_reserved_definition_name(const char* s) {
+    for (size_t i = 0; i < sizeof(dsl_primitives) / sizeof(dsl_primitives[0]); i++) {
+        if (strcmp(s, dsl_primitives[i].name) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static int definition_index(const struct arguments* arguments, const char* name) {
+    for (int i = 0; i < arguments->def_count; i++)
+        if (strcmp(arguments->defs[i].name, name) == 0) return i;
+    return -1;
+}
 
 
 /* ------------------------------------ */
-/* string representations and printing  */
+/* string representations               */
 /* ------------------------------------ */
 
 static const char* corners_str_repr[NCORNERS] = {
@@ -15,10 +51,6 @@ static const char* edges_str_repr[NEDGES] = {
   "UB", "UR", "UF", "UL", "DF", "DR", "DB", "DL", "BL", "BR", "FR", "FL",
 };
 
-char* move_notation[] = {
-  "U", "U2", "U'", "D", "D2", "D'", "L", "L2", "L'",
-  "R", "R2", "R'", "F", "F2", "F'", "B", "B2", "B'",
-};
 
 static inline void fill_corner_strings(cube_t* cube, char cs[NCORNERS][3]) {
     for (int i = 0; i < NCORNERS; i++)
@@ -57,6 +89,11 @@ static inline void fill_edge_strings(cube_t* cube, char es[NEDGES][2]) {
     }
 }
 
+
+/* --------------------------------------- */
+/*                   printing              */
+/* --------------------------------------- */
+
 void cube_print_cube(cube_t* cube) {
     const char* cube_str_pattern = "      -------\n"
                                    "      |%c %c %c|\n"
@@ -85,119 +122,6 @@ void cube_print_cube(cube_t* cube) {
            es[4][0], cs[5][0], es[7][0], es[5][0], cs[7][0], es[6][0], cs[6][0]);
 }
 
-bool parse_move_string(Solution* result, const char* move_string) {
-    // TODO: add support for rotations, wide moves, slice moves and inverse moves
-
-    const struct {const char move; enum move value;} valid_base_moves[6] = {
-      {'U', U1}, {'D', D1}, {'L', L1}, {'R', R1}, {'F', F1}, {'B', B1},
-    };
-
-    // keep track of moves both on nomal and inverse,
-    // and store them in two "Solution"s.
-    Solution s, s_inv;
-    solution_init(&s);
-    solution_init(&s_inv);
-
-    bool is_on_inv = false;
-    bool is_in_comment = false;
-    
-    size_t i = 0;
-    while(i < strlen(move_string)){
-    // for (size_t i = 0; i < strlen(move_string); i++){
-        char c = move_string[i];
-        char c_next = move_string[i + 1];
-
-        if (c == '\n') {
-            is_in_comment = false;
-        }
-
-        if (is_in_comment || c == ' ' || c == '\n' || c == '\t' || c == '\r'){
-            i += 1;
-            continue;
-        }
-
-
-        if (c == '(') {
-            if (is_on_inv) {
-                fprintf(stderr, "Parsing error: Found ( following a (\n");
-                solution_free(&s); solution_free(&s_inv);
-                return false;
-            }
-            is_on_inv = true;
-            i += 1;
-            continue;
-        }
-
-        if (c == ')') {
-            if (!is_on_inv) {
-                fprintf(stderr, "Parsing error: Found ) without matching (\n");
-                solution_free(&s); solution_free(&s_inv);
-                return false;
-            }
-            is_on_inv = false;
-            i += 1;
-            continue;
-        }
-
-        if (c == '/') {
-            is_in_comment = true;
-            i += 1;
-            continue;
-        }
-
-        bool valid_move = false;
-        for (size_t j = 0; j < 6; j += 1) {
-            if (c == valid_base_moves[j].move) {
-                int move = valid_base_moves[j].value;
-
-                // check next char also!
-                if (c_next == '1'){
-                    move += 0;
-                    i += 1;
-                }
-                if (c_next == '2'){
-                    move += 1;
-                    i += 1;
-                }
-                if (c_next == '\'' || c_next == '3'){
-                    move += 2;
-                    i += 1;
-                }
-
-                valid_move = true;
-                solution_append(is_on_inv ? &s_inv : &s, move);
-                i += 1;
-                break;
-            }
-        }
-
-        if (!valid_move) {
-            fprintf(stderr, "Parsing error: Invalid move: %c\n", c);
-            solution_free(&s);
-            solution_free(&s_inv);
-            return false;
-        }
-
-
-    }
-
-    if (is_on_inv) {
-        // then ( was not closed, raise!
-        fprintf(stderr, "Parsing error: ( was not closed\n");
-        solution_free(&s);
-        solution_free(&s_inv);
-        return false;
-    }
-
-    // for a scramble we do moves on inverse as premoves
-    *result = solution_merge_inverse_and_normal(&s_inv, &s);
-
-    // Clean up and set output length
-    solution_free(&s);
-    solution_free(&s_inv);
-
-    return true;
-}
 
 void cube_print_solutions(int* solutions, int num_sols, int verbose) {
     for (int sol = 0; sol < num_sols; sol++)
@@ -322,6 +246,124 @@ void cube_print_pipelinesolution_set(PipelineSolutionSet* p, int verbose) {
 }
 
 
+/* ------------------------------ */
+/*           parsing              */
+/* ------------------------------ */
+
+bool parse_move_string(Solution* result, const char* move_string) {
+    // TODO: add support for rotations, wide moves, slice moves and inverse moves
+
+    const struct {const char move; enum move value;} valid_base_moves[6] = {
+      {'U', U1}, {'D', D1}, {'L', L1}, {'R', R1}, {'F', F1}, {'B', B1},
+    };
+
+    // keep track of moves both on nomal and inverse,
+    // and store them in two "Solution"s.
+    Solution s, s_inv;
+    solution_init(&s);
+    solution_init(&s_inv);
+
+    bool is_on_inv = false;
+    bool is_in_comment = false;
+    
+    size_t i = 0;
+    while(i < strlen(move_string)){
+    // for (size_t i = 0; i < strlen(move_string); i++){
+        char c = move_string[i];
+        char c_next = move_string[i + 1];
+
+        if (c == '\n') {
+            is_in_comment = false;
+        }
+
+        if (is_in_comment || c == ' ' || c == '\n' || c == '\t' || c == '\r'){
+            i += 1;
+            continue;
+        }
+
+
+        if (c == '(') {
+            if (is_on_inv) {
+                fprintf(stderr, "Parsing error: Found ( following a (\n");
+                solution_free(&s); solution_free(&s_inv);
+                return false;
+            }
+            is_on_inv = true;
+            i += 1;
+            continue;
+        }
+
+        if (c == ')') {
+            if (!is_on_inv) {
+                fprintf(stderr, "Parsing error: Found ) without matching (\n");
+                solution_free(&s); solution_free(&s_inv);
+                return false;
+            }
+            is_on_inv = false;
+            i += 1;
+            continue;
+        }
+
+        if (c == '/') {
+            is_in_comment = true;
+            i += 1;
+            continue;
+        }
+
+        bool valid_move = false;
+        for (size_t j = 0; j < 6; j += 1) {
+            if (c == valid_base_moves[j].move) {
+                int move = valid_base_moves[j].value;
+
+                // check next char also!
+                if (c_next == '1'){
+                    move += 0;
+                    i += 1;
+                }
+                if (c_next == '2'){
+                    move += 1;
+                    i += 1;
+                }
+                if (c_next == '\'' || c_next == '3'){
+                    move += 2;
+                    i += 1;
+                }
+
+                valid_move = true;
+                solution_append(is_on_inv ? &s_inv : &s, move);
+                i += 1;
+                break;
+            }
+        }
+
+        if (!valid_move) {
+            fprintf(stderr, "Parsing error: Invalid move: %c\n", c);
+            solution_free(&s);
+            solution_free(&s_inv);
+            return false;
+        }
+
+
+    }
+
+    if (is_on_inv) {
+        // then ( was not closed, raise!
+        fprintf(stderr, "Parsing error: ( was not closed\n");
+        solution_free(&s);
+        solution_free(&s_inv);
+        return false;
+    }
+
+    // for a scramble we do moves on inverse as premoves
+    *result = solution_merge_inverse_and_normal(&s_inv, &s);
+
+    // Clean up and set output length
+    solution_free(&s);
+    solution_free(&s_inv);
+
+    return true;
+}
+
 /* ----------------------- */
 /* arg parser */
 /* ----------------------- */
@@ -335,6 +377,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
 
     // for parsing number of solutions
     char* endptr;
+    char* spec;
     long  num;
     // long  depth_limit;
 
@@ -375,16 +418,13 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
 
         struct step* st = &arguments->steps[arguments->step_count++];
         st->max_depth   = -1;  // default
+        st->number_of_solutions = 1; // default
 
         // parse "eo:max=7,num=15"
-        char* spec = strdup(arg);
+        spec = strdup(arg);
         char* tok  = strtok(spec, ":");
 
         st->name = tok;
-        
-        // default values
-        st->max_depth = INT_MAX;
-        st->number_of_solutions = 1;
 
         tok = strtok(NULL, ",");
         while (tok)
@@ -394,42 +434,54 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
                 st->max_depth = atoi(tok + 4);
             else if (strncmp(tok, "num=", 4) == 0)
                 st->number_of_solutions = atoi(tok + 4);
-            // else if (strncmp(tok, "metric=", 7) == 0)
-            //     st->metric = tok + 7;
-            else
+            else {
+                free(spec);
                 argp_error(state, "Unknown step option: %s", tok);
+            }
 
             tok = strtok(NULL, ",");
         }
         break;
 
-    // case 'n' :
-    //     num = strtol(arg, &endptr, 10);
-    //
-    //     if (*endptr != '\0')
-    //     {
-    //         // Error: not a valid integer string
-    //         printf("Conversion error, non-integer characters found: %s. Using n = %i\n", endptr, 1);
-    //     }
-    //     else
-    //     {
-    //         arguments->number_of_solutions = (int)num;
-    //     }
-    //     break;
-    //
-    // case 'M' :
-    //     depth_limit = strtol(arg, &endptr, 10);
-    //
-    //     if (*endptr != '\0')
-    //     {
-    //         // Error: not a valid integer string
-    //         printf("Conversion error, non-integer characters found: %s. Using m = %i\n", endptr, 1);
-    //     }
-    //     else
-    //     {
-    //         arguments->depth_limit = (int)depth_limit;
-    //     }
-    //     break;
+    case 'D':
+        if (arguments->def_count >= MAX_DEFS){
+            argp_error(state, "Too many --define options"); 
+        }
+
+        spec = strdup(arg);
+        char* eq = strchr(spec, '=');
+
+        if (!eq) {
+            free(spec);
+            argp_error(state, "--define require NAME=EXPR");
+        }
+        *eq = '\0'; 
+
+        if (!valid_identifier(spec) || is_reserved_definition_name(spec)) {
+            free(spec);
+            argp_error(state, "invalid step name in --define");
+        }
+
+        /* Optional moveset suffix: NAME=EXPR@MOVESET */
+        uint32_t moveset_mask = MOVESET_HTM; /* default to all 18 moves in HTM. */
+        char* at = strchr(eq + 1, '@');
+        if (at) {
+            *at = '\0';
+            char err[128];
+            if (moveset_parse(at + 1, &moveset_mask, err, sizeof err) != 0) {
+                fprintf(stderr, "invalid moveset: %s\n", err);
+                free(spec);
+                argp_error(state, "invalid moveset");
+            }
+        }
+
+        struct dsl_def* d = &arguments->defs[arguments->def_count++];
+        d->name = strdup(spec);
+        d->expr = strdup(eq + 1);
+        d->moveset_mask = moveset_mask;
+        free(spec);
+        break;
+
     case ARGP_KEY_ARG:
         arguments->scramble = strdup(arg);
         break;
@@ -443,29 +495,29 @@ error_t parse_opt(int key, char* arg, struct argp_state* state) {
 
 void set_default_values_arguments(struct arguments* arguments) {
     /* Default values. */
-    arguments->verbose = 0;
-    arguments->stdin_mode = 0;
-    arguments->scramble = "";
-    arguments->gen     = 0;
-    arguments->format  = "singmaster";
-    // arguments->steps[0]            = (struct step){.name = "fin", .max_depth = -1};
-    arguments->step_count          = 0;
-    // arguments->number_of_solutions = 1;
-    // arguments->depth_limit = 1024;  // practically inifinite
+    arguments->verbose          = 0;
+    arguments->stdin_mode       = 0;
+    arguments->scramble         = "";
+    arguments->gen              = 0;
+    arguments->format           = "singmaster";
+    arguments->step_count       = 0;
+    arguments->def_count        = 0;
     
     long n = sysconf(_SC_NPROCESSORS_ONLN);
     arguments->number_of_threads = n > 0 ? (int)n : 1;
 }
 
 
-void cli_gen() {
+void cli_gen(struct arguments arguments) {
     printf("Starting to gen tables...\n");
+
+    // tabledir location
     char fname[strlen(tabledir) + FILENAME_MAX];
+    strcpy(fname, tabledir);
+    strcat(fname, "/");
 
     // this is needed since kube currently
     // does not generate this file itself
-    strcpy(fname, tabledir);
-    strcat(fname, "/");
     printf(
         "TEMP: If you want to solve to HTR you need to copy dr_subsets.dat to this location: %s\n",
         fname);
@@ -474,11 +526,11 @@ void cli_gen() {
     timespec_get(&start, TIME_UTC);
     cube_tables_generate();
 
+    /* TODO: This is kinda ugly. Fix. */
     char fname1[strlen(tabledir) + FILENAME_MAX];
     strcpy(fname1, tabledir);
     strcat(fname1, "/");
     strcat(fname1, "sym_table_e_index.dat");
-
 
     if (file_exists(fname1))
     {
@@ -507,6 +559,14 @@ void cli_gen() {
         }
     }
 
+
+    /* TODO: Should this be here? Do we want to save these to disk? */
+    if (dsl_compile_build_definitions(&custom_solved_definitions, &custom_solved_definitions_count, &arguments) == 0) {
+        // gen ptables and save to disk 
+    }
+    
+
+
     timespec_get(&end, TIME_UTC);
     double elapsed = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_nsec - start.tv_nsec) / 1e9;
     printf("Total time used for table gen (in seconds): %f\n", elapsed);
@@ -515,29 +575,39 @@ void cli_gen() {
 
 int cli_solver_prepare(struct arguments arguments, solving_step** steps){
     cube_tables_generate();  // generates tables for moves, symmetries, etc.
+    
+
+    if (dsl_compile_build_definitions(&custom_solved_definitions, &custom_solved_definitions_count, &arguments) != 0) {
+        return 1;
+    }
 
     // load all tables needed for all the steps.
     for (int i = 0; i < arguments.step_count; i++)
     {
         struct step s = arguments.steps[i];
-
         solving_step* ss = NULL;
-        if (strcmp(s.name, "fin") == 0)
-        {
-            ss = &fin;
+
+        // TODO: check these also against predefined steps
+        if      (strcmp(s.name, "fin")  == 0)    ss = &fin;
+        else if (strcmp(s.name, "dr")   == 0)    ss = &dr;
+        else if (strcmp(s.name, "eo")   == 0)    ss = &eo;
+        else if (strcmp(s.name, "htr")  == 0)    ss = &htr;
+        else {
+            int def_index = definition_index(&arguments, s.name);
+            printf("Definition index for %s is %i. custom_solved_definitions_count is %i\n", s.name, def_index, custom_solved_definitions_count);
+
+            if (def_index < 0) {
+                // TODO: fins all available steps programatically
+                fprintf(stderr, "Unknown step '%s'. Available: fin, dr, eo, htr, eofb", s.name);
+                for (int k = 0; k < arguments.def_count; k++)
+                    fprintf(stderr, ", %s", arguments.defs[k].name);
+                fprintf(stderr, "\n");
+                return 1;
+            }
+            custom_solved_definitions[def_index].referenced = true;
+            ss = &custom_solved_definitions[def_index].step;
         }
-        if (strcmp(s.name, "dr") == 0)
-        {
-            ss = &dr;
-        }
-        if (strcmp(s.name, "eo") == 0)
-        {
-            ss = &eo;
-        }
-        if (strcmp(s.name, "htr") == 0)
-        {
-            ss = &htr;
-        }
+
 
         if (ss == NULL)
         {
@@ -545,7 +615,20 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
             return 1;
         }
 
-        if (ss->p_data == NULL)
+        if (ss->custom_ptables != NULL && ss->n_custom_ptables > 0)
+        {
+            bool all_loaded = true;
+            for (int k = 0; k < ss->n_custom_ptables; k++)
+                if (cube_tables_load_ptable(ss->custom_ptables[k]) == 1)
+                    all_loaded = false;
+            if (!all_loaded)
+            {
+                fprintf(stderr, "\tstep %s got ptables but ", s.name);
+                fprintf(stderr, "\tcould not load ptable! Trying to solve step: %i\n",
+                        ss->solving_type);
+            }
+        }
+        else if (ss->p_data == NULL)
         {
             if (arguments.verbose == 1)
                 fprintf(stderr, "\tstep %s aint got ptable!\n", s.name);
@@ -558,7 +641,7 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
         }
 
         // load some special tables needed for some of the steps
-        if (ss->solving_type == SOLVE_FIN)
+        if (ss->p_data == &ptable_data_opt1)
         {
             cube_tables_load_sym_table_e_index();
         }
@@ -571,19 +654,40 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
         steps[i] = ss;
     }
 
+
+    /* warn-and-ignore unreferenced definitions */
+    for (int i = 0; i < custom_solved_definitions_count; i++)
+        if (!custom_solved_definitions[i].referenced)
+            fprintf(stderr, "note: definition '%s' is not used by any -s step (ignored)\n",
+                    custom_solved_definitions[i].name);
+
+
+
     return 0;
 }
+
+
+
+
+/* -------------------------------------------- */
+/*                    cli                       */
+/* -------------------------------------------- */
 
 void cli_solver_cleanup(struct arguments arguments, solving_step** steps){
     cube_tables_free();
     for (int i = 0; i < arguments.step_count; i++)
     {
         solving_step* ss = steps[i];
-        if (ss->p_data != NULL)
+        if (ss->custom_ptables != NULL && ss->n_custom_ptables > 0)
         {
+            for (int k = 0; k < ss->n_custom_ptables; k++)
+                free_ptable(ss->custom_ptables[k]);
+        }
+        else if (ss->p_data != NULL) {
             free_ptable(ss->p_data);
         }
     }   
+    dsl_compile_free_definitions(custom_solved_definitions, &custom_solved_definitions_count);
 }
 
 int solve(char* scr, struct arguments arguments, solving_step** steps){

@@ -1,9 +1,9 @@
 #include <string.h>
-
 #include "core/cube.h"
 #include "core/move.h"
-#include "utils.h"
 #include "tables.h"
+#include "utils/utils.h"
+
 
 cube_t cube_scrambler_get_handscrambled_cube() {
     cube_t cube = cube_create_new_cube();

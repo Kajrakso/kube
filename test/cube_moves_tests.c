@@ -4,7 +4,7 @@
 
 #include "../src/core/cube.h"
 #include "../src/core/move.h"
-#include "../src/utils.h"
+#include "../src/utils/utils.h"
 
 Test(standard_cube_moves, single_U_move) {
   cube_t cube = cube_create_new_cube();

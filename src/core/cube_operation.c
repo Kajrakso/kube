@@ -1,4 +1,4 @@
-#include "../utils.h"
+#include "../utils/utils.h"
 #include "sym.h"
 #include "cube_operation.h"
 

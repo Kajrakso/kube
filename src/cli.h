@@ -14,6 +14,7 @@
 #include "solutions.h"
 
 #define MAX_STEPS 32
+#define MAX_DEFS 32
 #define BUF_SIZE 4096
 
 /* Prints the cube in a human-readable format. */
@@ -40,16 +41,24 @@ struct step {
     int number_of_solutions;
 };
 
+struct dsl_def {
+    char* name;
+    char* expr;
+    uint32_t moveset_mask;
+};
+
 /* Used by main to communicate with parse_opt. */
 struct arguments {
     char* format;
     char* scramble;
+
     int   stdin_mode;
     int   verbose;
     int   gen;
-    // int   number_of_solutions;
-    // int   depth_limit;
     int   number_of_threads;
+
+    struct dsl_def defs[MAX_DEFS];
+    int def_count;
 
     struct step steps[MAX_STEPS];
     int step_count;
@@ -62,7 +71,7 @@ void set_default_values_arguments(struct arguments* arguments);
 
 
 /* main should call these functions when we pass cli arguments */
-void cli_gen();
+void cli_gen(struct arguments arguments);
 int cli_solver_prepare(struct arguments arguments, solving_step** steps);
 void cli_solver_solve(struct arguments arguments, solving_step** steps);
 void cli_solver_solving_loop(struct arguments arguments, solving_step** steps);

@@ -8,7 +8,7 @@
 #include "core/cube.h"
 #include "core/move.h"
 #include "core/sym.h"
-#include "utils.h"
+#include "utils/utils.h"
 #include "env.h"
 
 #define FACTORIAL8 40320
@@ -18,17 +18,21 @@
 /* type used to store information about each
  * type of pruning table. */
 typedef struct ptable_info_t {
-    char name[FILENAME_MAX];
-    unsigned long long ptable_size; /* in bytes */
-    unsigned long long number_of_elements; /* can be larger than ptable_size */
-    char filename[FILENAME_MAX];
-    uint64_t (*cube_to_index_func) (cube_t* cube, axes ax);
-    void (*gen_ptable_func)(void);
-    uint8_t (*read_value_ptable_func)(uint64_t i, uint8_t* ptable);
-    void (*set_value_ptable_func)(uint64_t i, uint8_t p, uint8_t* ptable);
-    bool ptable_is_loaded;
-    void* ptable;
-    /* moveset? */
+    char                name[FILENAME_MAX];
+    unsigned long long  ptable_size; /* in bytes */
+    unsigned long long  number_of_elements; /* can be larger than ptable_size */
+    char                filename[FILENAME_MAX];
+
+    uint64_t            (*cube_to_index_func) (cube_t* cube, axes ax);
+    void                (*gen_ptable_func)(void);
+    uint8_t             (*read_value_ptable_func)(uint64_t i, uint8_t* ptable);
+    void                (*set_value_ptable_func)(uint64_t i, uint8_t p, uint8_t* ptable);
+
+    bool                ptable_is_loaded;
+    void*               ptable;
+
+    uint32_t            moveset_mask;
+
     /* prune function? */
 } ptable_data_t;
 

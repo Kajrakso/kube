@@ -6,14 +6,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tables.h"
 #include "core/cube.h"
 #include "core/cube_state.h"
+
+#include "utils/thread_pool.h"
+
+#include "tables.h"
 #include "index.h"
 #include "solver_steps.h"
-
 #include "solutions.h"
-#include "thread_pool.h"
+#include "moveset.h"
 
 
 struct solver_stats {

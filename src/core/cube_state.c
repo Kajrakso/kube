@@ -319,7 +319,7 @@ bool cube_state_is_dr(cube_t* cube) {
 
 
 
-#include "../utils.h"
+#include "../utils/utils.h"
 #include "../tables.h"
 
 uint64_t cube_to_cp_index(cube_t* cube){

@@ -5,7 +5,7 @@
 
 #include "core/cube.h"
 #include "tables.h"
-#include "utils.h"
+#include "utils/utils.h"
 
 /* TODO: reconsider the way to calculate these indeces. It need to be fast. */
 

@@ -2,6 +2,7 @@
 #define TABLES_PTABLE_DATA_H
 
 #include "index.h"
+#include "moveset.h"
 
 
 extern ptable_data_t* enabled_ptables[];

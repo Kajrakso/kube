@@ -67,6 +67,14 @@ TestSuite(cube_index, .disabled=false, .init=setup_index, .fini=teardown_index);
 TestSuite(fix_orientation, .disabled=false, .init=setup, .fini=teardown);
 TestSuite(cclass, .disabled=false, .init=setup, .fini=teardown);
 
+TestSuite(sha1, .disabled=false);
+TestSuite(dsl_parse, .disabled=false);
+TestSuite(dsl_eval, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(dsl_equiv, .disabled=false, .init=setup, .fini=teardown);
+
+TestSuite(dsl_debug, .disabled=false);
+// TestSuite(dsl_ptable, .disabled=false, .init=setup, .fini=teardown);
+
 TestSuite(solver_fin, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
 TestSuite(solver_multiple_solutions, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
 

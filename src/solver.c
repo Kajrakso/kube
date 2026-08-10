@@ -77,7 +77,7 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
 
     if (remaining_moves == 0)
     {
-        if (ss->cube_is_solved(cube))
+        if (ss->cube_is_solved(cube, ss->custom_data))
         {
             solutionset_add_copy(solution_set, temp_solution);
             stats->num_sol_found++;
@@ -102,7 +102,7 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
     }
 
     // we extract the move_mask for this node.
-    uint32_t mm = move_mask[prev_move];
+    uint32_t mm = moveset_follow(moveset_eff(ss->moveset_mask), prev_move);
 
     while (mm) {
         int move = __builtin_ctz(mm); // count trailing zeros

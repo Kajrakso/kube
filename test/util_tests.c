@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../src/utils.h"
+#include "../src/utils/utils.h"
 
 Test(util_tests, arr_eq) {
   uint16_t arr1[] = {1, 2, 3, 4};
