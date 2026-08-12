@@ -17,7 +17,7 @@
 
 /* type used to store information about each
  * type of pruning table. */
-typedef struct ptable_info_t {
+typedef struct {
     char                name[FILENAME_MAX];
     unsigned long long  ptable_size; /* in bytes */
     unsigned long long  number_of_elements; /* can be larger than ptable_size */
@@ -36,6 +36,27 @@ typedef struct ptable_info_t {
     /* prune function? */
 } ptable_data_t;
 
+/* Context used by the pruning table generation in tables_prune.c */
+typedef struct ptable_gen_ctx_t {
+    ptable_data_t* ptable_data;
+
+    /* Table-specific behavior (4 function pointers): */
+    bool     (*setup)(struct ptable_gen_ctx_t*);
+    uint64_t (*init)(struct ptable_gen_ctx_t*, cube_t*, uint64_t*);
+    uint64_t (*apply_move)(struct ptable_gen_ctx_t*, uint64_t*, int);
+    void     (*decompose_index)(struct ptable_gen_ctx_t*, uint64_t, uint64_t*);
+
+    /* Configuration: */
+    uint8_t     dls_max_depth;        // H:10, DR:9
+    uint8_t     nbhr_min_depth;       // H:10, DR:9
+    uint8_t     nbhr_max_depth_excl;  // H:13, DR:12
+    size_t      num_components;       // H:4, DR:3
+
+    /* H-specific data (unused by DR): */
+    uint64_t* sym_table_e_index;
+    uint64_t* cclass_index_cindex_rep;
+} ptable_gen_ctx_t;
+
 /* moves */
 extern uint16_t move_table_corner_transformation[NMOVES][NCORNERCUBIES];
 extern uint16_t move_table_edge_transformation[NMOVES][NEDGECUBIES];
@@ -49,23 +70,26 @@ void gen_move_tables();
 void initialize_sym_tables();
 void gen_sym_tables();
 
-//! 19.04.2025: These are for testing!
-
+/* We reduce the corner index by the symmetries of the cube,
+ * so we generate a table to keep track of which representative
+ * is being used for all the conjugacy classes. Each corner index (the key in the table)
+ * maps to an instance of the following struct: */
 struct c_index_cclass_sym {
-  uint64_t cclass_i;
-  uint64_t cclass;
-  uint8_t sym;
+  uint64_t cclass_i; // keeps a running count of the number of conjugacy classes
+  uint64_t cclass;   // the index representative of the conjugacy class
+  uint8_t sym;       // symmetry that was applied to the key in order to reach the representative. 
 };
+
+extern struct c_index_cclass_sym cclass_table[NCCU * NCO];
 
 /* a move mask prevents us from checking unnecessary move sequences.
 "R R" is the same as "R2". For two subsequent moves on the same axes
-we only do one: "R L" and "L R" for instance. */
+we only do one: "R L" and "L R" for instance. See movemask.h and movemask.c also. */
 extern uint32_t move_mask[NMOVES + 1];
 extern uint64_t move_table_ccu_index[NCCU][NMOVES];
 extern uint64_t move_table_coud_index[NCO][NMOVES];
 extern uint64_t move_table_ece_index[NECE][NMOVES];
 extern uint64_t move_table_eofb_index[NEO][NMOVES];
-extern struct c_index_cclass_sym cclass_table[NCCU * NCO];
 
 /* we want to generate all sequences of 4 moves
  * and then sort them based on information gained

@@ -19,31 +19,11 @@
 // coordinate (index) has value N. When to start 
 // this neighbour scan is just based on my "gefühl".
 
-struct ptable_gen_ctx {
-    ptable_data_t* ptable_data;
-
-    /* Table-specific behavior (4 function pointers): */
-    bool     (*setup)(struct ptable_gen_ctx*);
-    uint64_t (*init)(struct ptable_gen_ctx*, cube_t*, uint64_t*);
-    uint64_t (*apply_move)(struct ptable_gen_ctx*, uint64_t*, int);
-    void     (*decompose_index)(struct ptable_gen_ctx*, uint64_t, uint64_t*);
-
-    /* Configuration: */
-    uint8_t     dls_max_depth;        // H:10, DR:9
-    uint8_t     nbhr_min_depth;       // H:10, DR:9
-    uint8_t     nbhr_max_depth_excl;  // H:13, DR:12
-    size_t      num_components;       // H:4, DR:3
-
-    /* H-specific data (unused by DR): */
-    uint64_t* sym_table_e_index;
-    uint64_t* cclass_index_cindex_rep;
-};
-
 typedef struct {
     uint64_t start_index, end_index;
     uint8_t  depth;
     uint8_t* ptable;
-    struct ptable_gen_ctx* ctx;
+    ptable_gen_ctx_t* ctx;
 } NeighbourScanTask;
 
 // DLS = Depth limited search
@@ -51,7 +31,7 @@ void table_prune_gen_DLS(
     int num_moves_done,
     int remaining_moves,
     int previous_move,
-    struct ptable_gen_ctx* ctx,
+    ptable_gen_ctx_t* ctx,
     uint64_t previous_index,
     uint64_t* previous_components,
     uint8_t* ptable
@@ -84,7 +64,7 @@ void table_prune_gen_DLS(
 
 void neighbour_scan_task(int thread_id, void* task_ptr, void* local){
     NeighbourScanTask* task = (NeighbourScanTask*)task_ptr;
-    struct ptable_gen_ctx* ctx = task->ctx;
+    ptable_gen_ctx_t* ctx = task->ctx;
 
     for (uint64_t index = task->start_index; index < task->end_index; index++) {
 
@@ -121,7 +101,7 @@ void neighbour_scan_task(int thread_id, void* task_ptr, void* local){
     }
 }
 
-void table_prune_gen(struct ptable_gen_ctx* ctx){
+void table_prune_gen(ptable_gen_ctx_t* ctx){
     if (!ctx->setup(ctx)){
         fprintf(stderr, "Setup for table generation failed. Aborting...\n");
         return;
@@ -213,7 +193,7 @@ void table_prune_gen(struct ptable_gen_ctx* ctx){
 /* ----------------------------------------------------- */
 
 /* opt1 table */
-bool setup_opt1(struct ptable_gen_ctx* ctx){
+bool setup_opt1(ptable_gen_ctx_t* ctx){
     cube_tables_load_sym_table_e_index();
     uint64_t* sym_table_e_index = (uint64_t*) get_sym_table_e_index();
     if (!sym_table_e_index)
@@ -248,7 +228,7 @@ bool setup_opt1(struct ptable_gen_ctx* ctx){
     ctx->cclass_index_cindex_rep = cclass_index_cindex_rep;
     return true;
 }
-uint64_t init_opt1(struct ptable_gen_ctx* ctx, cube_t* cube, uint64_t* components){
+uint64_t init_opt1(ptable_gen_ctx_t* ctx, cube_t* cube, uint64_t* components){
     uint64_t ccu  = cube_to_cc_index(cube, UD);
     uint64_t coud = cube_to_co_index(cube, UD);
     uint64_t ece  = cube_to_ec_index(cube, UD);
@@ -261,7 +241,7 @@ uint64_t init_opt1(struct ptable_gen_ctx* ctx, cube_t* cube, uint64_t* component
     return index;
 }
 
-uint64_t apply_move_opt1(struct ptable_gen_ctx* ctx, uint64_t* components, int move){
+uint64_t apply_move_opt1(ptable_gen_ctx_t* ctx, uint64_t* components, int move){
     uint64_t ccu = components[0];
     uint64_t coud = components[1];
     uint64_t ece = components[2];
@@ -287,7 +267,7 @@ uint64_t apply_move_opt1(struct ptable_gen_ctx* ctx, uint64_t* components, int m
     return p2;
 }
 
-void decompose_index_opt1(struct ptable_gen_ctx* ctx, uint64_t index, uint64_t* components){
+void decompose_index_opt1(ptable_gen_ctx_t* ctx, uint64_t index, uint64_t* components){
     uint64_t cclass_i = index % NCCLASS;
     uint64_t ei       = index / NCCLASS;
 
@@ -306,14 +286,14 @@ void decompose_index_opt1(struct ptable_gen_ctx* ctx, uint64_t index, uint64_t* 
 
 /* DR table */
 
-bool setup_DR(struct ptable_gen_ctx* ctx){
+bool setup_DR(ptable_gen_ctx_t* ctx){
     gen_move_table_coud_index();
     gen_move_table_eofb_index();
     gen_move_table_ece_index();
     return true;
 }
 
-uint64_t init_DR(struct ptable_gen_ctx* ctx, cube_t* cube, uint64_t* components){
+uint64_t init_DR(ptable_gen_ctx_t* ctx, cube_t* cube, uint64_t* components){
     uint64_t coud  = cube_to_co_index(cube, UD);
     uint64_t eofb  = cube_to_eo_index(cube, UD);
     uint64_t eceud = cube_to_ec_index(cube, UD);
@@ -326,7 +306,7 @@ uint64_t init_DR(struct ptable_gen_ctx* ctx, cube_t* cube, uint64_t* components)
     return index;
 }
 
-uint64_t apply_move_DR(struct ptable_gen_ctx* ctx, uint64_t* components, int move){
+uint64_t apply_move_DR(ptable_gen_ctx_t* ctx, uint64_t* components, int move){
     uint64_t coud = components[0];
     uint64_t eofb = components[1];
     uint64_t ece = components[2];
@@ -343,7 +323,7 @@ uint64_t apply_move_DR(struct ptable_gen_ctx* ctx, uint64_t* components, int mov
 
     return p2;
 }
-void decompose_index_DR(struct ptable_gen_ctx* ctx, uint64_t index, uint64_t* components){
+void decompose_index_DR(ptable_gen_ctx_t* ctx, uint64_t index, uint64_t* components){
     uint64_t coud = index % NCO;
     uint64_t eofb = (index / NCO) % NEO;
     uint64_t ece  = (index / NCO) / NEO;
@@ -354,7 +334,7 @@ void decompose_index_DR(struct ptable_gen_ctx* ctx, uint64_t index, uint64_t* co
 }
 
 void gen_ptable_DR(){
-    struct ptable_gen_ctx ctx = {
+    ptable_gen_ctx_t ctx = {
         .ptable_data = &ptable_data_dr,
         .num_components = 3,
         .nbhr_max_depth_excl = 12,
@@ -370,7 +350,7 @@ void gen_ptable_DR(){
 }
 
 void gen_ptable_opt1(){
-    struct ptable_gen_ctx ctx = {
+    ptable_gen_ctx_t ctx = {
         .ptable_data = &ptable_data_opt1,
         .num_components = 4,
         .nbhr_max_depth_excl = 13,
