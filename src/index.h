@@ -46,6 +46,33 @@ uint64_t cube_to_c_index(cube_t* cube, axes ax);
 
 uint64_t cube_to_e_index(cube_t* cube, axes ax);
 
+
+/* partial index */
+
+uint64_t cube_to_partial_cp_index(cube_t* cube, axes ax, int* corners, int n);
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial co index for n corners. */
+uint64_t cube_to_partial_co_index(cube_t* cube, axes ax, int* corners, int n);
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial ep index for n edges. */
+uint64_t cube_to_partial_ep_index(cube_t* cube, axes ax, int* edges, int n);
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial eo index for n edges. */
+uint64_t cube_to_partial_eo_index(cube_t* cube, axes ax, int* edges, int n);
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial e index for n edges. */
+uint64_t cube_to_partial_e_index(cube_t* cube, axes ax, int* edges, int n);
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial c index for n corners. */
+uint64_t cube_to_partial_c_index(cube_t* cube, axes ax, int* corners, int n);
+
+
+
 /* NOTE: the cube returned is not necessarily a valid cube.
  * Also, these function are not optimised. */
 cube_t coud_index_to_cube(uint64_t coud_i);
