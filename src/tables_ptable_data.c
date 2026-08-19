@@ -12,6 +12,7 @@ ptable_data_t ptable_data_opt1 = {
     .ptable_is_loaded = false,
     .ptable = NULL,             // be careful! always check if the table is loaded before use!
     .moveset_mask = MOVESET_HTM,
+    .is_custom = false,
 };
 
 ptable_data_t ptable_data_dr = {
@@ -26,6 +27,7 @@ ptable_data_t ptable_data_dr = {
     .ptable_is_loaded = false,
     .ptable = NULL,              // be careful! always check if the table is loaded before use!
     .moveset_mask = MOVESET_HTM,
+    .is_custom = false,
 };
 
 ptable_data_t* enabled_ptables[] = {

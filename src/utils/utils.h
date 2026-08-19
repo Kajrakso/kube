@@ -15,6 +15,9 @@ bool arr_perm_parity_is_even(uint16_t* arr, int n);
 /* Shuffles an array. */
 void arr_shuffle(uint16_t* arr, int n);
 
+/* */
+int factorial(int n);
+
 /* Swaps two uint16_t values. */
 void swap_uint16(uint16_t* a, uint16_t* b);
 

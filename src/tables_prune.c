@@ -34,6 +34,7 @@ void table_prune_gen_DLS(
     ptable_gen_ctx_t* ctx,
     uint64_t previous_index,
     uint64_t* previous_components,
+    cube_t previous_cube,
     uint8_t* ptable
 ){
     if (remaining_moves == 0) {
@@ -48,7 +49,15 @@ void table_prune_gen_DLS(
 
         uint64_t components[ctx->num_components];
         memcpy(components, previous_components, ctx->num_components * sizeof(uint64_t));
-        uint64_t index = ctx->apply_move(ctx, components, move);
+        uint64_t index;
+        cube_t c2 = previous_cube;
+        if (ctx->apply_move != NULL){
+            index = ctx->apply_move(ctx, components, move);
+        }
+        else {
+            cube_move_apply_move(&c2, move);
+            index = ctx->init(ctx, &c2, components);
+        }
 
         if (index == previous_index) {
             continue;
@@ -58,7 +67,7 @@ void table_prune_gen_DLS(
             ctx->ptable_data->set_value_ptable_func(index, (uint8_t) (num_moves_done + 1), ptable);
         }
 
-        table_prune_gen_DLS(num_moves_done + 1, remaining_moves - 1, move, ctx, index, components, ptable);
+        table_prune_gen_DLS(num_moves_done + 1, remaining_moves - 1, move, ctx, index, components, c2, ptable);
     } 
 }
 
@@ -84,7 +93,14 @@ void neighbour_scan_task(int thread_id, void* task_ptr, void* local){
             uint64_t next_components[ctx->num_components];
 
             memcpy(next_components, components, ctx->num_components * sizeof(uint64_t));
-            uint64_t next_index = ctx->apply_move(ctx, next_components, move);
+            uint64_t next_index;
+            if (ctx->apply_move != NULL){
+                next_index= ctx->apply_move(ctx, next_components, move);
+            }
+            else {
+                fprintf(stderr, "Neighbour scan is not supported without a ctx->apply_move function.\n");
+                return;
+            }
 
             if (ctx->ptable_data->read_value_ptable_func(next_index, task->ptable) == task->depth - 1) {
                 ctx->ptable_data->set_value_ptable_func(index, task->depth, task->ptable);
@@ -102,7 +118,18 @@ void neighbour_scan_task(int thread_id, void* task_ptr, void* local){
 }
 
 void table_prune_gen(ptable_gen_ctx_t* ctx){
-    if (!ctx->setup(ctx)){
+    fprintf(stderr, "table_prune_gen was called\n");
+    if (ctx == NULL) {
+        fprintf(stderr, "ctx is NULL. Aborting...\n");
+        return;
+    }
+
+    if (ctx->apply_move == NULL && ctx->dls_max_depth < ctx->nbhr_max_depth_excl) {
+        fprintf(stderr, "ctx->apply_move is NULL and dls_max_depth < nbhr_max_depth_excl. A apply_move function has to be defined when using a neighbour scan to fill the table. Aborting...\n");
+        return;
+    }
+
+    if (ctx->setup != NULL && !ctx->setup(ctx)){
         fprintf(stderr, "Setup for table generation failed. Aborting...\n");
         return;
     }
@@ -129,7 +156,7 @@ void table_prune_gen(ptable_gen_ctx_t* ctx){
     for (uint8_t depth = 0; depth < ctx->dls_max_depth; depth++)
     {
         fprintf(stderr, "Searching at depth %i\n", depth);
-        table_prune_gen_DLS(0, depth, NULLMOVE, ctx, index, components, ptable);
+        table_prune_gen_DLS(0, depth, NULLMOVE, ctx, index, components, cube, ptable);
     }
 
     // start multithreaded neighbour filling sweep
@@ -333,6 +360,8 @@ void decompose_index_DR(ptable_gen_ctx_t* ctx, uint64_t index, uint64_t* compone
     components[2] = ece;
 }
 
+/* gen functions for predefined tables */
+
 void gen_ptable_DR(){
     ptable_gen_ctx_t ctx = {
         .ptable_data = &ptable_data_dr,
@@ -365,6 +394,7 @@ void gen_ptable_opt1(){
     table_prune_gen(&ctx);
 }
 
+
 /* ------------------------------------------------------ */
 /* ------------------------- other ---------------------- */
 /* ------------------------------------------------------ */
@@ -389,14 +419,7 @@ void analyze_ptable(ptable_data_t ptable_data){
     for (uint64_t i = 0; i < ptable_data.number_of_elements; i++)
     {
         uint8_t val = ptable_data.read_value_ptable_func(i, ptable);
-        // if (val == 15)
-        // {
-        //     other++;
-        // }
-        // else
-        // {
-            stats[val]++;
-        // }
+        stats[val]++;
     }
 
     for (int i = 0; i <= 20; i++)
@@ -441,7 +464,6 @@ bool parse_cp_to_dr_subset_file_and_save_dr_subset_table(char* filename){
         cp_subsets[perm_to_fact(arr, NCORNERS)] = label;
     }
 
-
     /* end of TODO */
     char fname[strlen(tabledir) + FILENAME_MAX];
 
@@ -457,3 +479,31 @@ bool parse_cp_to_dr_subset_file_and_save_dr_subset_table(char* filename){
 
 
 }
+
+
+/* ====================== */
+/* PRINTING FOR DEBUGGING */
+/* ====================== */
+
+void tables_prune_print_ptable_data_t(ptable_data_t* pd, FILE* out){
+    fprintf(out, "ptable_data_t* pd contains the following fields:\n");
+    fprintf(out, "{\n");
+    fprintf(out, "\tpd->name = %s\n", pd->name);
+    fprintf(out, "\tpd->ptable_size = %llu\n", pd->ptable_size);
+    fprintf(out, "\tpd->number_of_elements = %llu\n", pd->number_of_elements);
+    fprintf(out, "\tpd->filename = %s\n", pd->filename);
+    fprintf(out, "\n");
+    fprintf(out, "\tpd->cube_to_index_func = %llu\n", pd->cube_to_index_func);
+    fprintf(out, "\tpd->gen_ptable_funx = %llu\n", pd->gen_ptable_func);
+    fprintf(out, "\tpd->read_value_ptable_func = %llu\n", pd->read_value_ptable_func);
+    fprintf(out, "\tpd->set_value_ptable_func = %llu\n", pd->set_value_ptable_func);
+    fprintf(out, "\n");
+    fprintf(out, "\tpd->ptable_is_loaded = %i\n", pd->ptable_is_loaded);
+    fprintf(out, "\tpd->ptable = %llu\n", pd->ptable);
+    fprintf(out, "\tpd->moveset_mask = %i\n", pd->moveset_mask);
+    fprintf(out, "\n");
+    fprintf(out, "\tpd->is_custom = %i\n", pd->is_custom);
+    fprintf(out, "\tpd->custom_data = %llu\n", pd->custom_data);
+    fprintf(out, "}\n");
+}
+
