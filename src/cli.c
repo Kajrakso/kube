@@ -637,7 +637,10 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
             (ss->p_data != NULL &&
              ss->p_data->cube_to_index_func == ptable_data_opt1.cube_to_index_func))
         {
-            cube_tables_load_sym_table_e_index();
+            if (cube_tables_load_sym_table_e_index() != 0) {
+                fprintf(stderr, "\tstep %s needs sym_table_e_index but it could not be loaded!\n", s.name);
+                return 1;
+            }
         }
 
         if (ss->solving_type == SOLVE_HTR)

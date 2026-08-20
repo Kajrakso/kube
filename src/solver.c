@@ -247,6 +247,17 @@ bool cube_solvers_solve_cube(
             }
         }
 
+        if (ss->p_data != NULL &&
+            ss->p_data->cube_to_index_func == ptable_data_opt1.cube_to_index_func)
+        {
+            void* _t = get_sym_table_e_index();
+            if (!_t)
+            {
+                fprintf(stderr, "\tCould not load sym_table_e_index. Have you initialized it?\n");
+                return false;
+            }
+        }
+
         IDA(cube, ss, stats, solution_set, number_of_solutions, verbose, depth_limit);
     }
     if (verbose == 1)

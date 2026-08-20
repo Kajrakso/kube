@@ -171,9 +171,8 @@ void dsl_compile_free_definitions(dsl_compile_definition_t* defs, int* n_defs) {
         }
 
         /* For MOD+fin (wrapper) cases: p_data is a heap-allocated wrapper ptable
-         * whose custom_data holds a dsl_prune_step_ctx_t. The wrapper's mmap'd
-         * ptable is NOT freed here — it shares with ptable_data_opt1 which is
-         * freed at program exit by cube_tables_free(). */
+         * whose custom_data holds a dsl_prune_step_ctx_t. The wrapper has its own
+         * mmap'd ptable (loaded independently from ptable_data_opt1), so free it. */
         if (df->step.is_custom && df->step.custom_ptables == NULL &&
             df->step.p_data != NULL &&
             df->step.p_data != &ptable_data_opt1) {
@@ -181,6 +180,7 @@ void dsl_compile_free_definitions(dsl_compile_definition_t* defs, int* n_defs) {
                 (dsl_prune_step_ctx_t*)df->step.p_data->custom_data;
             if (sctx)
                 free(sctx);
+            free_ptable(df->step.p_data);
             free(df->step.p_data);
         }
 
