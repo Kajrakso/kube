@@ -598,7 +598,7 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
             int def_index = definition_index(&arguments, s.name);
             if (def_index < 0) {
                 // TODO: fins all available steps programatically
-                fprintf(stderr, "Unknown step '%s'. Available: fin, dr, eo, htr, eofb", s.name);
+                fprintf(stderr, "Unknown step '%s'. Available: fin, dr, eo, htr", s.name);
                 for (int k = 0; k < arguments.def_count; k++) {
                     fprintf(stderr, ", %s", arguments.defs[k].name);
                 }
@@ -620,9 +620,10 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
         {
             cli_gen_custom_ptables(&arguments, &s, ss);
         }
-        else if (ss->p_data == NULL && arguments.verbose == 1)
-        {
-            fprintf(stderr, "\tstep %s aint got ptable!\n", s.name);
+        else if (ss->p_data == NULL) {
+            if (arguments.verbose == 1) {
+                fprintf(stderr, "\tstep %s aint got ptable!\n", s.name);
+            }
         }
         else if (cube_tables_load_ptable(ss->p_data) == 1)
         {
@@ -632,7 +633,9 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
         }
 
         // load some special tables needed for some of the steps
-        if (ss->p_data == &ptable_data_opt1)
+        if (ss->p_data == &ptable_data_opt1 ||
+            (ss->p_data != NULL &&
+             ss->p_data->cube_to_index_func == ptable_data_opt1.cube_to_index_func))
         {
             cube_tables_load_sym_table_e_index();
         }
