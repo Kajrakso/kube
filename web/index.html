@@ -17,6 +17,7 @@
     --and-color: #facc15;
     --or-color: #f472b6;
     --not-color: #fb923c;
+    --mod-color: #06b6d4;
   }
   * { box-sizing: border-box; }
   * { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
@@ -193,6 +194,8 @@
   .tree-btn.insert-or:hover { border-color: var(--or-color); color: var(--or-color); }
   .tree-btn.not-btn:hover { border-color: var(--not-color); color: var(--not-color); }
   .tree-btn.not-active { border-color: var(--not-color); color: var(--not-color); background: rgba(251,146,60,.1); }
+  .tree-btn.mod-btn:hover { border-color: var(--mod-color); color: var(--mod-color); }
+  .tree-btn.mod-active { border-color: var(--mod-color); color: var(--mod-color); background: rgba(6,182,212,.1); }
   .tree-btn.del-btn:hover { border-color: var(--danger); color: var(--danger); }
   .builder-footer { display: flex; gap: 8px; margin-top: 12px; }
   .btn-primary {
@@ -422,19 +425,34 @@
     var n = getNode(id);
     if (!n) return "";
     if (n.type === "atom") return (n.not ? "!" : "") + n.prim + ":" + n.pieces;
+    if (n.type === "mod") {
+      var inner = toExpr(n.child);
+      var cn = getNode(n.child);
+      if (cn.type === "op") inner = "(" + inner + ")";
+      if (n.not) inner = "!(" + inner + ")";
+      return inner + " mod " + getModExpr(n);
+    }
     var l = toExpr(n.left);
     var r = toExpr(n.right);
     var ln = getNode(n.left), rn = getNode(n.right);
-    var needL = ln.type === "op" && ln.op !== n.op;
-    var needR = rn.type === "op" && rn.op !== n.op;
+    var needL = (ln.type === "op" && ln.op !== n.op) || ln.type === "mod";
+    var needR = (rn.type === "op" && rn.op !== n.op) || rn.type === "mod";
+    if (ln.type === "mod") needL = true;
+    if (rn.type === "mod") needR = true;
     var expr = (needL ? "(" + l + ")" : l) + " " + n.op + " " + (needR ? "(" + r + ")" : r);
     if (n.not) expr = "!(" + expr + ")";
     return expr;
   }
 
   function insertOp(atId, op) {
-    var replacement = mkOp(op, atId, mkAtom());
     var n = getNode(atId);
+    if (n.type === "mod") {
+      var replacement = mkOp(op, n.child, mkAtom());
+      n.child = replacement;
+      if (rootId === atId) rootId = n;
+      return;
+    }
+    var replacement = mkOp(op, atId, mkAtom());
     if (rootId === atId) {
       rootId = replacement;
       return;
@@ -444,6 +462,10 @@
 
   function findAndReplace(parentId, targetId, newId) {
     var n = getNode(parentId);
+    if (n.type === "mod") {
+      if (n.child === targetId) { n.child = newId; return true; }
+      return findAndReplace(n.child, targetId, newId);
+    }
     if (n.type !== "op") return false;
     if (n.left === targetId) { n.left = newId; return true; }
     if (n.right === targetId) { n.right = newId; return true; }
@@ -454,6 +476,11 @@
 
   function collapseNode(id) {
     var n = getNode(id);
+    if (n.type === "mod") {
+      if (rootId === id) { rootId = n.child; return; }
+      findAndReplaceUp(rootId, id, n.child);
+      return;
+    }
     if (n.type === "op") {
       if (rootId === id) { rootId = n.left; return; }
       findAndReplaceUp(rootId, id, n.left);
@@ -469,6 +496,10 @@
 
   function findAndReplaceUp(fromId, targetId, newId) {
     var n = getNode(fromId);
+    if (n.type === "mod") {
+      if (n.child === targetId) { n.child = newId; return true; }
+      return findAndReplaceUp(n.child, targetId, newId);
+    }
     if (n.type !== "op") return false;
     if (n.left === targetId) { n.left = newId; return true; }
     if (n.right === targetId) { n.right = newId; return true; }
@@ -479,11 +510,58 @@
 
   function findParentId(fromId, childId) {
     var n = getNode(fromId);
+    if (n.type === "mod") {
+      if (n.child === childId) return fromId;
+      var r = findParentId(n.child, childId);
+      if (r !== null) return r;
+      return null;
+    }
     if (n.type !== "op") return null;
     if (n.left === childId || n.right === childId) return fromId;
     var r = findParentId(n.left, childId);
     if (r !== null) return r;
     return findParentId(n.right, childId);
+  }
+
+  /* ---- mod helpers ---- */
+  function wrapMod(atId) {
+    var n = getNode(atId);
+    var modId = nextId++;
+    nodes[modId] = {
+      id: modId, type: "mod", child: atId, not: false,
+      subgroup: { mode: "explicit", moves: [] }
+    };
+    if (rootId === atId) { rootId = modId; return; }
+    findAndReplace(rootId, atId, modId);
+  }
+
+  function setModMode(nid, mode) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === mode) return;
+    // read current text input value before switching
+    var input = document.querySelector('.mod-text-input[data-nid="' + nid + '"]');
+    var txt = input ? input.value : "";
+    if (n.subgroup.mode === "explicit") {
+      n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+    } else {
+      n.subgroup.generators = txt.split(",").map(function(s) {
+        return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+      }).filter(function(g) { return g.length > 0; });
+    }
+    // now switch mode
+    if (mode === "generators") {
+      var gen = n.subgroup.moves.length ? [n.subgroup.moves.slice()] : [];
+      n.subgroup = { mode: "generators", generators: gen };
+    } else {
+      var moves = [];
+      if (n.subgroup.generators) {
+        n.subgroup.generators.forEach(function(g) {
+          g.forEach(function(m) { if (moves.indexOf(m) < 0) moves.push(m); });
+        });
+      }
+      n.subgroup = { mode: "explicit", moves: moves };
+    }
+    renderBuilder();
   }
 
   function renderTree(id, depth) {
@@ -507,11 +585,30 @@
       h += '<button class="tree-btn not-btn' + (n.not ? ' not-active' : '') + '" data-nid="' + id + '" data-act="not">NOT</button>';
       h += '<button class="tree-btn insert-and" data-nid="' + id + '" data-act="and">+AND</button>';
       h += '<button class="tree-btn insert-or" data-nid="' + id + '" data-act="or">+OR</button>';
+      h += '<button class="tree-btn mod-btn" data-nid="' + id + '" data-act="mod">+MOD</button>';
       if (depth > 0) {
         h += '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>';
       }
       h += '</div></div>';
       return '<div class="tree-node">' + h + '</div>';
+    }
+    if (n.type === "mod") {
+      var childHtml = renderTree(n.child, depth + 1);
+      return '<div class="tree-node"><div class="tree-card" style="border-color:var(--mod-color);">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
+          '<span style="color:var(--mod-color);font-weight:700;font-size:13px;">MOD</span>' +
+          '<select data-nid="' + id + '" data-f="mod-mode" style="width:auto;padding:3px 24px 3px 6px;font-size:12px;">' +
+            '<option value="explicit"' + (n.subgroup.mode === "explicit" ? " selected" : "") + '>Explicit {…}</option>' +
+            '<option value="generators"' + (n.subgroup.mode === "generators" ? " selected" : "") + '>Generators &lt;…&gt;</option>' +
+          '</select>' +
+          (depth > 0 ? '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>' : '') +
+        '</div>' +
+        renderModEditor(id) +
+      '</div>' +
+      '<div class="tree-children" style="border-color:var(--mod-color);">' +
+        '<div class="tree-connector" style="color:var(--mod-color);font-weight:700;">inner</div>' +
+        childHtml +
+      '</div></div>';
     }
     var left = renderTree(n.left, depth + 1);
     var right = renderTree(n.right, depth + 1);
@@ -519,6 +616,30 @@
     return '<div class="tree-node"><div class="tree-children">' +
       '<div class="tree-connector ' + cls + '">' + (n.op === "&" ? "AND" : "OR") + '</div>' +
       left + right + '</div></div>';
+  }
+
+  function getModExpr(n) {
+    if (n.subgroup.mode === "explicit") {
+      return "{" + (n.subgroup.moves.length ? n.subgroup.moves.join(", ") : "") + "}";
+    }
+    var gs = n.subgroup.generators.map(function(gen) {
+      return gen.length ? gen.join(" ") : "?";
+    });
+    return "<" + (gs.length ? gs.join(", ") : "") + ">";
+  }
+
+  function renderModEditor(nid) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === "explicit") {
+      var val = n.subgroup.moves.join(", ");
+      return '<input class="mod-text-input" data-nid="' + nid + '" data-f="mod-text" ' +
+        'value="' + esc(val) + '" placeholder="R, U\', U2, e" ' +
+        'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+    }
+    var val = n.subgroup.generators.map(function(g) { return g.join(" "); }).join(", ");
+    return '<input class="mod-text-input" data-nid="' + nid + '" data-f="mod-text" ' +
+      'value="' + esc(val) + '" placeholder="R U, F2" ' +
+      'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
   }
 
   function renderBuilder() {
@@ -583,27 +704,42 @@
   }
 
   /* ---- Event delegation on #treeRoot ---- */
-  document.addEventListener("change", function(e) {
-    if (!e.target.matches("#treeRoot select[data-nid]")) return;
-    var nid = parseInt(e.target.getAttribute("data-nid"));
-    var field = e.target.getAttribute("data-f");
+  function handleTreeInput(e) {
+    var t = e.target;
+    if (!t.matches("#treeRoot [data-nid][data-f]")) return;
+    var nid = parseInt(t.getAttribute("data-nid"));
+    var field = t.getAttribute("data-f");
     var n = getNode(nid);
-    if (!n || n.type !== "atom") return;
-    if (field === "pieces") {
-      var sel = Array.from(e.target.selectedOptions).map(function(o) { return o.value; });
+    if (!n) return;
+    if (field === "pieces" && n.type === "atom") {
+      var sel = Array.from(t.selectedOptions).map(function(o) { return o.value; });
       n.pieces = sel.join(",");
-    } else {
-      n[field] = e.target.value;
+    } else if (field === "prim" && n.type === "atom") {
+      n[field] = t.value;
+    } else if (field === "mod-mode" && n.type === "mod") {
+      setModMode(nid, t.value);
+      return;
+    } else if (field === "mod-text" && n.type === "mod") {
+      var txt = t.value;
+      if (n.subgroup.mode === "explicit") {
+        n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+      } else {
+        n.subgroup.generators = txt.split(",").map(function(s) {
+          return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+        }).filter(function(g) { return g.length > 0; });
+      }
     }
     var pv = document.getElementById("exprPreview");
     if (pv) pv.textContent = toExpr(rootId);
-  });
+  }
+  document.addEventListener("change", handleTreeInput);
+  document.addEventListener("input", handleTreeInput);
 
   document.addEventListener("click", function(e) {
     var btn = e.target.closest("[data-act]");
     if (!btn) return;
-    var nid = parseInt(btn.getAttribute("data-nid"));
     var act = btn.getAttribute("data-act");
+    var nid = parseInt(btn.getAttribute("data-nid"));
     var n = getNode(nid);
     if (!n) return;
     if (act === "not") {
@@ -614,6 +750,9 @@
       renderBuilder();
     } else if (act === "or") {
       insertOp(nid, "|");
+      renderBuilder();
+    } else if (act === "mod") {
+      wrapMod(nid);
       renderBuilder();
     } else if (act === "del") {
       collapseNode(nid);
@@ -740,7 +879,7 @@
     if (document.getElementById("verboseToggle").checked) parts.push("-v");
     customStates.forEach(function(cs) {
       var ms = cs.moveset ? "@" + cs.moveset : "";
-      parts.push("-D '" + cs.name + "=" + cs.expr + ms + "'");
+      parts.push('-D "' + cs.name + "=" + cs.expr + ms + '"');
     });
     getActiveSteps().forEach(function(name) {
       var s = "--step " + name;
