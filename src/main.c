@@ -14,9 +14,10 @@ static char args_doc[] = "[SCRAMBLE]";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    {"define", 'D', "NAME=EXPR@MOVESET", 0,
-        "Define a custom solved state as a DSL expression (repeatable).\n"
-        "Example: -D f2l=solved:Dw -s f2l -s fin\n"
+    {"define", 'D', 0, 0,
+        "Define a custom solved state as a DSL expression (repeatable)."
+        "NAME=EXPR@MOVESET. "
+        "Example:    -D f2l=solved:Dw -s f2l -s fin"
         "See `man kube` for the DSL reference.", 0},
     {"verbose", 'v', 0, 0, "Produce verbose output.", 0},
     {"stdin", 'i', 0, 0, "Read scrambles from standard input.", 0},

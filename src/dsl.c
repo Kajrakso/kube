@@ -1,4 +1,8 @@
 #include "dsl.h"
+#include "core/cube_operation.h"
+#include "moveset.h"
+
+/* This file is mostly written by an LLM. */
 
 
 /* ---------------------------------------------------------------- */
@@ -136,6 +140,366 @@ static int dsl_parse_pieces(dsl_parser_t* p, uint16_t* em, uint8_t* cm) {
 }
 
 /* ---------------------------------------------------------------- */
+/* subgroup parsing  {U, U2, U', ...}                                */
+/* ---------------------------------------------------------------- */
+
+/* Parse a single move name and return the move id, or -1 on error.
+ * Also handles "e"/"I" as identity (returns -2). */
+static int dsl_parse_move_name(dsl_parser_t* p, char* mname, size_t mname_sz) {
+    p->pos = dsl_next_pos(p);
+    size_t start = p->pos;
+    while (p->pos < p->len && (isalnum((unsigned char)p->s[p->pos]) || p->s[p->pos] == '\''))
+        p->pos++;
+    size_t len = p->pos - start;
+    if (len == 0 || len >= mname_sz) return -1;
+    memcpy(mname, p->s + start, len);
+    mname[len] = '\0';
+
+    int mv = move_from_name(mname);
+    if (mv >= 0) return mv;
+    if (strcmp(mname, "e") == 0 || strcmp(mname, "I") == 0) return -2;
+    return -1;
+}
+
+/* ---------------------------------------------------------------- */
+/* Subgroup closure with hash-set for O(1) membership               */
+
+typedef struct {
+    uint64_t hash;
+    cube_t   cube;
+    bool     occupied;
+} cube_hs_entry;
+
+typedef struct {
+    cube_hs_entry* entries;
+    int            capacity;
+    int            count;
+} cube_hash_set;
+
+static inline uint64_t cube_hash(cube_t c) {
+    /* FNV-1a over the raw bytes of edges[] and corners[] */
+    const uint8_t* data = (const uint8_t*)&c;
+    uint64_t h = 0xcbf29ce484222325ULL;
+    for (size_t i = 0; i < sizeof(cube_t); i++) {
+        h ^= data[i];
+        h *= 0x100000001b3ULL;
+    }
+    return h;
+}
+
+static cube_hash_set cube_hs_new(int min_cap) {
+    /* round up to power of two */
+    int cap = 1;
+    while (cap < min_cap) cap *= 2;
+    cube_hash_set hs = {
+        .entries = calloc((size_t)cap, sizeof(cube_hs_entry)),
+        .capacity = cap,
+        .count = 0,
+    };
+    return hs;
+}
+
+static bool cube_hs_contains(const cube_hash_set* hs, cube_t c) {
+    uint64_t h = cube_hash(c);
+    int mask = hs->capacity - 1;
+    for (int i = (int)(h & (uint64_t)mask); ; i = (i + 1) & mask)
+    {
+        if (!hs->entries[i].occupied) return false;
+        if (hs->entries[i].hash == h && cube_operation_is_equal(hs->entries[i].cube, c))
+            return true;
+    }
+}
+
+static void cube_hs_insert(cube_hash_set* hs, cube_t c) {
+    /* resize when load factor > 70% */
+    if (hs->count * 10 >= hs->capacity * 7)
+    {
+        int old_cap = hs->capacity;
+        cube_hs_entry* old = hs->entries;
+        hs->capacity = old_cap * 2;
+        hs->entries = calloc((size_t)hs->capacity, sizeof(cube_hs_entry));
+        hs->count = 0;
+        int mask = hs->capacity - 1;
+        for (int j = 0; j < old_cap; j++)
+        {
+            if (!old[j].occupied) continue;
+            uint64_t h = old[j].hash;
+            for (int i = (int)(h & (uint64_t)mask); ; i = (i + 1) & mask)
+            {
+                if (!hs->entries[i].occupied)
+                {
+                    hs->entries[i] = old[j];
+                    hs->count++;
+                    break;
+                }
+            }
+        }
+        free(old);
+    }
+    uint64_t h = cube_hash(c);
+    int mask = hs->capacity - 1;
+    for (int i = (int)(h & (uint64_t)mask); ; i = (i + 1) & mask)
+    {
+        if (!hs->entries[i].occupied)
+        {
+            hs->entries[i] = (cube_hs_entry){ .hash = h, .cube = c, .occupied = true };
+            hs->count++;
+            return;
+        }
+        if (hs->entries[i].hash == h && cube_operation_is_equal(hs->entries[i].cube, c))
+            return; /* already present */
+    }
+}
+
+static void cube_hs_free(cube_hash_set* hs) {
+    free(hs->entries);
+    hs->entries = NULL;
+    hs->capacity = 0;
+    hs->count = 0;
+}
+
+/* Compute the subgroup closure from generators via BFS.
+ * Starts with identity, repeatedly multiplies by each generator and its inverse
+ * until no new elements are found. Uses a hash set for O(1) membership testing.
+ * Returns NULL and sets *out_count to 0 if the subgroup exceeds max_elems. */
+static cube_t* subgroup_closure(cube_t* generators, int n_gen, int* out_count,
+                                int max_elems) {
+    int cap = 64;
+    int n = 0;
+    cube_t* arr = malloc((size_t)cap * sizeof(cube_t));
+    cube_hash_set hs = cube_hs_new(256);
+
+    /* start with identity */
+    cube_t id = cube_create_new_cube();
+    arr[n++] = id;
+    cube_hs_insert(&hs, id);
+
+    /* precompute inverses of generators */
+    cube_t* gen_inv = malloc((size_t)n_gen * sizeof(cube_t));
+    for (int i = 0; i < n_gen; i++)
+        gen_inv[i] = cube_operation_inverse(generators[i]);
+
+    /* BFS with frontier */
+    int frontier_start = 0;
+    int frontier_end = 1; /* arr[0] = identity */
+    while (frontier_start < frontier_end) {
+        for (int i = frontier_start; i < frontier_end; i++) {
+            for (int g = 0; g < n_gen; g++) {
+                cube_t p = cube_operation_compose(arr[i], generators[g]);
+                if (!cube_hs_contains(&hs, p))
+                {
+                    if (n >= max_elems)
+                    {
+                        free(arr);
+                        cube_hs_free(&hs);
+                        free(gen_inv);
+                        *out_count = 0;
+                        return NULL;
+                    }
+                    if (n == cap)
+                    {
+                        cap *= 2;
+                        arr = realloc(arr, (size_t)cap * sizeof(cube_t));
+                    }
+                    arr[n++] = p;
+                    cube_hs_insert(&hs, p);
+                }
+                p = cube_operation_compose(arr[i], gen_inv[g]);
+                if (!cube_hs_contains(&hs, p))
+                {
+                    if (n >= max_elems)
+                    {
+                        free(arr);
+                        cube_hs_free(&hs);
+                        free(gen_inv);
+                        *out_count = 0;
+                        return NULL;
+                    }
+                    if (n == cap)
+                    {
+                        cap *= 2;
+                        arr = realloc(arr, (size_t)cap * sizeof(cube_t));
+                    }
+                    arr[n++] = p;
+                    cube_hs_insert(&hs, p);
+                }
+            }
+        }
+        frontier_start = frontier_end;
+        frontier_end = n;
+    }
+
+    cube_hs_free(&hs);
+    free(gen_inv);
+    *out_count = n;
+    return arr;
+}
+
+/* Parse an explicit subgroup set: {R, U2, U', e} */
+static int dsl_parse_subgroup_explicit(dsl_parser_t* p, cube_t** elems, int* count) {
+    if (!dsl_match(p, '{'))
+    {
+        dsl_fail(p, "expected '{' for subgroup");
+        return 0;
+    }
+
+    int cap = 8;
+    int n = 0;
+    cube_t* arr = malloc((size_t)cap * sizeof(cube_t));
+
+    for (;;) {
+        size_t ws = dsl_next_pos(p);
+        if (ws < p->len && p->s[ws] == '}') break;
+        if (n > 0) {
+            if (!dsl_match(p, ','))
+            {
+                dsl_fail(p, "expected ',' or '}' in subgroup");
+                free(arr);
+                return 0;
+            }
+        }
+
+        char mname[16];
+        int mv = dsl_parse_move_name(p, mname, sizeof(mname));
+        if (mv < 0) {
+            if (mv == -2)
+            {
+                /* identity */
+                if (n == cap)
+                {
+                    cap *= 2;
+                    arr = realloc(arr, (size_t)cap * sizeof(cube_t));
+                }
+                arr[n++] = cube_create_new_cube();
+                continue;
+            }
+            dsl_fail(p, "unknown move name in subgroup");
+            free(arr);
+            return 0;
+        }
+
+        if (n == cap)
+        {
+            cap *= 2;
+            arr = realloc(arr, (size_t)cap * sizeof(cube_t));
+        }
+        cube_t elem = cube_create_new_cube();
+        cube_move_apply_move(&elem, mv);
+        arr[n++] = elem;
+    }
+
+    if (!dsl_match(p, '}'))
+    {
+        dsl_fail(p, "expected '}' to close subgroup");
+        free(arr);
+        return 0;
+    }
+    if (n == 0)
+    {
+        dsl_fail(p, "empty subgroup");
+        free(arr);
+        return 0;
+    }
+
+    *elems = arr;
+    *count = n;
+    return 1;
+}
+
+/* Parse a generator subgroup: <R, U, F2>
+ * Each entry can be a sequence of moves: <R U, U2> means two generators: R*U and U2.
+ * Returns the full closure (all products of generators). */
+static int dsl_parse_subgroup_generators(dsl_parser_t* p, cube_t** elems, int* count) {
+    if (!dsl_match(p, '<'))
+    {
+        dsl_fail(p, "expected '<' for generator subgroup");
+        return 0;
+    }
+
+    int cap_gen = 8;
+    int n_gen = 0;
+    cube_t* generators = malloc((size_t)cap_gen * sizeof(cube_t));
+
+    for (;;) {
+        size_t ws = dsl_next_pos(p);
+        if (ws < p->len && p->s[ws] == '>') break;
+        if (n_gen > 0) {
+            if (!dsl_match(p, ','))
+            {
+                dsl_fail(p, "expected ',' or '>' in generator subgroup");
+                free(generators);
+                return 0;
+            }
+        }
+
+        /* parse one generator: a sequence of moves composed together */
+        cube_t gen = cube_create_new_cube();
+        bool got_move = false;
+        for (;;) {
+            /* peek at next non-whitespace char: if not a move starter, done with this generator */
+            size_t peek = dsl_next_pos(p);
+            if (peek >= p->len || (!isalnum((unsigned char)p->s[peek]) && p->s[peek] != '\''))
+                break;
+
+            size_t saved = p->pos;
+            char mname[16];
+            int mv = dsl_parse_move_name(p, mname, sizeof(mname));
+            if (mv == -2) { got_move = true; continue; }
+            if (mv < 0) { p->pos = saved; break; }
+            cube_move_apply_move(&gen, mv);
+            got_move = true;
+        }
+
+        if (!got_move) {
+            dsl_fail(p, "expected at least one move in generator");
+            free(generators);
+            return 0;
+        }
+
+        if (n_gen == cap_gen)
+        {
+            cap_gen *= 2;
+            generators = realloc(generators, (size_t)cap_gen * sizeof(cube_t));
+        }
+        generators[n_gen++] = gen;
+    }
+
+    if (!dsl_match(p, '>'))
+    {
+        dsl_fail(p, "expected '>' to close generator subgroup");
+        free(generators);
+        return 0;
+    }
+    if (n_gen == 0)
+    {
+        dsl_fail(p, "empty generator subgroup");
+        free(generators);
+        return 0;
+    }
+
+    cube_t* closure = subgroup_closure(generators, n_gen, count, 100000);
+    free(generators);
+    if (closure == NULL) {
+        dsl_fail(p, "subgroup too large (>100000 elements), cannot enumerate");
+        return 0;
+    }
+    *elems = closure;
+    return 1;
+}
+
+/* Dispatch between {explicit} and <generators> syntax. */
+static int dsl_parse_subgroup(dsl_parser_t* p, cube_t** elems, int* count) {
+    size_t ws = dsl_next_pos(p);
+    if (ws >= p->len)
+    {
+        dsl_fail(p, "expected '{' or '<' for subgroup");
+        return 0;
+    }
+    if (p->s[ws] == '<') return dsl_parse_subgroup_generators(p, elems, count);
+    return dsl_parse_subgroup_explicit(p, elems, count);
+}
+
+/* ---------------------------------------------------------------- */
 /* Constructing expressions                                         */
 /* ---------------------------------------------------------------- */
 
@@ -170,6 +534,18 @@ static dsl_expr_t* dsl_new_binop(dsl_parser_t* p, dsl_expr_kind kind,
     e->kind = kind;
     e->left = left;
     e->right = right;
+    return e;
+}
+
+static dsl_expr_t* dsl_new_mod(dsl_parser_t* p, dsl_expr_t* base,
+                                cube_t* subgroup_elems, int subgroup_len) {
+    dsl_expr_t* e = calloc(1, sizeof *e);
+    if (!e) { dsl_fail(p, "out of memory"); return NULL; }
+    e->kind = EXPR_MOD;
+    e->left = base;
+    e->right = NULL;
+    e->subgroup_elems = subgroup_elems;
+    e->subgroup_len = subgroup_len;
     return e;
 }
 
@@ -232,18 +608,58 @@ static dsl_expr_t* dsl_parse_or(dsl_parser_t* p) {
     return left;
 }
 
-static dsl_expr_t* dsl_parse_expr(dsl_parser_t* p) { return dsl_parse_or(p); }
+/* Check if the next token is exactly `word` followed by a non-alnum/non-underscore char. */
+static bool dsl_peek_word(dsl_parser_t* p, const char* word) {
+    size_t i = p->pos;
+    while (i < p->len && isspace((unsigned char)p->s[i])) i++;
+    size_t wlen = strlen(word);
+    if (i + wlen > p->len) return false;
+    if (memcmp(p->s + i, word, wlen) != 0) return false;
+    size_t after = i + wlen;
+    if (after < p->len && (isalnum((unsigned char)p->s[after]) || p->s[after] == '_'))
+        return false;
+    return true;
+}
+
+static dsl_expr_t* dsl_parse_mod(dsl_parser_t* p) {
+    dsl_expr_t* left = dsl_parse_or(p);
+    if (!left) return NULL;
+
+    if (dsl_peek_word(p, "mod"))
+    {
+        /* consume the "mod" keyword */
+        size_t i = p->pos;
+        while (i < p->len && isspace((unsigned char)p->s[i])) i++;
+        p->pos = i + 3; /* skip "mod" */
+
+        cube_t* elems = NULL;
+        int count = 0;
+        if (!dsl_parse_subgroup(p, &elems, &count))
+        {
+            dsl_free_expression(left);
+            return NULL;
+        }
+        return dsl_new_mod(p, left, elems, count);
+    }
+
+    return left;
+}
+
+static dsl_expr_t* dsl_parse_expr(dsl_parser_t* p) { return dsl_parse_mod(p); }
 
 dsl_expr_t* dsl_parse(const char* str, char* err, size_t errsz) {
     dsl_parser_t p = {.s = str, .pos = 0, .len = strlen(str), .err = ""};
     dsl_expr_t* e = dsl_parse_expr(&p);
-    if (e == NULL) {
+    if (e == NULL)
+    {
         snprintf(err, errsz, "%s", p.err[0] ? p.err : "parse error");
         return NULL;
     }
-    if (dsl_peek(&p) != -1) {
+    if (dsl_peek(&p) != -1)
+    {
         dsl_free_expression(e);
-        snprintf(err, errsz, "unexpected character at column %zu", dsl_next_pos(&p) + 1);
+        snprintf(err, errsz, "unexpected character at column %zu",
+                 dsl_next_pos(&p) + 1);
         return NULL;
     }
     return e;
@@ -287,6 +703,15 @@ bool dsl_eval(const dsl_expr_t* e, cube_t* cube) {
     case EXPR_AND: return dsl_eval(e->left, cube) && dsl_eval(e->right, cube);
     case EXPR_OR:  return dsl_eval(e->left, cube) || dsl_eval(e->right, cube);
     case EXPR_NOT: return !dsl_eval(e->left, cube);
+    case EXPR_MOD:
+        for (int i = 0; i < e->subgroup_len; i++)
+        {
+            cube_t inv = cube_operation_inverse(e->subgroup_elems[i]);
+            cube_t transformed = cube_operation_compose(inv, *cube);
+            if (dsl_eval(e->left, &transformed))
+                return true;
+        }
+        return false;
     case EXPR_ATOM: break;
     }
 
@@ -327,6 +752,8 @@ void dsl_free_expression(dsl_expr_t* e) {
     if (!e) return;
     dsl_free_expression(e->left);
     dsl_free_expression(e->right);
+    if (e->kind == EXPR_MOD)
+        free(e->subgroup_elems);
     free(e);
 }
 
@@ -342,6 +769,7 @@ static const char* dsl_expr_kind_name(dsl_expr_kind k) {
     case EXPR_OR:   return "EXPR_OR";
     case EXPR_NOT:  return "EXPR_NOT";
     case EXPR_ATOM: return "ATOM";
+    case EXPR_MOD:  return "EXPR_MOD";
     }
     return "?";
 }
@@ -402,6 +830,46 @@ static char* dsl_render(const dsl_expr_t* e) {
         s = malloc(strlen(c) + 4);
         sprintf(s, "!(%s)", c);
         free(c);
+        return s;
+    }
+    case EXPR_MOD: {
+        char* base = dsl_render(e->left);
+        /* estimate size: base + " mod {" + moves + "}" */
+        size_t movelen = 0;
+        for (int i = 0; i < e->subgroup_len; i++)
+        {
+            for (int m = 0; m < NMOVES; m++)
+            {
+                cube_t test = cube_create_new_cube();
+                cube_move_apply_move(&test, m);
+                if (cube_operation_is_equal(test, e->subgroup_elems[i]))
+                {
+                    movelen += strlen(move_notation[m]);
+                    break;
+                }
+            }
+            if (i > 0) movelen += 2; /* ", " */
+        }
+        s = malloc(strlen(base) + 7 + movelen + 1);
+        char* p = s;
+        p += sprintf(p, "%s mod {", base);
+        free(base);
+        for (int i = 0; i < e->subgroup_len; i++)
+        {
+            if (i > 0) *p++ = ',';
+            for (int m = 0; m < NMOVES; m++)
+            {
+                cube_t test = cube_create_new_cube();
+                cube_move_apply_move(&test, m);
+                if (cube_operation_is_equal(test, e->subgroup_elems[i]))
+                {
+                    p += sprintf(p, "%s", move_notation[m]);
+                    break;
+                }
+            }
+        }
+        *p++ = '}';
+        *p = '\0';
         return s;
     }
     case EXPR_ATOM:
@@ -465,6 +933,29 @@ static void dsl_debug_node(dsl_strbuf_t* b, const dsl_expr_t* e) {
         dsl_strbuf_addf(b, "ATOM %s  axis=%s  edges=0x%04X corners=0x%02X",
                         dsl_prim_name(e->atom_kind, e->axis),
                         dsl_axis_name(e->axis), e->edge_mask, e->corner_mask);
+    else if (e->kind == EXPR_MOD)
+    {
+        dsl_strbuf_addf(b, "EXPR_MOD subgroup=%d=[", e->subgroup_len);
+        for (int i = 0; i < e->subgroup_len && i < 12; i++)
+        {
+            if (i > 0) dsl_strbuf_add(b, ", ");
+            int found = 0;
+            for (int m = 0; m < NMOVES; m++)
+            {
+                cube_t test = cube_create_new_cube();
+                cube_move_apply_move(&test, m);
+                if (cube_operation_is_equal(test, e->subgroup_elems[i]))
+                {
+                    dsl_strbuf_add(b, move_notation[m]);
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) dsl_strbuf_add(b, "...");
+        }
+        if (e->subgroup_len > 12) dsl_strbuf_add(b, ", ...");
+        dsl_strbuf_add(b, "]");
+    }
     else
         dsl_strbuf_add(b, dsl_expr_kind_name(e->kind));
 }

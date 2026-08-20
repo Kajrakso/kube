@@ -3,6 +3,7 @@
 
 #include "dsl.h"
 #include "tables.h"
+#include "solver_steps.h"
 #include "utils/utils.h"
 #include "utils/sha1.h"
 
@@ -24,6 +25,10 @@ typedef struct {
     ptable_data_t**          tables;     /* array of table pointers */
     uint8_t                  n_tables;   /* number of tables */
     custom_prune_table_ctx_t* table_ctxs; /* array of per-table contexts (same order) */
+    /* MOD support: when set, the heuristic iterates over subgroup elements,
+     * transforms the cube, and evaluates the inner expression's tables on each. */
+    cube_t*                  mod_subgroup_elems;
+    int                      mod_subgroup_len;
 } dsl_prune_step_ctx_t;
 
 /* Create a ptable_data_t for n solved edges.
@@ -40,7 +45,11 @@ ptable_data_t** dsl_prune_make_ptables(dsl_expr_t* expr, uint8_t* n_out);
 
 /* Heuristic function for multi-table custom steps.
  * Walks the DSL AST and evaluates over the tables. */
-size_t dsl_prune_heuristic(cube_t* c, ptable_data_t* p_data);
+size_t dsl_prune_heuristic(cube_t* c, solving_step* ss);
+
+/* Mod-aware heuristic: iterates subgroup elements, transforms the cube,
+ * evaluates the base expression's pruning tables on each, returns min. */
+size_t dsl_prune_heuristic_mod(cube_t* c, solving_step* ss);
 
 /* Free a custom step's tables and contexts. */
 void dsl_prune_free_tables(ptable_data_t** tables, uint8_t n);

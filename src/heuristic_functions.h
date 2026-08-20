@@ -3,7 +3,7 @@
 
 #include "solver_steps.h"
 
-size_t dr_heuristic(cube_t* cube, ptable_data_t* p_data);
-size_t htr_heuristic(cube_t* cube, ptable_data_t* p_data);
+size_t dr_heuristic(cube_t* cube, solving_step* ss);
+size_t htr_heuristic(cube_t* cube, solving_step* ss);
 
 #endif /* HEURISTIC_FUNCIONS_H */

@@ -132,6 +132,7 @@ typedef enum {
     EXPR_OR,
     EXPR_NOT,
     EXPR_ATOM,
+    EXPR_MOD,
 } dsl_expr_kind;
 
 
@@ -146,6 +147,10 @@ typedef struct dsl_expr {
     axes                axis;        /* only EO, CO ATOM */
     uint16_t            edge_mask;   /* piece mask; 0x0FFF = all edges */
     uint8_t             corner_mask; /* piece mask; 0xFF = all corners */
+
+    /* EXPR_MOD only: subgroup elements as cube states */
+    cube_t*             subgroup_elems;
+    int                 subgroup_len;
 } dsl_expr_t;
 
 /* Evaluates the expression for a cube state. */

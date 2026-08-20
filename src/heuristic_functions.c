@@ -1,6 +1,7 @@
 #include "heuristic_functions.h"
 
-size_t dr_heuristic(cube_t* cube, ptable_data_t* p_data){
+size_t dr_heuristic(cube_t* cube, solving_step* ss) {
+    ptable_data_t* p_data = ss->p_data;
     uint64_t      p1      = p_data->cube_to_index_func(cube, UD);
     size_t pval_UD = p_data->read_value_ptable_func(p1, p_data->ptable);
     uint64_t      p2      = p_data->cube_to_index_func(cube, LR);
@@ -20,7 +21,8 @@ size_t dr_heuristic(cube_t* cube, ptable_data_t* p_data){
 }
 
 
-size_t htr_heuristic(cube_t* cube, ptable_data_t* p_data){
+size_t htr_heuristic(cube_t* cube, solving_step* ss) {
+    ptable_data_t* p_data = ss->p_data;
     uint64_t      p1      = p_data->cube_to_index_func(cube, UD);
     size_t pval_UD = p_data->read_value_ptable_func(p1, p_data->ptable);
     uint64_t      p2      = p_data->cube_to_index_func(cube, LR);
