@@ -7,6 +7,7 @@
 /* runs before each test */
 void setup(void) {
     srand((unsigned int) time(NULL));
+    init_env();
     cube_tables_generate();
 }
 
@@ -85,6 +86,7 @@ TestSuite(dsl_debug, .disabled=false);
 
 TestSuite(moveset, .disabled=false, .init=setup, .fini=teardown);
 TestSuite(dsl_set, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(dsl_prod, .disabled=false, .init=setup, .fini=teardown);
 TestSuite(dsl_ptable, .disabled=false, .init=setup_dsl_ptable, .fini=teardown_dsl_ptable);
 TestSuite(dsl_compile, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
 

@@ -27,14 +27,14 @@ static void args_free(struct arguments* a) {
 }
 
 Test(dsl_compile, solved_star_routes_to_optimal_solver) {
-    struct arguments a = args_one("x", "solved:*", MOVESET_HTM);
+    struct arguments a = args_one("x", "solved", MOVESET_HTM);
     dsl_compile_definition_t* defs = NULL;
     int n = 0;
 
     cr_assert_eq(dsl_compile_build_definitions(&defs, &n, &a), 0);
     cr_assert_eq(n, 1);
     cr_assert_str_eq(defs[0].name, "x");
-    cr_assert_str_eq(defs[0].canonical, "solved:*");
+    cr_assert_str_eq(defs[0].canonical, "solved");
     cr_assert_not_null(defs[0].expr);
 
     cr_assert_not(defs[0].step.is_custom);
@@ -121,7 +121,7 @@ Test(dsl_compile, custom_moveset_survives_compilation) {
     char err[64];
     cr_assert_eq(moveset_parse("QTM", &mask, err, sizeof err), 0);
 
-    struct arguments a = args_one("q", "solved:*", mask);
+    struct arguments a = args_one("q", "solved", mask);
     dsl_compile_definition_t* defs = NULL;
     int n = 0;
 
@@ -136,7 +136,7 @@ Test(dsl_compile, custom_moveset_survives_compilation) {
 }
 
 Test(dsl_compile, integration_dsl_definition_solves_optimally) {
-    struct arguments a = args_one("x", "solved:*", MOVESET_HTM);
+    struct arguments a = args_one("x", "solved", MOVESET_HTM);
     dsl_compile_definition_t* defs = NULL;
     int n = 0;
 

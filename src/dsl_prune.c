@@ -220,6 +220,7 @@ static void collect_solved_tables(const dsl_expr_t* e,
     switch (e->kind) {
     case EXPR_AND:
     case EXPR_OR:
+    case EXPR_PROD:
         collect_solved_tables(e->left, arr, n, cap);
         collect_solved_tables(e->right, arr, n, cap);
         break;
@@ -276,6 +277,10 @@ static bool mask_is_subset(uint16_t child_edge, uint8_t child_corner,
         && (child_corner & atom_corner) == child_corner;
 }
 
+static bool prod_side_is_set(const dsl_expr_t* e) {
+    return e->kind == EXPR_ATOM && e->atom_kind == ATOM_SET;
+}
+
 static size_t eval_prune_expr(const dsl_expr_t* e, cube_t* cube,
                               dsl_prune_step_ctx_t* ctx) {
     if (e == NULL){
@@ -296,6 +301,24 @@ static size_t eval_prune_expr(const dsl_expr_t* e, cube_t* cube,
         size_t l = eval_prune_expr(e->left, cube, ctx);
         size_t r = eval_prune_expr(e->right, cube, ctx);
         return l < r ? l : r;
+    }
+    case EXPR_PROD: {
+        /* An admissible bound exists only with the set operand on the
+         * LEFT: if c*s = h*p then h^-1*c*s = p, hence
+         *   min_h dist_P(h^-1*c) <= dist(c, H*P).
+         * With the set on the RIGHT the mirrored transform c*h^-1 is
+         * inadmissible: the inverse would land between the solution
+         * moves and the goal, inflating the bound. No pruning there.
+         * Membership in dsl_eval handles both directions correctly. */
+        if (!prod_side_is_set(e->left)) return 0;
+        size_t best = (size_t)-1;
+        for (int i = 0; i < e->left->subgroup_len; i++) {
+            cube_t inv = cube_operation_inverse(e->left->subgroup_elems[i]);
+            cube_t transformed = cube_operation_compose(inv, *cube);
+            size_t v = eval_prune_expr(e->right, &transformed, ctx);
+            if (v < best) best = v;
+        }
+        return best == (size_t)-1 ? 0 : best;
     }
     case EXPR_ATOM: {
         if (e->atom_kind != ATOM_SOLVED) return 0;

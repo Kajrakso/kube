@@ -55,26 +55,26 @@ static void check_equiv(const char* expr, bool (*pred)(cube_t*)) {
 }
 
 Test(dsl_equiv, eofb_matches_is_eo_FB) {
-    check_equiv("eofb:*", cube_state_is_eo_FB);
+    check_equiv("eofb", cube_state_is_eo_FB);
 }
 
 Test(dsl_equiv, eoud_matches_is_eo_UD) {
-    check_equiv("eoud:*", cube_state_is_eo_UD);
+    check_equiv("eoud", cube_state_is_eo_UD);
 }
 
 Test(dsl_equiv, cofb_matches_is_co_FB) {
-    check_equiv("cofb:*", cube_state_is_co_FB);
+    check_equiv("cofb", cube_state_is_co_FB);
 }
 
 Test(dsl_equiv, any_eo_matches_is_eo) {
-    check_equiv("eofb:* | eolr:* | eoud:*", cube_state_is_eo);
+    check_equiv("eofb | eolr | eoud", cube_state_is_eo);
 }
 
 Test(dsl_equiv, dr_fb_formula) {
-    check_equiv("eolr:* & eoud:* & cofb:*", cube_state_is_dr_FB);
+    check_equiv("eolr & eoud & cofb", cube_state_is_dr_FB);
 }
 
 Test(dsl_equiv, solved_matches_is_solved) {
-    check_equiv("solved:*", cube_state_is_solved);
+    check_equiv("solved", cube_state_is_solved);
 }
 

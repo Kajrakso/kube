@@ -67,9 +67,22 @@ static size_t run_heuristic(ptable_data_t** tabs, cube_t* c,
     return fn(c, &ss);
 }
 
+/* true iff some move sequence of length <= budget reaches a state
+ * satisfying e (exact for small budgets) */
+static bool prod_reaches(const dsl_expr_t* e, cube_t* c, int budget) {
+    if (dsl_eval(e, c)) return true;
+    if (budget == 0) return false;
+    for (int m = 0; m < NMOVES; m++) {
+        cube_t c2 = *c;
+        cube_move_apply_move(&c2, m);
+        if (prod_reaches(e, &c2, budget - 1)) return true;
+    }
+    return false;
+}
+
 Test(dsl_ptable, make_ptables_groups_solved_atoms) {
     char err[256];
-    dsl_expr_t* e = dsl_parse("solved:*", err, sizeof err);
+    dsl_expr_t* e = dsl_parse("solved", err, sizeof err);
     cr_assert_not_null(e);
 
     uint8_t n = 0;
@@ -104,7 +117,7 @@ Test(dsl_ptable, make_ptables_groups_solved_atoms) {
 
 Test(dsl_ptable, no_solved_atoms_no_tables) {
     char err[256];
-    const char* exprs[] = {"eofb:*", "!(solved:UF)", "eofb | coud"};
+    const char* exprs[] = {"eofb", "!(solved:UF)", "eofb | coud"};
     for (size_t i = 0; i < sizeof exprs / sizeof exprs[0]; i++) {
         dsl_expr_t* e = dsl_parse(exprs[i], err, sizeof err);
         cr_assert_not_null(e);
@@ -136,6 +149,93 @@ Test(dsl_ptable, single_edge_heuristic_values) {
         cr_assert_eq(h, cases[i].h, "scramble \"%s\"", cases[i].moves);
         cr_assert_eq(h == 0, dsl_eval(e, &c),
                      "h/eval mismatch on \"%s\"", cases[i].moves);
+    }
+
+    dsl_prune_free_tables(tabs, n);
+    dsl_free_expression(e);
+}
+
+Test(dsl_ptable, prod_with_right_set_returns_zero) {
+    char err[256];
+    dsl_expr_t* e = dsl_parse("solved:UF * {R}", err, sizeof err);
+    cr_assert_not_null(e);
+
+    uint8_t n = 0;
+    ptable_data_t** tabs = dsl_prune_make_ptables(e, &n);
+    cr_assert_eq(n, 1);
+    gen_and_load_custom(tabs, n);
+
+    /* No admissible bound exists when the set is on the right: the
+     * transform depends on the unknown solution's final moves.
+     * The heuristic must not prune here (regression: it used the
+     * mirrored c*h^-1 transform and over-pruned optimal solutions). */
+    const struct { const char* moves; bool member; } cases[] = {
+        {"", true}, {"R", true},
+        {"U F", false}, {"R U", false}, {"R U F", false},
+    };
+    for (size_t i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+        cube_t c = cube_after(cases[i].moves);
+        cr_assert_eq(run_heuristic(tabs, &c, dsl_prune_heuristic), 0,
+                     "right-set prod pruned at \"%s\"", cases[i].moves);
+        cr_assert_eq(dsl_eval(e, &c), cases[i].member,
+                     "eval mismatch on \"%s\"", cases[i].moves);
+    }
+
+    dsl_prune_free_tables(tabs, n);
+    dsl_free_expression(e);
+}
+
+Test(dsl_ptable, prod_with_left_set_uses_transform) {
+    char err[256];
+    dsl_expr_t* e = dsl_parse("{R} * solved:UF", err, sizeof err);
+    cr_assert_not_null(e);
+
+    uint8_t n = 0;
+    ptable_data_t** tabs = dsl_prune_make_ptables(e, &n);
+    cr_assert_eq(n, 1);
+    gen_and_load_custom(tabs, n);
+
+    /* Valid direction: h(c) = dist_solvedUF(R^-1 * c).
+     * At "R U" the transform is the U-state (h = 1); at identity it is
+     * the R'-state (UF untouched, h = 0). */
+    cube_t c = cube_after("R U");
+    cr_assert_eq(run_heuristic(tabs, &c, dsl_prune_heuristic), 1);
+
+    cube_t id = cube_create_new_cube();
+    cr_assert_eq(run_heuristic(tabs, &id, dsl_prune_heuristic), 0);
+    cr_assert(dsl_eval(e, &id));
+
+    dsl_prune_free_tables(tabs, n);
+    dsl_free_expression(e);
+}
+
+Test(dsl_ptable, prod_left_set_admissible_vs_true_distance) {
+    char err[256];
+    dsl_expr_t* e = dsl_parse("{R} * solved:UF", err, sizeof err);
+    cr_assert_not_null(e);
+
+    uint8_t n = 0;
+    ptable_data_t** tabs = dsl_prune_make_ptables(e, &n);
+    cr_assert_eq(n, 1);
+    gen_and_load_custom(tabs, n);
+
+    /* Exact true distance via iterative deepening on the DSL predicate,
+     * then admissibility: heuristic must never exceed it. */
+    const char* scrambles[] = {"", "U", "R", "R U", "F", "U F"};
+    for (size_t i = 0; i < sizeof scrambles / sizeof scrambles[0]; i++) {
+        cube_t c = cube_after(scrambles[i]);
+        size_t h = run_heuristic(tabs, &c, dsl_prune_heuristic);
+
+        int true_dist = -1;
+        for (int d = 0; d <= 3 && true_dist < 0; d++)
+            if (prod_reaches(e, &c, d)) true_dist = d;
+        cr_assert_geq(true_dist, 0, "no solution within 3 for \"%s\"",
+                      scrambles[i]);
+        cr_assert_leq(h, (size_t)true_dist,
+                      "inadmissible h=%zu > %zu on \"%s\"",
+                      h, (size_t)true_dist, scrambles[i]);
+        cr_assert_eq(h == 0, dsl_eval(e, &c),
+                     "h/eval mismatch on \"%s\"", scrambles[i]);
     }
 
     dsl_prune_free_tables(tabs, n);

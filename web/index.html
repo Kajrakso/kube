@@ -392,7 +392,7 @@
 <script>
   var BUILT_IN = ["eo", "dr", "htr", "fin"];
   var PRIMITIVES = ["solved", "eofb", "eolr", "eoud", "cofb", "colr", "coud", "ep", "cp"];
-  var PIECE_GROUPS = ["*", "U", "D", "M", "S", "E", "Ue", "Uc", "De", "Dc", "Dw", "Uw", "Rw", "Lw", "Fw", "Bw"];
+  var PIECE_GROUPS = ["U", "D", "M", "S", "E", "Ue", "Uc", "De", "Dc", "Dw", "Uw", "Rw", "Lw", "Fw", "Bw"];
   var EDGE_PIECES = ["UB", "UR", "UF", "UL", "DF", "DR", "DB", "DL", "BL", "BR", "FR", "FL"];
   var CORNER_PIECES = ["UBL", "UBR", "UFR", "UFL", "DFL", "DFR", "DBR", "DBL"];
   var ALL_PIECES = PIECE_GROUPS.concat(EDGE_PIECES).concat(CORNER_PIECES);
@@ -424,7 +424,11 @@
   function toExpr(id) {
     var n = getNode(id);
     if (!n) return "";
-    if (n.type === "atom") return (n.not ? "!" : "") + n.prim + ":" + n.pieces;
+    if (n.type === "atom") {
+      /* "*" is the internal marker for all pieces: a bare primitive */
+      var base = (n.pieces && n.pieces !== "*") ? n.prim + ":" + n.pieces : n.prim;
+      return (n.not ? "!" : "") + base;
+    }
     if (n.type === "mod") {
       /* sets are atoms now: solved:* mod H == the set atom itself */
       var cn = getNode(n.child);
@@ -566,7 +570,8 @@
   function renderTree(id, depth) {
     var n = getNode(id);
     if (n.type === "atom") {
-      var selectedPieces = n.pieces ? n.pieces.split(",") : [];
+      var selectedPieces = !n.pieces ? []
+        : (n.pieces === "*" ? ALL_PIECES.slice() : n.pieces.split(","));
       var primOpts = PRIMITIVES.map(function(p) {
         return '<option value="' + p + '"' + (p === n.prim ? ' selected' : '') + '>' + p + '</option>';
       }).join("");

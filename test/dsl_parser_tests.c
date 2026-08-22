@@ -33,22 +33,27 @@ static void parse_errs(const char* s) {
 /* parser: structure, precedence, piece/group expansion             */
 /* ---------------------------------------------------------------- */
 Test(dsl_parse, precedence_and_over_or) {
-    canon_is("eoud | eolr & eofb", "(eoud:* | (eolr:* & eofb:*))");
+    canon_is("eoud | eolr & eofb", "(eoud | (eolr & eofb))");
 }
 
 Test(dsl_parse, parens_override_precedence) {
-    canon_is("(eoud | eolr) & eofb", "((eoud:* | eolr:*) & eofb:*)");
+    canon_is("(eoud | eolr) & eofb", "((eoud | eolr) & eofb)");
 }
 
 Test(dsl_parse, not_binds_tightest) {
     canon_is("!eofb:UF", "!(eofb:UF)");
-    canon_is("!!eofb", "!(!(eofb:*))");
-    canon_is("!(eofb & eoud)", "!((eofb:* & eoud:*))");
+    canon_is("!!eofb", "!(!(eofb))");
+    canon_is("!(eofb & eoud)", "!((eofb & eoud))");
 }
 
 Test(dsl_parse, missing_pieces_means_all) {
-    canon_is("eofb", "eofb:*");
-    canon_is("solved", "solved:*");
+    canon_is("eofb", "eofb");
+    canon_is("solved", "solved");
+}
+
+Test(dsl_parse, star_wildcard_removed) {
+    parse_errs("eofb:*");
+    parse_errs("solved:*,UF");
 }
 
 Test(dsl_parse, piece_list_rendered_in_bit_order) {
@@ -65,19 +70,14 @@ Test(dsl_parse, groups_expand_to_pieces) {
     canon_is("coud:D", "coud:DF,DR,DB,DL,DFL,DFR,DBR,DBL");
 }
 
-Test(dsl_parse, star_wildcard_in_list) {
-    canon_is("eofb:UF,*", "eofb:*");
-    canon_is("solved:Uc,*", "solved:*");
-}
-
 Test(dsl_parse, whitespace_tolerated) {
     canon_is(" eofb : UF ", "eofb:UF");
-    canon_is("eoud |  eolr\t&  eofb", "(eoud:* | (eolr:* & eofb:*))");
+    canon_is("eoud |  eolr\t&  eofb", "(eoud | (eolr & eofb))");
 }
 
 Test(dsl_parse, associativity) {
-    canon_is("eofb & eolr & eoud", "((eofb:* & eolr:*) & eoud:*)");
-    canon_is("eofb | eolr | eoud", "((eofb:* | eolr:*) | eoud:*)");
+    canon_is("eofb & eolr & eoud", "((eofb & eolr) & eoud)");
+    canon_is("eofb | eolr | eoud", "((eofb | eolr) | eoud)");
 }
 
 Test(dsl_parse, errors_return_null_with_message) {
@@ -106,7 +106,7 @@ Test(dsl_parser, canonical_is_idempotent) {
         "solved:UFR,UFL & eofb:UF,UB",
         "eofb:UF,UB,UR,UL",
         "eoud | eolr & eofb",
-        "!solved:*",
+        "!solved",
         "ep:Ue",
         "cp:U",
         "coud:Uc | colr:Dc",

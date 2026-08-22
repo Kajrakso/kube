@@ -6,6 +6,7 @@
 #include "../src/core/move.h"
 #include "../src/core/cube_operation.h"
 
+
 static dsl_expr_t* parse_ok(const char* s) {
     char err[256];
     dsl_expr_t* e = dsl_parse(s, err, sizeof err);
@@ -182,6 +183,75 @@ Test(dsl_set, generator_closure_eval_matches_explicit) {
     }
 }
 
+/* ---------------------------------------------------------------- */
+/* product: A*B = {a*b : a in A, b in B} (apply a first, then b)     */
+/* ---------------------------------------------------------------- */
+
+Test(dsl_prod, parse_precedence_and_canonical) {
+    canon_is("solved * {R}", "(solved * {R})");
+    canon_is("{U} * <R>", "({U} * <R>)");
+    /* binds tighter than & and |, looser than unary ! */
+    canon_is("eofb & {U} * <R>", "(eofb & ({U} * <R>))");
+    canon_is("!{U} * {R}", "(!({U}) * {R})");
+    /* left-associative chain (the product is associative) */
+    canon_is("{U} * {R} * {F}", "(({U} * {R}) * {F})");
+}
+
+Test(dsl_prod, requires_a_set_operand) {
+    parse_errs("eofb * coud");
+    parse_errs("(eofb & solved:UF) * solved:D");
+}
+
+Test(dsl_prod, both_sets_materialized) {
+    cube_t r = cube_after("R");
+    cr_assert(eval_on("{e} * {R}", &r));
+    cr_assert(eval_on("{R} * {e}", &r));
+
+    cube_t ru = cube_after("R U");
+    cr_assert(eval_on("{R} * {U}", &ru));
+    cr_assert_not(eval_on("{U} * {R}", &ru));   /* order matters */
+
+    /* duplicates collapse through the materialized index */
+    cube_t ur = cube_after("U R");
+    cr_assert(eval_on("{U,U2} * {R,R'}", &ur));
+}
+
+Test(dsl_prod, mixed_set_predicate_membership) {
+    /* predicate * set: c = p*h  <=>  c*h^-1 satisfies the predicate */
+    cube_t r = cube_after("R");
+    cr_assert(eval_on("solved:UF * {R}", &r));
+    cube_t f = cube_after("F");
+    cr_assert_not(eval_on("solved:UF * {R}", &f));
+
+    /* set * predicate: c = h*p  <=>  h^-1*c satisfies the predicate.
+     * U preserves edge orientation, so it cannot fix the flips from F. */
+    cube_t u = cube_after("U");
+    cr_assert(eval_on("<U> * eofb", &u));
+    cube_t fr = cube_after("F R");
+    cr_assert_not(eval_on("<U> * eofb", &fr));
+}
+
+Test(dsl_prod, matches_manual_transform_loop) {
+    dsl_expr_t* e = parse_ok("{R,U'} * solved:UF");
+    dsl_expr_t* pred = parse_ok("solved:UF");
+    cube_t elems[2] = {cube_after("R"), cube_after("U'")};
+    const char* scrambles[] = {"", "R", "U'", "R' U", "F", "U R'",
+                               "R U R' U'", "L2 D B'"};
+    for (size_t i = 0; i < sizeof scrambles / sizeof scrambles[0]; i++) {
+        cube_t c = cube_after(scrambles[i]);
+        bool want = false;
+        for (int j = 0; j < 2 && !want; j++) {
+            cube_t inv = cube_operation_inverse(elems[j]);
+            /* c = a*p  <=>  a^-1*c satisfies the predicate */
+            cube_t transformed = cube_operation_compose(inv, c);
+            if (dsl_eval(pred, &transformed)) want = true;
+        }
+        cr_assert_eq(dsl_eval(e, &c), want, "scramble \"%s\"", scrambles[i]);
+    }
+    dsl_free_expression(e);
+    dsl_free_expression(pred);
+}
+
 Test(dsl_set, canonical_rendering) {
     canon_is("{R, U2}", "{R,U2}");
     /* elements render in input order */
@@ -191,9 +261,9 @@ Test(dsl_set, canonical_rendering) {
     /* duplicate generators are removed */
     canon_is("<U,U>", "<U>");
     /* sets bind tightest (primary level), like primitives */
-    canon_is("eofb & {U}", "(eofb:* & {U})");
-    canon_is("!{R} | eofb", "(!({R}) | eofb:*)");
-    canon_is("(eofb | {U}) & {R}", "((eofb:* | {U}) & {R})");
+    canon_is("eofb & {U}", "(eofb & {U})");
+    canon_is("!{R} | eofb", "(!({R}) | eofb)");
+    canon_is("(eofb | {U}) & {R}", "((eofb | {U}) & {R})");
 }
 
 Test(dsl_set, parse_errors) {

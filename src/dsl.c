@@ -110,25 +110,26 @@ static int dsl_group_lookup(const char* name, uint16_t* em, uint8_t* cm) {
     return 0;
 }
 
-/* comma-separated piece/group list -> position masks (incl. the `*` wildcard) */
+/* comma-separated piece/group list -> position masks */
 static int dsl_parse_pieces(dsl_parser_t* p, uint16_t* em, uint8_t* cm) {
     uint16_t e = 0;
     uint8_t c = 0;
     int any = 0;
     for (;;) {
-        if (dsl_match(p, '*')) {
-            e = 0x0FFF; c = 0xFF;
-        } else {
-            char id[16];
-            if (dsl_read_ident(p, id, sizeof(id)) < 0) { dsl_fail(p, "expected a piece or group name"); return 0; }
-            uint16_t ge; uint8_t gc;
-            if (dsl_group_lookup(id, &ge, &gc)) { e |= ge; c |= gc; }
-            else {
-                int b = edge_bit(id);
-                if (b >= 0) e |= (uint16_t)(1u << b);
-                else if ((b = corner_bit(id)) >= 0) c |= (uint8_t)(1u << b);
-                else { dsl_fail(p, "unknown piece or group"); return 0; }
-            }
+        size_t ws = dsl_next_pos(p);
+        if (ws < p->len && p->s[ws] == '*') {
+            dsl_fail(p, "'*' wildcard removed; write the primitive without ':*'");
+            return 0;
+        }
+        char id[16];
+        if (dsl_read_ident(p, id, sizeof(id)) < 0) { dsl_fail(p, "expected a piece or group name"); return 0; }
+        uint16_t ge; uint8_t gc;
+        if (dsl_group_lookup(id, &ge, &gc)) { e |= ge; c |= gc; }
+        else {
+            int b = edge_bit(id);
+            if (b >= 0) e |= (uint16_t)(1u << b);
+            else if ((b = corner_bit(id)) >= 0) c |= (uint8_t)(1u << b);
+            else { dsl_fail(p, "unknown piece or group"); return 0; }
         }
         any = 1;
         if (!dsl_match(p, ',')) break;
@@ -648,6 +649,48 @@ static dsl_expr_t* dsl_new_set(dsl_parser_t* p, cube_t* elems, int len,
     return e;
 }
 
+/* Product of two operands: A*B = {a*b : a in A, b in B} (apply a, then b).
+ * At least one operand must be a set atom. If both are sets, the product is
+ * materialized eagerly into an O(1) membership index. */
+#define DSL_PROD_MAX_ELEMS 100000
+
+static bool dsl_expr_is_set(const dsl_expr_t* e) {
+    return e->kind == EXPR_ATOM && e->atom_kind == ATOM_SET;
+}
+
+static dsl_expr_t* dsl_new_prod(dsl_parser_t* p,
+                                dsl_expr_t* left, dsl_expr_t* right) {
+    if (!dsl_expr_is_set(left) && !dsl_expr_is_set(right)) {
+        dsl_fail(p, "'*' requires at least one set operand ({..} or <..>)");
+        return NULL;
+    }
+
+    dsl_expr_t* e = calloc(1, sizeof *e);
+    if (!e) { dsl_fail(p, "out of memory"); return NULL; }
+    e->kind = EXPR_PROD;
+    e->left = left;
+    e->right = right;
+
+    if (dsl_expr_is_set(left) && dsl_expr_is_set(right)) {
+        long long total = (long long)left->subgroup_len * right->subgroup_len;
+        if (total > DSL_PROD_MAX_ELEMS) {
+            dsl_fail(p, "product too large (more than 100000 elements)");
+            free(e);
+            return NULL;
+        }
+        cube_hash_set* hs = malloc(sizeof *hs);
+        if (!hs) { dsl_fail(p, "out of memory"); free(e); return NULL; }
+        *hs = cube_hs_new(total > 0 ? (int)total * 2 : 256);
+        for (int i = 0; i < left->subgroup_len; i++)
+            for (int j = 0; j < right->subgroup_len; j++)
+                cube_hs_insert(hs, cube_operation_compose(
+                                       left->subgroup_elems[i],
+                                       right->subgroup_elems[j]));
+        e->prod_index = hs;
+    }
+    return e;
+}
+
 
 /* ---------------------------------------------------------------- */
 /* Parsing                                                          */
@@ -684,7 +727,7 @@ static dsl_expr_t* dsl_parse_primary(dsl_parser_t* p) {
     dsl_atom_kind kind; axes ax;
     if (!dsl_prim_lookup(id, &kind, &ax)) { dsl_fail(p, "unknown primitive"); return NULL; }
 
-    uint16_t em = 0x0FFF; uint8_t cm = 0xFF;   /* `prim` without `:pieces` == `prim:*` */
+    uint16_t em = 0x0FFF; uint8_t cm = 0xFF;   /* bare primitive == all pieces */
     if (dsl_match(p, ':'))
         if (!dsl_parse_pieces(p, &em, &cm)) return NULL;
 
@@ -700,11 +743,26 @@ static dsl_expr_t* dsl_parse_unary(dsl_parser_t* p) {
     return dsl_parse_primary(p);
 }
 
-static dsl_expr_t* dsl_parse_and(dsl_parser_t* p) {
+/* Product level: binds tighter than &, looser than unary. Left-assoc
+ * (the product is associative, so chaining a*b*c is unambiguous). */
+static dsl_expr_t* dsl_parse_prod(dsl_parser_t* p) {
     dsl_expr_t* left = dsl_parse_unary(p);
     if (!left) return NULL;
-    while (dsl_match(p, '&')) {
+    while (dsl_match(p, '*')) {
         dsl_expr_t* right = dsl_parse_unary(p);
+        if (!right) { dsl_free_expression(left); return NULL; }
+        dsl_expr_t* node = dsl_new_prod(p, left, right);
+        if (!node) { dsl_free_expression(left); dsl_free_expression(right); return NULL; }
+        left = node;
+    }
+    return left;
+}
+
+static dsl_expr_t* dsl_parse_and(dsl_parser_t* p) {
+    dsl_expr_t* left = dsl_parse_prod(p);
+    if (!left) return NULL;
+    while (dsl_match(p, '&')) {
+        dsl_expr_t* right = dsl_parse_prod(p);
         if (!right) { dsl_free_expression(left); return NULL; }
         left = dsl_new_binop(p, EXPR_AND, left, right);
     }
@@ -780,6 +838,31 @@ bool dsl_eval(const dsl_expr_t* e, cube_t* cube) {
     case EXPR_AND: return dsl_eval(e->left, cube) && dsl_eval(e->right, cube);
     case EXPR_OR:  return dsl_eval(e->left, cube) || dsl_eval(e->right, cube);
     case EXPR_NOT: return !dsl_eval(e->left, cube);
+    case EXPR_PROD: {
+        /* c = a*b (apply a, then b) for some members of both operands. */
+        if (e->prod_index)
+            return cube_hs_contains((const cube_hash_set*)e->prod_index, *cube);
+        if (dsl_expr_is_set(e->left)) {
+            /* left is the set H: check h^-1 * c against the right operand */
+            const dsl_expr_t* h = e->left;
+            const dsl_expr_t* other = e->right;
+            for (int i = 0; i < h->subgroup_len; i++) {
+                cube_t inv = cube_operation_inverse(h->subgroup_elems[i]);
+                cube_t transformed = cube_operation_compose(inv, *cube);
+                if (dsl_eval(other, &transformed)) return true;
+            }
+            return false;
+        }
+        /* right is the set H: check c * h^-1 against the left operand */
+        const dsl_expr_t* h = e->right;
+        const dsl_expr_t* other = e->left;
+        for (int i = 0; i < h->subgroup_len; i++) {
+            cube_t inv = cube_operation_inverse(h->subgroup_elems[i]);
+            cube_t transformed = cube_operation_compose(*cube, inv);
+            if (dsl_eval(other, &transformed)) return true;
+        }
+        return false;
+    }
     case EXPR_ATOM: break;
     }
 
@@ -839,6 +922,10 @@ void dsl_free_expression(dsl_expr_t* e) {
             free(e->set_index);
         }
     }
+    if (e->kind == EXPR_PROD && e->prod_index) {
+        cube_hs_free((cube_hash_set*)e->prod_index);
+        free(e->prod_index);
+    }
     free(e);
 }
 
@@ -854,6 +941,7 @@ static const char* dsl_expr_kind_name(dsl_expr_kind k) {
     case EXPR_OR:   return "EXPR_OR";
     case EXPR_NOT:  return "EXPR_NOT";
     case EXPR_ATOM: return "ATOM";
+    case EXPR_PROD: return "EXPR_PROD";
     }
     return "?";
 }
@@ -987,6 +1075,14 @@ static char* dsl_render(const dsl_expr_t* e) {
         free(l); free(r);
         return s;
     }
+    case EXPR_PROD: {
+        char* l = dsl_render(e->left);
+        char* r = dsl_render(e->right);
+        s = malloc(strlen(l) + strlen(r) + 7);
+        sprintf(s, "(%s * %s)", l, r);
+        free(l); free(r);
+        return s;
+    }
     case EXPR_NOT: {
         char* c = dsl_render(e->left);
         s = malloc(strlen(c) + 4);
@@ -998,7 +1094,7 @@ static char* dsl_render(const dsl_expr_t* e) {
         if (e->atom_kind == ATOM_SET)
             return dsl_render_set(e);
         if (e->edge_mask == 0x0FFF && e->corner_mask == 0xFF)
-            sprintf(buf, "%s:*", dsl_prim_name(e->atom_kind, e->axis));
+            sprintf(buf, "%s", dsl_prim_name(e->atom_kind, e->axis));
         else {
             char pieces[192];
             dsl_render_pieces(e->edge_mask, e->corner_mask, pieces, sizeof pieces);

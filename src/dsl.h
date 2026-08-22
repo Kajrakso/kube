@@ -15,8 +15,9 @@
  *
  * Primitives: eofb, eolr, eoud, cofb, colr, coud, ep, cp
  * Pieces: UBL, UBR, ..., DBR, DBL, UB, UR, UF, UL, DF, ... FR, FL
- * Combinations of pieces: M, S, E, Dw, Uw, ..., Rw, Lw, U, Uc (all corners on U, Ue (all edges on U), * (all pieces)
- * Usage: To define an "atom" (the building block of a custom solved state) use PRIMITIVE:PIECE/COMBINATION OF PIECES*.
+ * Combinations of pieces: M, S, E, Dw, Uw, ..., Rw, Lw, U, Uc (all corners on U), Ue (all edges on U)
+ * Usage: To define an "atom" (the building block of a custom solved state) use PRIMITIVE or PRIMITIVE:PIECE/COMBINATION OF PIECES.
+ * A primitive written without :PIECES refers to all pieces (e.g. solved == all pieces solved).
  * Where combination of pieces is a predefined one, or pieces separated by commas. To define a custom solved state to
  *
  *     --define 'NAME=ATOM'
@@ -24,10 +25,18 @@
  * Atoms are combined using the simple operators above in addition to parentheses. Example:
  *
  *     --define 'NAME=ATOM1 & ATOM2 & (ATOM3 | !ATOM4)'
- * The order of operations are (), !, &, |.
+ * The order of operations are (), !, *, &, | where * is the set/group product:
+ *
+ *     --define 'NAME=A1 * A2'
+ *
+ * denotes the product {a1*a2 : a1 in A1's states, a2 in A2's states} (apply a1,
+ * then a2). At least one operand of * must be a set atom ({..} or <..>); if
+ * both are sets the product is materialized eagerly. Example: 'solved:U * <R,U>'
+ * is the set of states that solve to solved:U by some element of <R,U>.
  *
  * Set atoms: {R, U2, e} (exactly the listed elements, identity only when
- * spelled out) and <R, U> (closure of the given generators, a subgroup).
+ * spelled out; each element may be a move sequence like R U R') and <R, U>
+ * (closure of the given generators, a subgroup).
  * A set atom evaluates to true when the cube state is a member of the set.
  *
  * Example: To define a solving step for f2l, with the corners on the U-layer permuted (but might not be oriented)
@@ -137,6 +146,7 @@ typedef enum {
     EXPR_OR,
     EXPR_NOT,
     EXPR_ATOM,
+    EXPR_PROD,
 } dsl_expr_kind;
 
 
@@ -162,7 +172,9 @@ typedef struct dsl_expr {
     char**              gen_strs;     /* generator source texts (set_is_generators) */
     int                 n_gens;
     char**              elem_strs;    /* element source texts ({..} only) */
-    void*               set_index;    /* internal O(1) membership index */
+    void*               set_index;    /* ATOM_SET only: O(1) membership index */
+    void*               prod_index;   /* EXPR_PROD only: index over materialized
+                                       * product when both operands are sets */
 } dsl_expr_t;
 
 /* Evaluates the expression for a cube state. */
@@ -181,7 +193,8 @@ bool dsl_is_maybe_fin(dsl_expr_t*);
 /* Parses str into an dsl_expr_t. On error returns NULL and writes a message to err. */
 dsl_expr_t* dsl_parse(const char* str, char* err, size_t errsz);
 
-/* Deterministic canonical string (pieces sorted, all-pieces as `*`). Caller frees. */
+/* Deterministic canonical string (pieces sorted, all-pieces rendered bare).
+ * Caller frees. */
 char* dsl_canonical(const dsl_expr_t* e);
 
 /* ---------------------------------------------------------------- */
