@@ -426,20 +426,19 @@
     if (!n) return "";
     if (n.type === "atom") return (n.not ? "!" : "") + n.prim + ":" + n.pieces;
     if (n.type === "mod") {
-      var inner = toExpr(n.child);
+      /* sets are atoms now: solved:* mod H == the set atom itself */
       var cn = getNode(n.child);
-      if (cn.type === "op") inner = "(" + inner + ")";
+      var trivialChild = cn && cn.type === "atom" && cn.prim === "solved" &&
+                         cn.pieces === "*" && !cn.not;
+      if (!trivialChild) return null; /* product (*) not supported yet */
+      var inner = getModExpr(n);
       if (n.not) inner = "!(" + inner + ")";
-      return inner + " mod " + getModExpr(n);
+      return inner;
     }
     var l = toExpr(n.left);
     var r = toExpr(n.right);
-    var ln = getNode(n.left), rn = getNode(n.right);
-    var needL = (ln.type === "op" && ln.op !== n.op) || ln.type === "mod";
-    var needR = (rn.type === "op" && rn.op !== n.op) || rn.type === "mod";
-    if (ln.type === "mod") needL = true;
-    if (rn.type === "mod") needR = true;
-    var expr = (needL ? "(" + l + ")" : l) + " " + n.op + " " + (needR ? "(" + r + ")" : r);
+    if (l === null || r === null) return null;
+    var expr = l + " " + n.op + " " + r;
     if (n.not) expr = "!(" + expr + ")";
     return expr;
   }
@@ -585,7 +584,7 @@
       h += '<button class="tree-btn not-btn' + (n.not ? ' not-active' : '') + '" data-nid="' + id + '" data-act="not">NOT</button>';
       h += '<button class="tree-btn insert-and" data-nid="' + id + '" data-act="and">+AND</button>';
       h += '<button class="tree-btn insert-or" data-nid="' + id + '" data-act="or">+OR</button>';
-      h += '<button class="tree-btn mod-btn" data-nid="' + id + '" data-act="mod">+MOD</button>';
+      h += '<button class="tree-btn mod-btn" data-nid="' + id + '" data-act="mod">+SET</button>';
       if (depth > 0) {
         h += '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>';
       }
@@ -596,7 +595,7 @@
       var childHtml = renderTree(n.child, depth + 1);
       return '<div class="tree-node"><div class="tree-card" style="border-color:var(--mod-color);">' +
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
-          '<span style="color:var(--mod-color);font-weight:700;font-size:13px;">MOD</span>' +
+          '<span style="color:var(--mod-color);font-weight:700;font-size:13px;">SET</span>' +
           '<select data-nid="' + id + '" data-f="mod-mode" style="width:auto;padding:3px 24px 3px 6px;font-size:12px;">' +
             '<option value="explicit"' + (n.subgroup.mode === "explicit" ? " selected" : "") + '>Explicit {…}</option>' +
             '<option value="generators"' + (n.subgroup.mode === "generators" ? " selected" : "") + '>Generators &lt;…&gt;</option>' +
@@ -642,6 +641,12 @@
       'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
   }
 
+  function exprPreviewText(id) {
+    var e = toExpr(id);
+    if (e === null) return "(not supported yet: SET over non-solved state)";
+    return e;
+  }
+
   function renderBuilder() {
     if (!builderOpen) return;
     var bState = getBuilderFields();
@@ -653,7 +658,7 @@
           '<input id="defMoveset" placeholder="Moveset (opt)" value="' + esc(bState.moveset) + '" style="width:120px;flex:none;" />' +
         '</div>' +
         '<div id="treeRoot">' + renderTree(rootId, 0) + '</div>' +
-        '<div class="expr-preview">Preview: <span id="exprPreview">' + esc(toExpr(rootId)) + '</span></div>' +
+        '<div class="expr-preview">Preview: <span id="exprPreview">' + esc(exprPreviewText(rootId)) + '</span></div>' +
         '<div class="builder-footer">' +
           '<button class="btn-primary btn-confirm" onclick="confirmBuilder()">Add State</button>' +
           '<button class="btn-primary btn-cancel" onclick="closeBuilder()">Cancel</button>' +
@@ -730,7 +735,7 @@
       }
     }
     var pv = document.getElementById("exprPreview");
-    if (pv) pv.textContent = toExpr(rootId);
+    if (pv) pv.textContent = exprPreviewText(rootId);
   }
   document.addEventListener("change", handleTreeInput);
   document.addEventListener("input", handleTreeInput);

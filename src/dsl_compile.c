@@ -57,62 +57,6 @@ int dsl_compile_build_definitions(dsl_compile_definition_t** defs, int* n_defs, 
         }
         df->canonical = dsl_canonical(df->expr);
 
-        /* Handle MOD expressions: expr mod {moves} */
-        if (df->expr->kind == EXPR_MOD) {
-            dsl_expr_t* inner = df->expr->left;
-            cube_t*     sub_elems = df->expr->subgroup_elems;
-            int         sub_len   = df->expr->subgroup_len;
-
-            df->step.name = df->name;
-            df->step.is_custom = true;
-            df->step.solving_type = SOLVE_CUSTOM;
-            df->step.cube_is_solved = custom_cube_is_solved;
-            df->step.moveset_mask = df->moveset_mask;
-
-            /* Store the outer EXPR_MOD as custom_data for cube_is_solved. */
-            df->step.custom_data = df->expr;
-
-            /* If the inner expression is solved:*, reuse the opt1 ptable.
-             * Build a wrapper ptable with its own custom_data for the mod context. */
-            if (dsl_is_maybe_fin(inner)) {
-                dsl_prune_step_ctx_t* sctx = calloc(1, sizeof(*sctx));
-                sctx->expr = inner;
-                sctx->mod_subgroup_elems = sub_elems;
-                sctx->mod_subgroup_len = sub_len;
-
-                ptable_data_t* wrapper = calloc(1, sizeof(ptable_data_t));
-                *wrapper = ptable_data_opt1;  /* copy all fields incl. ptable ptr */
-                wrapper->ptable_is_loaded = false;  /* force reload via mmap */
-                wrapper->ptable = NULL;
-                wrapper->custom_data = sctx;
-
-                df->step.p_data = wrapper;
-                df->step.heuristic_func = dsl_prune_heuristic_mod;
-            } else {
-                /* Build custom tables from the inner expression */
-                df->step.custom_ptables =
-                    dsl_prune_make_ptables(inner, &df->step.n_custom_ptables);
-                if (df->step.custom_ptables != NULL &&
-                    df->step.n_custom_ptables > 0) {
-                    df->step.p_data = df->step.custom_ptables[0];
-                    /* Set mod fields on the step context stored in the ptable.
-                     * dsl_prune_make_ptables already allocated this context;
-                     * we just fill in the mod fields. */
-                    dsl_prune_step_ctx_t* sctx =
-                        (dsl_prune_step_ctx_t*)df->step.p_data->custom_data;
-                    sctx->mod_subgroup_elems = sub_elems;
-                    sctx->mod_subgroup_len = sub_len;
-                    df->step.heuristic_func = dsl_prune_heuristic_mod;
-                } else {
-                    df->step.custom_ptables = NULL;
-                    df->step.n_custom_ptables = 0;
-                    df->step.p_data = NULL;
-                    df->step.heuristic_func = NULL;
-                }
-            }
-            continue;
-        }
-
         /* solve everything  ==  fin  (keeps the fast IDA_fin + opt1 path) */
         if (dsl_is_maybe_fin(df->expr)) {
             if (moveset_eff(df->moveset_mask) == MOVESET_HTM) {
@@ -165,27 +109,14 @@ void dsl_compile_free_definitions(dsl_compile_definition_t* defs, int* n_defs) {
         free(df->name);
         free(df->canonical);
 
-        /* Free custom pruning tables (non-fin MOD and general custom steps) */
+        /* Free custom pruning tables (general custom steps) */
         if (df->step.is_custom && df->step.custom_ptables != NULL) {
             dsl_prune_free_tables(df->step.custom_ptables, df->step.n_custom_ptables);
         }
 
-        /* For MOD+fin (wrapper) cases: p_data is a heap-allocated wrapper ptable
-         * whose custom_data holds a dsl_prune_step_ctx_t. The wrapper has its own
-         * mmap'd ptable (loaded independently from ptable_data_opt1), so free it. */
-        if (df->step.is_custom && df->step.custom_ptables == NULL &&
-            df->step.p_data != NULL &&
-            df->step.p_data != &ptable_data_opt1) {
-            dsl_prune_step_ctx_t* sctx =
-                (dsl_prune_step_ctx_t*)df->step.p_data->custom_data;
-            if (sctx)
-                free(sctx);
-            free_ptable(df->step.p_data);
-            free(df->step.p_data);
-        }
-
-        /* For non-fin MOD steps, custom_data is the outer EXPR_MOD pointer
-         * (owned by df->expr, freed below). Do NOT free it separately. */
+        /* For custom steps reusing the shared opt1 ptable (p_data == &ptable_data_opt1),
+         * nothing is owned here. Any other heap p_data belongs to custom_ptables,
+         * freed above. */
 
         dsl_free_expression(df->expr);
     }

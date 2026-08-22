@@ -26,6 +26,10 @@
  *     --define 'NAME=ATOM1 & ATOM2 & (ATOM3 | !ATOM4)'
  * The order of operations are (), !, &, |.
  *
+ * Set atoms: {R, U2, e} (exactly the listed elements, identity only when
+ * spelled out) and <R, U> (closure of the given generators, a subgroup).
+ * A set atom evaluates to true when the cube state is a member of the set.
+ *
  * Example: To define a solving step for f2l, with the corners on the U-layer permuted (but might not be oriented)
  * and then solve a scramble optimally (first to eo on the FB axis, then to the user defined state), do either:
  *
@@ -97,6 +101,7 @@ typedef enum {
     ATOM_EP,
     ATOM_CP,
     ATOM_SOLVED,
+    ATOM_SET,
 } dsl_atom_kind;
 
 /* ---------------------------------------------------------------- */
@@ -132,7 +137,6 @@ typedef enum {
     EXPR_OR,
     EXPR_NOT,
     EXPR_ATOM,
-    EXPR_MOD,
 } dsl_expr_kind;
 
 
@@ -148,9 +152,17 @@ typedef struct dsl_expr {
     uint16_t            edge_mask;   /* piece mask; 0x0FFF = all edges */
     uint8_t             corner_mask; /* piece mask; 0xFF = all corners */
 
-    /* EXPR_MOD only: subgroup elements as cube states */
+    /* ATOM_SET only: enumerated set of states.
+     * {..}: exactly the listed elements; each element is a sequence of
+     *       moves composed together (identity only if spelled out).
+     * <..>: closure of the generators (a subgroup, so it contains e). */
     cube_t*             subgroup_elems;
     int                 subgroup_len;
+    bool                set_is_generators; /* parsed as <..>; render as such */
+    char**              gen_strs;     /* generator source texts (set_is_generators) */
+    int                 n_gens;
+    char**              elem_strs;    /* element source texts ({..} only) */
+    void*               set_index;    /* internal O(1) membership index */
 } dsl_expr_t;
 
 /* Evaluates the expression for a cube state. */

@@ -225,9 +225,6 @@ static void collect_solved_tables(const dsl_expr_t* e,
         break;
     case EXPR_NOT:
         break;
-    case EXPR_MOD:
-        collect_solved_tables(e->left, arr, n, cap);
-        break;
     case EXPR_ATOM:
         collect_from_atom(e, arr, n, cap);
         break;
@@ -300,9 +297,6 @@ static size_t eval_prune_expr(const dsl_expr_t* e, cube_t* cube,
         size_t r = eval_prune_expr(e->right, cube, ctx);
         return l < r ? l : r;
     }
-    case EXPR_MOD:
-        /* Handled by dsl_prune_heuristic_mod; fall back to inner expression. */
-        return eval_prune_expr(e->left, cube, ctx);
     case EXPR_ATOM: {
         if (e->atom_kind != ATOM_SOLVED) return 0;
         size_t best = 0;
@@ -336,48 +330,6 @@ size_t dsl_prune_heuristic(cube_t* c, solving_step* ss) {
     dsl_prune_step_ctx_t* ctx = (dsl_prune_step_ctx_t*)p_data->custom_data;
     if (!ctx || !ctx->expr) return 0;
     return eval_prune_expr(ctx->expr, c, ctx);
-}
-
-size_t dsl_prune_heuristic_mod(cube_t* c, solving_step* ss) {
-    ptable_data_t* p_data = ss->p_data;
-    dsl_prune_step_ctx_t* ctx = (dsl_prune_step_ctx_t*)p_data->custom_data;
-    if (!ctx) return 0;
-
-    /* No subgroup: fall back to plain heuristic on the inner expression. */
-    if (ctx->mod_subgroup_len == 0)
-    {
-        if (!ctx->expr) return 0;
-        return eval_prune_expr(ctx->expr, c, ctx);
-    }
-
-    /* Fast path: when the step context has no tables (e.g. solved:* reused with opt1),
-     * use the ptable's own index function directly. */
-    if (ctx->n_tables == 0 && p_data->cube_to_index_func != NULL &&
-        p_data->ptable != NULL)
-    {
-        size_t best = SIZE_MAX;
-        for (int i = 0; i < ctx->mod_subgroup_len; i++)
-        {
-            cube_t inv = cube_operation_inverse(ctx->mod_subgroup_elems[i]);
-            cube_t transformed = cube_operation_compose(inv, *c);
-            uint64_t idx = p_data->cube_to_index_func(&transformed, UD);
-            size_t v = (size_t)p_data->read_value_ptable_func(
-                idx, (uint8_t*)p_data->ptable);
-            if (v < best) best = v;
-        }
-        return best;
-    }
-
-    /* General path: walk the DSL AST using the inner expression's tables. */
-    size_t best = SIZE_MAX;
-    for (int i = 0; i < ctx->mod_subgroup_len; i++)
-    {
-        cube_t inv = cube_operation_inverse(ctx->mod_subgroup_elems[i]);
-        cube_t transformed = cube_operation_compose(inv, *c);
-        size_t v = eval_prune_expr(ctx->expr, &transformed, ctx);
-        if (v < best) best = v;
-    }
-    return best;
 }
 
 /* ------------------------------------------------------------------ */
