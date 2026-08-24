@@ -1,4 +1,6 @@
 #include "cube_state.h"
+#include "../utils/utils.h"
+#include "../tables.h"
 
 /* private */
 
@@ -25,7 +27,11 @@ bool cube_valid_co(cube_t* cube) {
 }
 
 // todo: implement these.
-bool cube_valid_permutation(cube_t* cube) { return true; }
+bool cube_valid_permutation(cube_t* cube) {
+    printf("NOT IMPLEMENTED YET!\n");
+    exit(1);
+    return true;
+}
 
 /* public */
 
@@ -180,148 +186,6 @@ bool cube_state_is_dr(cube_t* cube) {
 }
 
 
-// bool cube_state_is_cross_D(cube_t* cube){
-//     return (extract_edge_perm(cube->edges[DB]) == DB
-//         && extract_edge_perm(cube->edges[DR]) == DR
-//         && extract_edge_perm(cube->edges[DL]) == DL
-//         && extract_edge_perm(cube->edges[DF]) == DF
-//         && extract_edge_orien(cube->edges[DB], UD) == 0
-//         && extract_edge_orien(cube->edges[DR], UD) == 0
-//         && extract_edge_orien(cube->edges[DL], UD) == 0
-//         && extract_edge_orien(cube->edges[DF], UD) == 0
-//     );
-// }
-//
-//
-// bool cube_state_is_xcross_D(cube_t* cube){
-//     cube_t c = *cube;
-//     int num_pairs = 0;
-//     for (int i = 0; i < 4; i++){
-//         if (extract_edge_perm(c.edges[DB]) == DB
-//             && extract_edge_perm(c.edges[DR]) == DR
-//             && extract_edge_perm(c.edges[DL]) == DL
-//             && extract_edge_perm(c.edges[DF]) == DF
-//             && extract_edge_orien(c.edges[DB], UD) == 0
-//             && extract_edge_orien(c.edges[DR], UD) == 0
-//             && extract_edge_orien(c.edges[DL], UD) == 0
-//             && extract_edge_orien(c.edges[DF], UD) == 0
-//
-//             && extract_edge_perm(c.edges[FL]) == FL
-//             && extract_edge_orien(c.edges[FL], UD) == 0
-//             && extract_corner_perm(c.corners[DFL] == DFL)
-//             && extract_corner_orien(c.corners[DFL], UD) == 0
-//         ) {
-//             num_pairs++;
-//         }
-//
-//         if (num_pairs == 1){
-//             return true;
-//         }
-//
-//         c = cube_operation_sym_conjugate(c, 1);
-//     }
-//     return false;
-// }
-//
-//
-// bool cube_state_is_xxcross_D(cube_t* cube){
-//     cube_t c = *cube;
-//     int num_pairs = 0;
-//     for (int i = 0; i < 4; i++){
-//         if (extract_edge_perm(c.edges[DB]) == DB
-//             && extract_edge_perm(c.edges[DR]) == DR
-//             && extract_edge_perm(c.edges[DL]) == DL
-//             && extract_edge_perm(c.edges[DF]) == DF
-//             && extract_edge_orien(c.edges[DB], UD) == 0
-//             && extract_edge_orien(c.edges[DR], UD) == 0
-//             && extract_edge_orien(c.edges[DL], UD) == 0
-//             && extract_edge_orien(c.edges[DF], UD) == 0
-//
-//             && extract_edge_perm(c.edges[FL]) == FL
-//             && extract_edge_orien(c.edges[FL], UD) == 0
-//             && extract_corner_perm(c.corners[DFL] == DFL)
-//             && extract_corner_orien(c.corners[DFL], UD) == 0
-//         ) {
-//             num_pairs++;
-//         }
-//
-//         if (num_pairs == 2){
-//             return true;
-//         }
-//
-//         c = cube_operation_sym_conjugate(c, 1);
-//     }
-//     return false;
-// }
-//
-// bool cube_state_is_xxxcross_D(cube_t* cube){
-//     cube_t c = *cube;
-//     int num_pairs = 0;
-//     for (int i = 0; i < 4; i++){
-//         if (extract_edge_perm(c.edges[DB]) == DB
-//             && extract_edge_perm(c.edges[DR]) == DR
-//             && extract_edge_perm(c.edges[DL]) == DL
-//             && extract_edge_perm(c.edges[DF]) == DF
-//             && extract_edge_orien(c.edges[DB], UD) == 0
-//             && extract_edge_orien(c.edges[DR], UD) == 0
-//             && extract_edge_orien(c.edges[DL], UD) == 0
-//             && extract_edge_orien(c.edges[DF], UD) == 0
-//
-//             && extract_edge_perm(c.edges[FL]) == FL
-//             && extract_edge_orien(c.edges[FL], UD) == 0
-//             && extract_corner_perm(c.corners[DFL] == DFL)
-//             && extract_corner_orien(c.corners[DFL], UD) == 0
-//         ) {
-//             num_pairs++;
-//         }
-//
-//         if (num_pairs == 3){
-//             return true;
-//         }
-//
-//         c = cube_operation_sym_conjugate(c, 1);
-//     }
-//     return false;
-// }
-//
-//
-// bool cube_state_is_xxxxcross_D(cube_t* cube){
-//     cube_t c = *cube;
-//     int num_pairs = 0;
-//     for (int i = 0; i < 4; i++){
-//         if (extract_edge_perm(c.edges[DB]) == DB
-//             && extract_edge_perm(c.edges[DR]) == DR
-//             && extract_edge_perm(c.edges[DL]) == DL
-//             && extract_edge_perm(c.edges[DF]) == DF
-//             && extract_edge_orien(c.edges[DB], UD) == 0
-//             && extract_edge_orien(c.edges[DR], UD) == 0
-//             && extract_edge_orien(c.edges[DL], UD) == 0
-//             && extract_edge_orien(c.edges[DF], UD) == 0
-//
-//             && extract_edge_perm(c.edges[FL]) == FL
-//             && extract_edge_orien(c.edges[FL], UD) == 0
-//             && extract_corner_perm(c.corners[DFL] == DFL)
-//             && extract_corner_orien(c.corners[DFL], UD) == 0
-//         ) {
-//             num_pairs++;
-//         }
-//
-//         if (num_pairs == 4){
-//             return true;
-//         }
-//
-//         c = cube_operation_sym_conjugate(c, 1);
-//     }
-//     return false;
-// }
-
-
-
-
-
-#include "../utils/utils.h"
-#include "../tables.h"
-
 uint64_t cube_to_cp_index(cube_t* cube){
     int cp[NCORNERS];
     for (int i = 0; i < NCORNERS; i++){
@@ -339,10 +203,4 @@ bool cube_state_is_htr(cube_t* cube) {
 
     return cube_state_is_dr_FB(cube) && cube_state_is_dr_UD(cube) && cube_state_is_dr_LR(cube) && dr_subsets[cp_i] == 1;
 }
-
-
-
-
-
-
 

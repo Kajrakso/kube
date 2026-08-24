@@ -1,6 +1,7 @@
 #include "dsl_compile.h"
 #include "cli.h"
 #include "moveset.h"
+#include "dsl_prune.h"
 
 /* ------------------------
  * functions that bridges the gap
@@ -9,12 +10,13 @@
  * ------------------------ */
 
 static bool custom_cube_is_solved(cube_t* c, void* data) {
-    return dsl_eval((dsl_expr_t*)data, c);
+    dsl_expr_t* e = data;
+    return dsl_eval(e, c);
 }
 
-static size_t generic_ptable_heuristic(cube_t* c, ptable_data_t* p_data) {
-    uint64_t idx = p_data->cube_to_index_func(c, UD);
-    return p_data->read_value_ptable_func(idx, p_data->ptable);
+static size_t generic_ptable_heuristic(cube_t* c, solving_step* ss) {
+    uint64_t idx = ss->p_data->cube_to_index_func(c, UD);
+    return ss->p_data->read_value_ptable_func(idx, ss->p_data->ptable);
 }
 
 /* ------------------------
@@ -26,8 +28,6 @@ static size_t generic_ptable_heuristic(cube_t* c, ptable_data_t* p_data) {
  * is wired together.
  * ------------------------ */
 int dsl_compile_build_definitions(dsl_compile_definition_t** defs, int* n_defs, struct arguments* arguments){
-    printf("dsl_compile_build_definitions is not implemented yet!\n");
-
     if (defs == NULL) {
         fprintf(stderr, "defs = NULL\n");
         return 1;
@@ -56,7 +56,7 @@ int dsl_compile_build_definitions(dsl_compile_definition_t** defs, int* n_defs, 
             dsl_debug_print(df->expr, stdout);
         }
         df->canonical = dsl_canonical(df->expr);
-        
+
         /* solve everything  ==  fin  (keeps the fast IDA_fin + opt1 path) */
         if (dsl_is_maybe_fin(df->expr)) {
             if (moveset_eff(df->moveset_mask) == MOVESET_HTM) {
@@ -82,34 +82,19 @@ int dsl_compile_build_definitions(dsl_compile_definition_t** defs, int* n_defs, 
         df->step.cube_is_solved = custom_cube_is_solved;
         df->step.custom_data = df->expr;
         df->step.moveset_mask = df->moveset_mask;
-        df->step.custom_ptables = NULL;
 
-        df->step.p_data             = NULL;
-        df->step.heuristic_func     = NULL;
-
-        // df->step.custom_ptables = steps_dsl_make_ptables(df->expr, &df->step.n_custom_ptables, df->moveset_mask);
-
-    //     if (df->step.custom_ptables != NULL) {
-    //     df->step.custom_ptables = steps_dsl_make_ptables(df->expr, &df->step.n_custom_ptables, df->moveset_mask);
-    //     if (df->step.custom_ptables != NULL) {
-    //         if (df->step.n_custom_ptables == 1)
-    //             fprintf(stderr, "note: step '%s' will use pruning table %s\n",
-    //                     df->name, df->step.custom_ptables[0]->filename);
-    //         else {
-    //             fprintf(stderr, "note: step '%s' is too large for one table; using %i tables:",
-    //                     df->name, df->step.n_custom_ptables);
-    //             for (int k = 0; k < df->step.n_custom_ptables; k++)
-    //                 fprintf(stderr, " %s", df->step.custom_ptables[k]->filename);
-    //             fprintf(stderr, "\n");
-    //         }
-    //     } else {
-    //         fprintf(stderr,
-    //                 "warning: step '%s' is not T1-prunable; solving will be unpruned (slow).\n"
-    //                 "         (tables can only be generated for pure ANDs of full-cube\n"
-    //                 "         eofb/eolr/eoud/cofb/colr/coud clauses)\n",
-    //                 df->name);
-    //     }
-    //
+        /* build custom pruning tables from the DSL expression */
+        df->step.custom_ptables =
+            dsl_prune_make_ptables(df->expr, &df->step.n_custom_ptables);
+        if (df->step.custom_ptables != NULL && df->step.n_custom_ptables > 0) {
+            df->step.p_data = df->step.custom_ptables[0];
+            df->step.heuristic_func = dsl_prune_heuristic;
+        } else {
+            df->step.custom_ptables = NULL;
+            df->step.n_custom_ptables = 0;
+            df->step.p_data = NULL;
+            df->step.heuristic_func = NULL;
+        }
     }
     return 0;
 }
@@ -123,12 +108,16 @@ void dsl_compile_free_definitions(dsl_compile_definition_t* defs, int* n_defs) {
         dsl_compile_definition_t* df = &defs[i];
         free(df->name);
         free(df->canonical);
+
+        /* Free custom pruning tables (general custom steps) */
         if (df->step.is_custom && df->step.custom_ptables != NULL) {
-            for (int k = 0; k < df->step.n_custom_ptables; k++) {
-                free(df->step.custom_ptables[k]);
-            }
-            free(df->step.custom_ptables);
+            dsl_prune_free_tables(df->step.custom_ptables, df->step.n_custom_ptables);
         }
+
+        /* For custom steps reusing the shared opt1 ptable (p_data == &ptable_data_opt1),
+         * nothing is owned here. Any other heap p_data belongs to custom_ptables,
+         * freed above. */
+
         dsl_free_expression(df->expr);
     }
 

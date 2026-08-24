@@ -64,18 +64,7 @@ bool cube_state_is_corners_solved(cube_t* cube);
 /* Check if the cube has solved edges. */
 bool cube_state_is_edges_solved(cube_t* cube);
 
-
-// temp
-/* Check if the cube has cross solved on any side. */
-// bool cube_state_is_cross(cube_t* cube);
-//
-//
-// bool cube_state_is_cross_D(cube_t* cube);
-// bool cube_state_is_xcross_D(cube_t* cube);
-// bool cube_state_is_xxcross_D(cube_t* cube);
-// bool cube_state_is_xxxcross_D(cube_t* cube);
-// bool cube_state_is_xxxxcross_D(cube_t* cube);
-//
+/* Used for checking if a cube is in htr */
 uint64_t cube_to_cp_index(cube_t* cube);
 
 #endif /* CUBE_STATE_H */

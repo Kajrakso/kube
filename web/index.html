@@ -3,68 +3,129 @@
 <head>
 <meta charset="utf-8">
 <title>Kube Solver</title>
+<script src="https://cdn.cubing.net/v0/js/scramble-display" type="module"></script>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #111827;
-    --accent: #38bdf8;
-    --accent2: #22c55e;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --danger: #ef4444;
-    --border: #1f2933;
+    --bg: #070c18;
+    --panel: #151d30;
+    --card: #0d1220;
+    --tree-bg: #0b1018;
+    --input-bg: #0d1220;
+    --accent: #60a5fa;
+    --accent2: #34d399;
+    --text: #f1f5f9;
+    --text-on-accent: #020617;
+    --muted: #94a3b8;
+    --danger: #f87171;
+    --border: #1e293b;
+    --border-light: #2d3a52;
+    --scrollbar: #2d3a52;
+    --scrollbar-hover: #3d4f6f;
+    --toggle-bg: #2d3a52;
+    --toggle-circle: #f1f5f9;
+    --and-color: #facc15;
+    --or-color: #f472b6;
+    --not-color: #fb923c;
+    --mod-color: #06b6d4;
+    --prod-color: #a78bfa;
   }
-
+  .light {
+    --bg: #f0f4f8;
+    --panel: #ffffff;
+    --card: #f8fafc;
+    --tree-bg: #f1f5f9;
+    --input-bg: #ffffff;
+    --accent: #2563eb;
+    --accent2: #059669;
+    --text: #1e293b;
+    --text-on-accent: #ffffff;
+    --muted: #64748b;
+    --danger: #dc2626;
+    --border: #e2e8f0;
+    --border-light: #cbd5e1;
+    --scrollbar: #cbd5e1;
+    --scrollbar-hover: #94a3b8;
+    --toggle-bg: #cbd5e1;
+    --toggle-circle: #1e293b;
+    --and-color: #ca8a04;
+    --or-color: #db2777;
+    --not-color: #ea580c;
+    --mod-color: #0891b2;
+    --prod-color: #7c3aed;
+  }
   * { box-sizing: border-box; }
-
+  * { scrollbar-width: thin; scrollbar-color: var(--scrollbar) transparent; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+  ::-webkit-scrollbar-button, ::-webkit-scrollbar-corner { display: none; }
   body {
     margin: 0;
     font-family: ui-sans-serif, system-ui, sans-serif;
-    background: linear-gradient(120deg, #020617, #020617 40%, #020617);
+    background: var(--bg);
     color: var(--text);
     display: flex;
     justify-content: center;
     padding: 40px 20px;
   }
-
   .app {
     width: 100%;
     max-width: 900px;
     background: var(--panel);
     border-radius: 18px;
     border: 1px solid var(--border);
-    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
     padding: 28px;
   }
-
-  h1 {
-    margin: 0 0 6px;
-    font-size: 26px;
-    letter-spacing: .5px;
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: .5px; }
+  .subtitle { color: var(--muted); margin-bottom: 24px; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .header-row h1 { margin: 0; }
+  #theme-toggle { display: none; }
+  .theme-switch {
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+    background: var(--toggle-bg, var(--border-light));
+    border-radius: 26px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
   }
-
-  .subtitle {
-    color: var(--muted);
-    margin-bottom: 24px;
+  .theme-switch::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: var(--toggle-circle, var(--text));
+    border-radius: 50%;
+    transition: transform 0.3s, background 0.3s;
   }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px;
+  #theme-toggle:checked + .theme-switch::before {
+    transform: translateX(26px);
   }
-
-  @media (max-width: 800px) {
-    .grid { grid-template-columns: 1fr; }
+  .theme-switch-icons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    height: 100%;
+    font-size: 12px;
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
   }
-
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
   .card {
-    background: #020617;
+    background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 16px;
   }
-
   .card h3 {
     margin: 0 0 12px;
     font-size: 15px;
@@ -72,215 +133,1198 @@
     letter-spacing: .04em;
     text-transform: uppercase;
   }
-
-  input {
+  input, select {
     width: 100%;
-    padding: 12px 14px;
+    padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: #020617;
+    background: var(--input-bg);
     color: var(--text);
     outline: none;
-    font-size: 15px;
+    font-size: 14px;
+    font-family: inherit;
   }
-
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+  select[multiple] { background-image: none; padding-right: 8px; }
   input::placeholder { color: var(--muted); }
-
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .icon-btn {
+    display: none;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: .15s;
+    line-height: 1;
   }
-
+  .icon-btn:hover { color: var(--danger); background: rgba(239,68,68,.1); }
+  .add-btn {
+    width: 100%;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    transition: .15s;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .custom-states-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .custom-state-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+  }
+  .custom-state-item .name { font-weight: 600; color: var(--accent); }
+  .custom-state-item .expr {
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  .custom-state-item .moveset { color: #a78bfa; font-size: 11px; margin-left: 4px; }
+  .custom-state-item .icon-btn { display: inline-block; }
+  .builder {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    background: rgba(56,189,248,.03);
+  }
+  .builder-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .builder-header input { flex: 1; }
+  .tree-node { margin: 0; }
+  .tree-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: var(--tree-bg);
+    margin: 3px 0;
+  }
+  .tree-children {
+    padding-left: 20px;
+    border-left: 2px solid var(--border);
+    margin-left: 10px;
+  }
+  .tree-children .tree-connector {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    padding: 1px 0 1px 4px;
+    letter-spacing: .5px;
+    line-height: 1.4;
+  }
+  .tree-connector.and-conn { color: var(--and-color); font-weight: 700; }
+  .tree-connector.or-conn { color: var(--or-color); font-weight: 700; }
+  .tree-connector.prod-conn { color: var(--prod-color); font-weight: 700; }
+  .tree-fields {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tree-field { display: flex; flex-direction: column; gap: 2px; }
+  .tree-field label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .tree-field select {
+    width: auto;
+    padding: 5px 28px 5px 8px;
+    font-size: 13px;
+  }
+  .tree-fields .prim-sel { width: 90px; }
+  .tree-fields .pieces-sel { width: 140px; }
+  .tree-btn {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    transition: .15s;
+    white-space: nowrap;
+  }
+  .tree-btn:hover { border-color: var(--text); color: var(--text); }
+  .tree-btn.insert-and:hover { border-color: var(--and-color); color: var(--and-color); }
+  .tree-btn.insert-or:hover { border-color: var(--or-color); color: var(--or-color); }
+  .tree-btn.not-btn:hover { border-color: var(--not-color); color: var(--not-color); }
+  .tree-btn.not-active { border-color: var(--not-color); color: var(--not-color); background: rgba(251,146,60,.1); }
+  .tree-btn.mod-btn:hover { border-color: var(--mod-color); color: var(--mod-color); }
+  .tree-btn.mod-active { border-color: var(--mod-color); color: var(--mod-color); background: rgba(6,182,212,.1); }
+  .tree-btn.prod-btn:hover { border-color: var(--prod-color); color: var(--prod-color); }
+  .tree-btn.prod-active { border-color: var(--prod-color); color: var(--prod-color); background: rgba(167,139,250,.1); }
+  .tree-btn.del-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .builder-footer { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-primary {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .15s;
+  }
+  .btn-confirm { background: var(--accent2); color: var(--text-on-accent); }
+  .btn-cancel { background: var(--border); color: var(--text); }
+  .btn-confirm:hover { opacity: .9; }
+  .btn-cancel:hover { opacity: .8; }
+  .expr-preview {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    word-break: break-all;
+  }
+  .expr-preview span { font-family: ui-monospace, monospace; color: var(--text); }
+  .steps { display: flex; flex-direction: column; gap: 8px; }
   .step {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    transition: .2s;
+    overflow: hidden;
+    cursor: grab;
+  }
+  .step.disabled { opacity: .35; }
+  .step.dragging { opacity: .4; }
+  .step.drag-over { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .step-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: #020617;
-    transition: .2s;
   }
-
-  .step.disabled {
-    opacity: .35;
-  }
-
-  .step label {
+  .step-top label {
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
   }
-
   .badge {
-    font-size: 12px;
-    padding: 3px 8px;
+    font-size: 11px;
+    padding: 2px 7px;
     border-radius: 999px;
     border: 1px solid var(--border);
     color: var(--muted);
   }
-
-  .badge.active {
-    color: var(--accent2);
-    border-color: var(--accent2);
+  .badge.active { color: var(--accent2); border-color: var(--accent2); }
+  .step-actions { display: flex; align-items: center; gap: 2px; }
+  .adv-toggle {
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-family: inherit;
+    transition: .15s;
   }
-
+  .adv-toggle:hover { border-color: var(--border); color: var(--text); }
+  .step-adv { display: none; padding: 0 12px 10px; gap: 8px; }
+  .step-adv.open { display: flex; flex-wrap: wrap; }
+  .adv-field { display: flex; flex-direction: column; gap: 3px; }
+  .adv-field label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  .adv-field input { width: 70px; padding: 5px 8px; font-size: 13px; }
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider {
+    position: absolute;
+    inset: 0;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    transition: .2s;
+  }
+  .toggle .slider::before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    left: 2px;
+    top: 2px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: .2s;
+  }
+  .toggle input:checked + .slider { border-color: var(--border-light); background: var(--panel); }
+  .toggle input:checked + .slider::before { transform: translateX(14px); background: var(--text); }
+  .step-adv.open { display: flex; flex-wrap: wrap; }
   .solve-btn {
-    margin-top: 20px;
+    margin-top: 16px;
     width: 100%;
     border: none;
     border-radius: 12px;
     padding: 14px;
     font-size: 16px;
     font-weight: 600;
-    background: linear-gradient(135deg, var(--accent), #6366f1);
-    color: #020617;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    color: var(--text-on-accent);
     cursor: pointer;
     transition: .15s;
   }
-
   .solve-btn:hover { transform: translateY(-1px); }
-
+  .solve-btn.running {
+    background: var(--danger);
+    cursor: wait;
+  }
+  .solve-btn.running::after {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0,0,0,.3);
+    border-top-color: var(--text-on-accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .scramble-row { display: flex; gap: 6px; }
+  .scramble-row input { flex: 1; }
+  .clear-btn {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    transition: .15s;
+  }
+  .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .btn-reset {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: .15s;
+  }
+  .btn-reset:hover { border-color: var(--text); color: var(--text); }
   .output {
     margin-top: 14px;
-    background: #020617;
+    background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 12px;
     min-height: 120px;
+    min-height: 60vh;
+    max-height: 80vh;
+    overflow-y: auto;
     font-family: ui-monospace, monospace;
     white-space: pre-wrap;
     font-size: 14px;
   }
-
   .cmd {
     margin-top: 10px;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--muted);
     font-family: ui-monospace, monospace;
+    word-break: break-all;
   }
-
+  .cmd-row { display: flex; align-items: start; gap: 6px; margin-top: 10px; }
+  .cmd-row .cmd { flex: 1; margin: 0; }
+  .copy-btn {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    transition: .15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent2); color: var(--accent2); }
+  .output-header { display: flex; align-items: center; justify-content: space-between; }
+  .output-header h3 { margin: 0; }
+  .preset-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .preset-btn {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    transition: .15s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
   .error { color: var(--danger); }
-  .ok { color: var(--accent2); }
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>🧩 Kube Solver</h1>
-  <div class="subtitle">Interactive Rubik’s Cube solving pipeline</div>
-
-  <div class="grid">
-    <!-- LEFT PANEL -->
-    <div class="card">
-      <h3>Scramble</h3>
-      <input id="scramble" placeholder="R U R' U' F2 D ..." />
-
-      <h3 style="margin-top:18px;">Solving Pipeline</h3>
-      <div class="steps" id="steps"></div>
-
-      <button class="solve-btn" onclick="solve()">Solve Cube</button>
-      <div class="cmd" id="cmdPreview"></div>
+  <div class="header-row">
+    <div>
+      <h1>Kube Solver</h1>
+      <div class="subtitle">Interactive Rubik's Cube solving pipeline</div>
     </div>
-
-    <!-- RIGHT PANEL -->
+    <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" />
+    <label class="theme-switch" for="theme-toggle" title="Toggle light/dark theme">
+      <span class="theme-switch-icons"><span>&#9788;</span><span>&#9790;</span></span>
+    </label>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <h3>Scramble</h3>
+    <div class="scramble-row">
+      <input id="scramble" placeholder="R U R' U' F2 D ..." oninput="renderCommand();updateScrambleDisplay()" />
+      <button class="clear-btn" onclick="document.getElementById('scramble').value='';renderCommand();updateScrambleDisplay()" title="Clear">&times;</button>
+    </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;">
+        <scramble-display id="scrambleViz" scramble="" visualization="3D" style="display:block;max-width:384px;height:256px;"></scramble-display>
+        <label class="toggle" title="Toggle 2D / 3D visualization">
+          <input type="checkbox" id="viz3dToggle" checked onchange="updateScrambleDisplay()" />
+          <span class="slider"></span>
+        </label>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);padding:0 1px;width:32px;">
+          <span>2D</span><span>3D</span>
+        </div>
+      </div>
+  </div>
+  <div class="grid" style="margin-bottom:16px;">
     <div class="card">
-      <h3>Output</h3>
-      <div class="output" id="output"></div>
+      <h3>Solving Pipeline</h3>
+      <div class="preset-row">
+        <button class="preset-btn" onclick="applyPreset(['eo','dr','htr','fin'])">eo &rarr; dr &rarr; htr &rarr; fin</button>
+        <button class="preset-btn" onclick="applyPreset(['dr','fin'])">dr &rarr; fin</button>
+        <button class="preset-btn" onclick="applyPreset(['htr','fin'])">htr &rarr; fin</button>
+        <button class="preset-btn" onclick="applyPreset(['fin'])">fin</button>
+      </div>
+      <div class="steps" id="steps"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--muted);white-space:nowrap;">
+          <input type="checkbox" id="verboseToggle" onchange="renderCommand()" />
+          Verbose (-v)
+        </label>
+      </div>
+      <button class="solve-btn" id="solveBtn" onclick="solve()">Solve Cube</button>
+      <div class="cmd-row">
+        <div class="cmd" id="cmdPreview"></div>
+        <button class="copy-btn" id="copyCmdBtn" onclick="copyCommand()" title="Copy command">Copy</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Custom States</h3>
+      <div class="custom-states-list" id="customStatesList"></div>
+      <div id="builderSlot"></div>
+      <button class="add-btn" id="addStateBtn" onclick="openBuilder()">+ Add Custom State</button>
     </div>
   </div>
+  <div class="card">
+    <div class="output-header">
+      <h3>Output</h3>
+      <button class="copy-btn" id="copyOutputBtn" onclick="copyOutput()" title="Copy output">Copy</button>
+    </div>
+    <div class="output" id="output"></div>
+  </div>
+  </div>
 </div>
-
 <script>
-  const ORDER = ["eo", "dr", "htr", "fin"];
+  var BUILT_IN = ["eo", "dr", "htr", "fin"];
+  var PRIMITIVES = ["solved", "eofb", "eolr", "eoud", "cofb", "colr", "coud", "ep", "cp"];
+  var PIECE_GROUPS = ["U", "D", "M", "S", "E", "Ue", "Uc", "De", "Dc", "Dw", "Uw", "Rw", "Lw", "Fw", "Bw"];
+  var EDGE_PIECES = ["UB", "UR", "UF", "UL", "DF", "DR", "DB", "DL", "BL", "BR", "FR", "FL"];
+  var CORNER_PIECES = ["UBL", "UBR", "UFR", "UFL", "DFL", "DFR", "DBR", "DBL"];
+  var ALL_PIECES = PIECE_GROUPS.concat(EDGE_PIECES).concat(CORNER_PIECES);
 
-  const stepsState = {
-    eo: false,
-    dr: false,
-    htr: false,
-    fin: true
-  };
+  var stepOrder = BUILT_IN.slice();
+  var stepState = {};
+  BUILT_IN.forEach(function(s) { stepState[s] = { enabled: s === "fin", max: "", num: "", advOpen: false }; });
+  var customStates = [];
+  var builderOpen = false;
 
-  const stepsContainer = document.getElementById("steps");
+  /* ===== Flat node list approach ===== */
+  var nodes = [];
+  var nextId = 0;
 
-  function renderSteps() {
-    stepsContainer.innerHTML = "";
+  function mkAtom(prim, pieces, not) {
+    var id = nextId++;
+    nodes[id] = { id: id, type: "atom", prim: prim || "solved", pieces: pieces || "*", not: !!not };
+    return id;
+  }
+  function mkOp(op, leftId, rightId) {
+    var id = nextId++;
+    nodes[id] = { id: id, type: "op", op: op, left: leftId, right: rightId, not: false };
+    return id;
+  }
+  function getNode(id) { return nodes[id]; }
 
-    for (const step of ORDER) {
-      const enabled = stepsState[step];
-      const div = document.createElement("div");
-      div.className = "step" + (!enabled ? " disabled" : "");
+  var rootId = mkAtom("solved", "*", false);
 
-      div.innerHTML = `
-        <label>
-          <input type="checkbox" ${enabled ? "checked" : ""} />
-          <strong>${step}</strong>
-        </label>
-        <span class="badge ${enabled ? "active" : ""}">
-          ${enabled ? "enabled" : "disabled"}
-        </span>
-      `;
-
-      const checkbox = div.querySelector("input");
-
-      checkbox.addEventListener("change", () => {
-        // enforce ordering rule
-        const idx = ORDER.indexOf(step);
-        stepsState[ORDER[idx]] = checkbox.checked;
-        renderSteps();
-        renderCommand();
-      });
-
-      stepsContainer.appendChild(div);
+  function toExpr(id) {
+    var n = getNode(id);
+    if (!n) return "";
+    if (n.type === "atom") {
+      /* "*" is the internal marker for all pieces: a bare primitive */
+      var base = (n.pieces && n.pieces !== "*") ? n.prim + ":" + n.pieces : n.prim;
+      return (n.not ? "!" : "") + base;
     }
+    if (n.type === "set") {
+      var inner = getModExpr(n);
+      if (n.not) inner = "!(" + inner + ")";
+      return inner;
+    }
+    if (n.type === "mod") {
+      var cn = getNode(n.child);
+      var trivialChild = cn && cn.type === "atom" && cn.prim === "solved" &&
+                         cn.pieces === "*" && !cn.not;
+      if (!trivialChild) return null;
+      var inner = getModExpr(n);
+      if (n.not) inner = "!(" + inner + ")";
+      return inner;
+    }
+    var l = toExpr(n.left);
+    var r = toExpr(n.right);
+    if (l === null || r === null) return null;
+    var expr = l + " " + n.op + " " + r;
+    if (n.not) expr = "!(" + expr + ")";
+    return expr;
   }
 
-  function getActiveSteps() {
-    return ORDER.filter(s => stepsState[s]);
-  }
-
-  function renderCommand() {
-    const steps = getActiveSteps();
-    const cmd = "kube " + steps.map(s => `--step ${s}`).join(" ");
-    document.getElementById("cmdPreview").textContent = "Command: " + cmd;
-  }
-
-  async function solve() {
-    const scramble = document.getElementById("scramble").value.trim();
-    const output = document.getElementById("output");
-    const steps = getActiveSteps();
-
-    if (!scramble) {
-      output.innerHTML = "<span class='error'>Enter a scramble.</span>";
+  function insertOp(atId, op) {
+    var n = getNode(atId);
+    if (n.type === "mod") {
+      var replacement = mkOp(op, n.child, mkAtom());
+      n.child = replacement;
+      if (rootId === atId) rootId = n;
       return;
     }
+    var replacement = mkOp(op, atId, mkAtom());
+    if (rootId === atId) {
+      rootId = replacement;
+      return;
+    }
+    findAndReplace(rootId, atId, replacement);
+  }
 
-    output.textContent = "Solving...";
+  function findAndReplace(parentId, targetId, newId) {
+    var n = getNode(parentId);
+    if (n.type === "mod") {
+      if (n.child === targetId) { n.child = newId; return true; }
+      return findAndReplace(n.child, targetId, newId);
+    }
+    if (n.type !== "op") return false;
+    if (n.left === targetId) { n.left = newId; return true; }
+    if (n.right === targetId) { n.right = newId; return true; }
+    if (findAndReplace(n.left, targetId, newId)) return true;
+    if (findAndReplace(n.right, targetId, newId)) return true;
+    return false;
+  }
+
+  function collapseNode(id) {
+    var n = getNode(id);
+    if (n.type === "set") {
+      if (rootId === id) { rootId = mkAtom(); return; }
+      findAndReplaceUp(rootId, id, mkAtom());
+      return;
+    }
+    if (n.type === "mod") {
+      if (rootId === id) { rootId = n.child; return; }
+      findAndReplaceUp(rootId, id, n.child);
+      return;
+    }
+    if (n.type === "op") {
+      if (rootId === id) { rootId = n.left; return; }
+      findAndReplaceUp(rootId, id, n.left);
+      return;
+    }
+    var pid = findParentId(rootId, id);
+    if (pid === null) return;
+    var p = getNode(pid);
+    if (p.type === "mod") {
+      if (rootId === pid) { rootId = mkAtom(); return; }
+      findAndReplaceUp(rootId, pid, mkAtom());
+      return;
+    }
+    var sibling = (p.left === id) ? p.right : p.left;
+    if (rootId === pid) { rootId = sibling; return; }
+    findAndReplaceUp(rootId, pid, sibling);
+  }
+
+  function findAndReplaceUp(fromId, targetId, newId) {
+    var n = getNode(fromId);
+    if (n.type === "mod") {
+      if (n.child === targetId) { n.child = newId; return true; }
+      return findAndReplaceUp(n.child, targetId, newId);
+    }
+    if (n.type !== "op") return false;
+    if (n.left === targetId) { n.left = newId; return true; }
+    if (n.right === targetId) { n.right = newId; return true; }
+    if (findAndReplaceUp(n.left, targetId, newId)) return true;
+    if (findAndReplaceUp(n.right, targetId, newId)) return true;
+    return false;
+  }
+
+  function findParentId(fromId, childId) {
+    var n = getNode(fromId);
+    if (n.type === "mod") {
+      if (n.child === childId) return fromId;
+      var r = findParentId(n.child, childId);
+      if (r !== null) return r;
+      return null;
+    }
+    if (n.type === "set" || n.type === "atom") return null;
+    if (n.type !== "op") return null;
+    if (n.left === childId || n.right === childId) return fromId;
+    var r = findParentId(n.left, childId);
+    if (r !== null) return r;
+    return findParentId(n.right, childId);
+  }
+
+  /* ---- mod helpers ---- */
+  function mkSet(mode, moves, generators) {
+    var id = nextId++;
+    nodes[id] = {
+      id: id, type: "set", not: false,
+      subgroup: { mode: mode || "explicit", moves: moves || [], generators: generators || [] }
+    };
+    return id;
+  }
+
+  function wrapMod(atId) {
+    var id = mkSet();
+    if (rootId === atId) { rootId = id; return; }
+    findAndReplace(rootId, atId, id);
+  }
+
+  function setModMode(nid, mode) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === mode) return;
+    // read current text input value before switching
+    var input = document.querySelector('.mod-text-input[data-nid="' + nid + '"]');
+    var txt = input ? input.value : "";
+    if (n.subgroup.mode === "explicit") {
+      n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+    } else {
+      n.subgroup.generators = txt.split(",").map(function(s) {
+        return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+      }).filter(function(g) { return g.length > 0; });
+    }
+    // now switch mode
+    if (mode === "generators") {
+      var gen = n.subgroup.moves.length ? [n.subgroup.moves.slice()] : [];
+      n.subgroup = { mode: "generators", generators: gen };
+    } else {
+      var moves = [];
+      if (n.subgroup.generators) {
+        n.subgroup.generators.forEach(function(g) {
+          g.forEach(function(m) { if (moves.indexOf(m) < 0) moves.push(m); });
+        });
+      }
+      n.subgroup = { mode: "explicit", moves: moves };
+    }
+    renderBuilder();
+  }
+
+  function setSetMode(nid, mode) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === mode) return;
+    var input = document.querySelector('.set-text-input[data-nid="' + nid + '"]');
+    var txt = input ? input.value : "";
+    if (n.subgroup.mode === "explicit") {
+      n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+    } else {
+      n.subgroup.generators = txt.split(",").map(function(s) {
+        return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+      }).filter(function(g) { return g.length > 0; });
+    }
+    if (mode === "generators") {
+      var gen = n.subgroup.moves.length ? [n.subgroup.moves.slice()] : [];
+      n.subgroup = { mode: "generators", generators: gen };
+    } else {
+      var moves = [];
+      if (n.subgroup.generators) {
+        n.subgroup.generators.forEach(function(g) {
+          g.forEach(function(m) { if (moves.indexOf(m) < 0) moves.push(m); });
+        });
+      }
+      n.subgroup = { mode: "explicit", moves: moves };
+    }
+    renderBuilder();
+  }
+
+  function renderTree(id, depth) {
+    var n = getNode(id);
+    if (n.type === "set") {
+      var h = '<div class="tree-card" style="border-color:var(--mod-color);">';
+      h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">';
+      h += '<span style="color:var(--mod-color);font-weight:700;font-size:13px;">SET</span>';
+      h += '<select data-nid="' + id + '" data-f="set-mode" style="width:auto;padding:3px 24px 3px 6px;font-size:12px;">';
+      h += '<option value="explicit"' + (n.subgroup.mode === "explicit" ? " selected" : "") + '>Explicit {…}</option>';
+      h += '<option value="generators"' + (n.subgroup.mode === "generators" ? " selected" : "") + '>Generators &lt;…&gt;</option>';
+      h += '</select>';
+      if (depth > 0) {
+        h += '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>';
+      }
+      h += '</div>';
+      h += renderSetEditor(id);
+      h += '</div>';
+      h += '<div style="display:flex;gap:4px;margin-top:6px;padding-left:12px;flex-wrap:wrap;">';
+      h += '<button class="tree-btn not-btn' + (n.not ? ' not-active' : '') + '" data-nid="' + id + '" data-act="not">NOT</button>';
+      h += '<button class="tree-btn insert-and" data-nid="' + id + '" data-act="and">+AND</button>';
+      h += '<button class="tree-btn insert-or" data-nid="' + id + '" data-act="or">+OR</button>';
+      h += '<button class="tree-btn prod-btn" data-nid="' + id + '" data-act="prod">+PROD</button>';
+      h += '</div>';
+      return '<div class="tree-node">' + h + '</div>';
+    }
+    if (n.type === "atom") {
+      var selectedPieces = !n.pieces ? []
+        : (n.pieces === "*" ? ALL_PIECES.slice() : n.pieces.split(","));
+      var primOpts = PRIMITIVES.map(function(p) {
+        return '<option value="' + p + '"' + (p === n.prim ? ' selected' : '') + '>' + p + '</option>';
+      }).join("");
+      var pieceOpts = ALL_PIECES.map(function(p) {
+        return '<option value="' + p + '"' + (selectedPieces.indexOf(p) >= 0 ? ' selected' : '') + '>' + p + '</option>';
+      }).join("");
+      var h = '<div class="tree-card">';
+      h += '<div class="tree-fields">';
+      h += '<div class="tree-field"><label>Primitive</label>';
+      h += '<select class="prim-sel" data-nid="' + id + '" data-f="prim">' + primOpts + '</select></div>';
+      h += '<div class="tree-field"><label>Piece(s)</label>';
+      h += '<select class="pieces-sel" multiple size="4" data-nid="' + id + '" data-f="pieces">' + pieceOpts + '</select></div>';
+      h += '</div>';
+      h += '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
+      h += '<button class="tree-btn not-btn' + (n.not ? ' not-active' : '') + '" data-nid="' + id + '" data-act="not">NOT</button>';
+      h += '<button class="tree-btn insert-and" data-nid="' + id + '" data-act="and">+AND</button>';
+      h += '<button class="tree-btn insert-or" data-nid="' + id + '" data-act="or">+OR</button>';
+      h += '<button class="tree-btn prod-btn" data-nid="' + id + '" data-act="prod">+PROD</button>';
+      h += '<button class="tree-btn mod-btn" data-nid="' + id + '" data-act="mod">+SET</button>';
+      if (depth > 0) {
+        h += '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>';
+      }
+      h += '</div></div>';
+      return '<div class="tree-node">' + h + '</div>';
+    }
+    var left = renderTree(n.left, depth + 1);
+    var right = renderTree(n.right, depth + 1);
+    var cls = n.op === "&" ? "and-conn" : (n.op === "|" ? "or-conn" : "prod-conn");
+    var label = n.op === "&" ? "AND" : (n.op === "|" ? "OR" : "PROD");
+    return '<div class="tree-node"><div class="tree-children">' +
+      '<div class="tree-connector ' + cls + '">' + label + '</div>' +
+      left + right + '</div></div>';
+  }
+
+  function getModExpr(n) {
+    if (n.subgroup.mode === "explicit") {
+      return "{" + (n.subgroup.moves.length ? n.subgroup.moves.join(", ") : "") + "}";
+    }
+    var gs = n.subgroup.generators.map(function(gen) {
+      return gen.length ? gen.join(" ") : "?";
+    });
+    return "<" + (gs.length ? gs.join(", ") : "") + ">";
+  }
+
+  function renderModEditor(nid) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === "explicit") {
+      var val = n.subgroup.moves.join(", ");
+      return '<input class="mod-text-input" data-nid="' + nid + '" data-f="mod-text" ' +
+        'value="' + esc(val) + '" placeholder="R, U\', U2, e" ' +
+        'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+    }
+    var val = n.subgroup.generators.map(function(g) { return g.join(" "); }).join(", ");
+    return '<input class="mod-text-input" data-nid="' + nid + '" data-f="mod-text" ' +
+      'value="' + esc(val) + '" placeholder="R U, F2" ' +
+      'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+  }
+
+  function renderSetEditor(nid) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === "explicit") {
+      var val = n.subgroup.moves.join(", ");
+      return '<input class="set-text-input" data-nid="' + nid + '" data-f="set-text" ' +
+        'value="' + esc(val) + '" placeholder="R, U\', U2, e" ' +
+        'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+    }
+    var val = n.subgroup.generators.map(function(g) { return g.join(" "); }).join(", ");
+    return '<input class="set-text-input" data-nid="' + nid + '" data-f="set-text" ' +
+      'value="' + esc(val) + '" placeholder="R U, F2" ' +
+      'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+  }
+
+  function exprPreviewText(id) {
+    var e = toExpr(id);
+    if (e === null) return "(SET over non-solved state not supported)";
+    return e;
+  }
+
+  function renderBuilder() {
+    if (!builderOpen) return;
+    var bState = getBuilderFields();
+    var slot = document.getElementById("builderSlot");
+    slot.innerHTML =
+      '<div class="builder">' +
+        '<div class="builder-header">' +
+          '<input id="defName" placeholder="State name" value="' + esc(bState.name) + '" maxlength="24" />' +
+          '<input id="defMoveset" placeholder="Moveset (opt)" value="' + esc(bState.moveset) + '" style="width:120px;flex:none;" />' +
+        '</div>' +
+        '<div id="treeRoot">' + renderTree(rootId, 0) + '</div>' +
+        '<div class="expr-preview">Preview: <span id="exprPreview">' + esc(exprPreviewText(rootId)) + '</span></div>' +
+        '<div class="builder-footer">' +
+          '<button class="btn-primary btn-confirm" onclick="confirmBuilder()">Add State</button>' +
+          '<button class="btn-primary btn-cancel" onclick="closeBuilder()">Cancel</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function getBuilderFields() {
+    var nameEl = document.getElementById("defName");
+    var movEl = document.getElementById("defMoveset");
+    return { name: nameEl ? nameEl.value : "", moveset: movEl ? movEl.value : "" };
+  }
+
+  function openBuilder() {
+    if (builderOpen) return;
+    builderOpen = true;
+    nodes = []; nextId = 0;
+    rootId = mkAtom("solved", "*", false);
+    document.getElementById("addStateBtn").style.display = "none";
+    renderBuilder();
+  }
+
+  function closeBuilder() {
+    builderOpen = false;
+    document.getElementById("builderSlot").innerHTML = "";
+    document.getElementById("addStateBtn").style.display = "";
+  }
+
+  function resetBuilder() {
+    nodes = []; nextId = 0;
+    rootId = mkAtom("solved", "*", false);
+    renderBuilder();
+  }
+
+  function confirmBuilder() {
+    var f = getBuilderFields();
+    var name = f.name.trim();
+    var moveset = f.moveset.trim().toUpperCase();
+    var nameEl = document.getElementById("defName");
+    if (!name) { nameEl.style.borderColor = "var(--danger)"; return; }
+    if (/[^a-zA-Z0-9_]/.test(name)) { nameEl.style.borderColor = "var(--danger)"; return; }
+    if (customStates.some(function(c) { return c.name === name; }) || BUILT_IN.indexOf(name) >= 0) {
+      nameEl.style.borderColor = "var(--danger)"; return;
+    }
+    var expr = toExpr(rootId);
+    if (!expr) return;
+    customStates.push({ name: name, expr: expr, moveset: moveset });
+    stepState[name] = { enabled: false, max: "", num: "", advOpen: false };
+    stepOrder.push(name);
+    closeBuilder();
+    renderCustomStates();
+    renderSteps();
+    renderCommand();
+  }
+
+  /* ---- Event delegation on #treeRoot ---- */
+  function handleTreeInput(e) {
+    var t = e.target;
+    if (!t.matches("#treeRoot [data-nid][data-f]")) return;
+    var nid = parseInt(t.getAttribute("data-nid"));
+    var field = t.getAttribute("data-f");
+    var n = getNode(nid);
+    if (!n) return;
+    if (field === "pieces" && n.type === "atom") {
+      var sel = Array.from(t.selectedOptions).map(function(o) { return o.value; });
+      n.pieces = sel.join(",");
+    } else if (field === "prim" && n.type === "atom") {
+      n[field] = t.value;
+    } else if (field === "set-mode" && n.type === "set") {
+      setSetMode(nid, t.value);
+      return;
+    } else if (field === "set-text" && n.type === "set") {
+      var txt = t.value;
+      if (n.subgroup.mode === "explicit") {
+        n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+      } else {
+        n.subgroup.generators = txt.split(",").map(function(s) {
+          return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+        }).filter(function(g) { return g.length > 0; });
+      }
+    } else if (field === "mod-mode" && n.type === "mod") {
+      setModMode(nid, t.value);
+      return;
+    } else if (field === "mod-text" && n.type === "mod") {
+      var txt = t.value;
+      if (n.subgroup.mode === "explicit") {
+        n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+      } else {
+        n.subgroup.generators = txt.split(",").map(function(s) {
+          return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+        }).filter(function(g) { return g.length > 0; });
+      }
+    }
+    var pv = document.getElementById("exprPreview");
+    if (pv) pv.textContent = exprPreviewText(rootId);
+  }
+  document.addEventListener("change", handleTreeInput);
+  document.addEventListener("input", handleTreeInput);
+
+  document.addEventListener("click", function(e) {
+    var btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    var act = btn.getAttribute("data-act");
+    var nid = parseInt(btn.getAttribute("data-nid"));
+    var n = getNode(nid);
+    if (!n) return;
+    if (act === "not") {
+      n.not = !n.not;
+      renderBuilder();
+    } else if (act === "and") {
+      insertOp(nid, "&");
+      renderBuilder();
+    } else if (act === "or") {
+      insertOp(nid, "|");
+      renderBuilder();
+    } else if (act === "prod") {
+      insertOp(nid, "*");
+      renderBuilder();
+    } else if (act === "mod") {
+      wrapMod(nid);
+      renderBuilder();
+    } else if (act === "del") {
+      collapseNode(nid);
+      renderBuilder();
+    }
+  });
+
+  /* ---- Custom States list ---- */
+  function renderCustomStates() {
+    var el = document.getElementById("customStatesList");
+    if (customStates.length === 0) { el.innerHTML = ""; return; }
+    el.innerHTML = customStates.map(function(cs, i) {
+      return '<div class="custom-state-item"><div>' +
+        '<span class="name">' + esc(cs.name) + '</span>' +
+        '<span class="expr"> = ' + esc(cs.expr) + '</span>' +
+        (cs.moveset ? '<span class="moveset">@' + esc(cs.moveset) + '</span>' : '') +
+        '</div>' +
+        '<button class="icon-btn" onclick="removeCustomState(' + i + ')" title="Delete">&times;</button>' +
+        '</div>';
+    }).join("");
+  }
+
+  function removeCustomState(i) {
+    var name = customStates[i].name;
+    delete stepState[name];
+    customStates.splice(i, 1);
+    var oi = stepOrder.indexOf(name);
+    if (oi >= 0) stepOrder.splice(oi, 1);
+    renderCustomStates();
+    renderSteps();
+    renderCommand();
+  }
+
+  /* ---- Steps pipeline ---- */
+  var _dragIdx = null;
+
+  function renderSteps() {
+    var el = document.getElementById("steps");
+    el.innerHTML = stepOrder.map(function(name, idx) {
+      var s = stepState[name];
+      var enabled = s.enabled;
+      return '<div class="step ' + (enabled ? "" : "disabled") + '" draggable="true" data-idx="' + idx + '">' +
+        '<div class="step-top">' +
+          '<label>' +
+            '<input type="checkbox"' + (enabled ? " checked" : "") +
+              ' onchange="toggleStep(\'' + esc(name) + '\',this.checked)" />' +
+            '<strong>' + esc(name) + '</strong>' +
+          '</label>' +
+          '<div class="step-actions">' +
+            '<button class="adv-toggle" onclick="toggleAdv(\'' + esc(name) + '\')">opts</button>' +
+            '<span class="badge ' + (enabled ? "active" : "") + '">' + (enabled ? "on" : "off") + '</span>' +
+            '<button class="icon-btn" onclick="removeStep(\'' + esc(name) + '\')" title="Remove" style="display:inline-block;">&times;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="step-adv' + (s.advOpen ? " open" : "") + '">' +
+          '<div class="adv-field"><label>Max depth</label>' +
+            '<input type="number" min="0" placeholder="auto" value="' + esc(s.max || "") +
+              '" onchange="setStepField(\'' + esc(name) + '\',\'max\',this.value)" /></div>' +
+          '<div class="adv-field"><label>Num sols</label>' +
+            '<input type="number" min="1" placeholder="1" value="' + esc(s.num || "") +
+              '" onchange="setStepField(\'' + esc(name) + '\',\'num\',this.value)" /></div>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  document.addEventListener("dragstart", function(e) {
+    var step = e.target.closest(".step");
+    if (!step) return;
+    _dragIdx = parseInt(step.getAttribute("data-idx"));
+    step.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+  });
+
+  document.addEventListener("dragend", function(e) {
+    var step = e.target.closest(".step");
+    if (step) step.classList.remove("dragging");
+    document.querySelectorAll(".step.drag-over").forEach(function(el) { el.classList.remove("drag-over"); });
+    _dragIdx = null;
+  });
+
+  document.addEventListener("dragover", function(e) {
+    var step = e.target.closest(".step");
+    if (!step || _dragIdx === null) return;
+    var overIdx = parseInt(step.getAttribute("data-idx"));
+    if (overIdx === _dragIdx) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    document.querySelectorAll(".step.drag-over").forEach(function(el) { el.classList.remove("drag-over"); });
+    step.classList.add("drag-over");
+  });
+
+  document.addEventListener("drop", function(e) {
+    e.preventDefault();
+    var step = e.target.closest(".step");
+    if (!step || _dragIdx === null) return;
+    var toIdx = parseInt(step.getAttribute("data-idx"));
+    if (toIdx === _dragIdx) return;
+    var moved = stepOrder.splice(_dragIdx, 1)[0];
+    stepOrder.splice(toIdx, 0, moved);
+    _dragIdx = null;
+    renderSteps();
+    renderCommand();
+  });
+
+  function toggleStep(name, val) { stepState[name].enabled = val; renderSteps(); renderCommand(); }
+  function toggleAdv(name) { stepState[name].advOpen = !stepState[name].advOpen; renderSteps(); }
+  function setStepField(name, field, val) { stepState[name][field] = val; renderCommand(); }
+  function removeStep(name) {
+    var oi = stepOrder.indexOf(name);
+    if (oi >= 0) stepOrder.splice(oi, 1);
+    var ci = customStates.findIndex(function(c) { return c.name === name; });
+    if (ci >= 0) customStates.splice(ci, 1);
+    delete stepState[name];
+    renderCustomStates();
+    renderSteps();
+    renderCommand();
+  }
+  function getActiveSteps() { return stepOrder.filter(function(s) { return stepState[s].enabled; }); }
+
+  /* ---- Command preview & solve ---- */
+  function renderCommand() {
+    var parts = [];
+    if (document.getElementById("verboseToggle").checked) parts.push("-v");
+    customStates.forEach(function(cs) {
+      var ms = cs.moveset ? "@" + cs.moveset : "";
+      parts.push('-D "' + cs.name + "=" + cs.expr + ms + '"');
+    });
+    getActiveSteps().forEach(function(name) {
+      var s = "--step " + name;
+      var st = stepState[name];
+      var opts = [];
+      if (st.max) opts.push("max=" + st.max);
+      if (st.num && st.num !== "1") opts.push("num=" + st.num);
+      if (opts.length) s += ":" + opts.join(",");
+      parts.push(s);
+    });
+    var scramble = document.getElementById("scramble").value.trim();
+    if (scramble) parts.push('"' + scramble + '"');
+    document.getElementById("cmdPreview").textContent = "kube " + parts.join(" ");
+  }
+
+  var _abort = null;
+
+  async function solve() {
+    if (_abort) { _abort.abort(); _abort = null; setSolveBtn(false); return; }
+
+    var scramble = document.getElementById("scramble").value.trim();
+    var output = document.getElementById("output");
+    var steps = getActiveSteps();
+    if (!scramble) { output.innerHTML = "<span class='error'>Enter a scramble.</span>"; return; }
+    if (steps.length === 0) { output.innerHTML = "<span class='error'>Enable at least one step.</span>"; return; }
+
+    _abort = new AbortController();
+    setSolveBtn(true);
+    output.innerHTML = "<span style='color:var(--muted);'>Connecting...</span>";
+
+    var defs = customStates.map(function(cs) {
+      return { name: cs.name, expr: cs.expr, moveset: cs.moveset || "" };
+    });
+    var stepConf = {};
+    steps.forEach(function(name) {
+      var s = stepState[name]; var conf = {};
+      if (s.max) conf.max = parseInt(s.max);
+      if (s.num && s.num !== "1") conf.num = parseInt(s.num);
+      if (Object.keys(conf).length) stepConf[name] = conf;
+    });
 
     try {
-      const res = await fetch("/solve", {
+      var res = await fetch("/solve/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scramble, steps })
+        body: JSON.stringify({ scramble: scramble, steps: steps, definitions: defs, stepConfig: stepConf, verbose: document.getElementById("verboseToggle").checked }),
+        signal: _abort.signal,
       });
 
-      const data = await res.json();
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var buf = "";
+      var stderrBuf = "";
 
-      if (!res.ok) {
-        output.innerHTML = "<span class='error'>" + data.detail + "</span>";
-      } else {
-        const lines = data.solution.split("\n");
-        output.innerHTML = lines.map((l,i)=>`[${steps[i] ?? "out"}] ${l}`).join("\n");
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+        buf += decoder.decode(chunk.value, { stream: true });
+
+        var parts = buf.split("\n\n");
+        buf = parts.pop();
+
+        for (var i = 0; i < parts.length; i++) {
+          var block = parts[i].trim();
+          if (!block || !block.startsWith("data: ")) continue;
+          try {
+            var msg = JSON.parse(block.slice(6));
+          } catch (e) { continue; }
+
+          if (msg.type === "stderr") {
+            stderrBuf += msg.text;
+            output.innerHTML = "<span style='color:var(--muted);'>" + esc(stderrBuf) + "</span>";
+            output.scrollTop = output.scrollHeight;
+          } else if (msg.type === "done") {
+            if (msg.returncode !== 0) {
+              output.innerHTML = "<span class='error'>" + esc(msg.solution || "Solver failed") + "</span>";
+            } else if (!msg.solution) {
+              output.innerHTML = "<span class='error'>Solver returned empty output.</span>";
+            } else {
+              var lines = msg.solution.split("\n").filter(function(l) { return l.trim() !== ""; });
+              var html = "<div style='margin-bottom:8px;color:var(--muted);font-size:12px;'>" + esc(stderrBuf) + "</div>";
+              html += lines.map(function(l) {
+                return esc(l);
+              }).join("\n");
+              output.innerHTML = html;
+            }
+          }
+        }
       }
     } catch (e) {
-      output.innerHTML = "<span class='error'>Network error.</span>";
+      if (e.name !== "AbortError") {
+        output.innerHTML = "<span class='error'>Network error.</span>";
+      }
+    } finally {
+      _abort = null;
+      setSolveBtn(false);
     }
   }
 
+  function setSolveBtn(running) {
+    var btn = document.getElementById("solveBtn");
+    if (running) {
+      btn.textContent = "Solving";
+      btn.classList.add("running");
+    } else {
+      btn.textContent = "Solve Cube";
+      btn.classList.remove("running");
+    }
+  }
+
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function copyCommand() {
+    var text = document.getElementById("cmdPreview").textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById("copyCmdBtn");
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(function() { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    });
+  }
+
+  function copyOutput() {
+    var el = document.getElementById("output");
+    var text = "";
+    for (var i = 0; i < el.childNodes.length; i++) {
+      var node = el.childNodes[i];
+      if (node.nodeType === 1 && node.style.fontSize === "12px") continue;
+      text += node.textContent;
+    }
+    navigator.clipboard.writeText(text.trim()).then(function() {
+      var btn = document.getElementById("copyOutputBtn");
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(function() { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    });
+  }
+
+  function applyPreset(preset) {
+    stepOrder = BUILT_IN.slice();
+    BUILT_IN.forEach(function(s) { stepState[s] = { enabled: preset.indexOf(s) >= 0, max: "", num: "", advOpen: false }; });
+    renderSteps();
+    renderCommand();
+  }
+
+  document.addEventListener("keydown", function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      solve();
+    }
+  });
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle("light");
+    var isLight = document.documentElement.classList.contains("light");
+    document.getElementById("theme-toggle").checked = isLight;
+    localStorage.setItem("kube-theme", isLight ? "light" : "dark");
+  }
+
+  (function() {
+    var saved = localStorage.getItem("kube-theme");
+    if (saved === "light") {
+      document.documentElement.classList.add("light");
+      document.getElementById("theme-toggle").checked = true;
+    }
+  })();
+
+  function updateScrambleDisplay() {
+    var v = document.getElementById("scrambleViz");
+    var s = document.getElementById("scramble").value.trim();
+    v.setAttribute("scramble", s);
+    v.setAttribute("visualization", document.getElementById("viz3dToggle").checked ? "3D" : "2D");
+  }
+
+  renderCustomStates();
   renderSteps();
   renderCommand();
 </script>
 </body>
 </html>
-

@@ -1,4 +1,7 @@
 #include "index.h"
+#include "math.h"
+
+/* The axis are defined by "swivelling" around the UFL-DBR diagonal, starting with U up and F front. */
 
 int i_transform_axes_c[NAXES][NCORNERS] = {[FB] = {4, 7, 0, 3, 2, 1, 6, 5},
                                            [LR] = {2, 5, 4, 3, 0, 7, 6, 1},
@@ -127,6 +130,219 @@ uint64_t cube_to_DR_index(cube_t* cube, axes ax) {
 
     return co_i + NCO * (eo_i + NEO * ec_i);
 }
+
+
+/* Partial indeces */
+/* These are used to construct tables for n solved edges/corners */
+/* The cp/ep index could be computed along different axis, but I am unsure is this is acutally useful for
+ * solving to partially solved cubes.
+ * */
+
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the combinatorial partial cp index for n corners. */
+uint64_t cube_to_partial_cpc_index(cube_t* cube, axes ax, int* corners, int n) {
+    int pos[NCORNERS];
+    int count = 0;
+    for (int i = 0; i < NCORNERS; i++) {
+        for (int j = 0; j < n; j++) {
+            if (corners[j] == i) {
+                pos[count++] = i_transform_axes_c[ax][extract_corner_perm(cube->corners[i])];
+                break;
+            }
+        }
+    }
+
+    for (int i = 1; i < n; i++) {
+        int key = pos[i], j = i - 1;
+        while (j >= 0 && pos[j] > key) {
+            pos[j + 1] = pos[j];
+            j--;
+        }
+        pos[j + 1] = key;
+    }
+
+    uint64_t idx = 0;
+    for (int i = 0; i < n; i++) {
+        idx += (uint64_t)comb(pos[i], i + 1);
+    }
+
+    return idx;
+}
+
+
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the permutational partial cp index for n corners. */
+uint64_t cube_to_partial_cpp_index(cube_t* cube, axes ax, int* corners, int n) {
+    int p[4], idx = 0;
+    for (int i = 0; i < NCORNERS; i++) {
+        for (int j = 0; j < n; j++){
+            if (corners[j] == i) {
+                p[idx++] = i_transform_axes_c[ax][extract_corner_perm(cube->corners[i])];
+                break;
+            }
+        }
+    }
+
+    int perm[4];
+    for (int i = 0; i < n; i++) {
+        perm[i] = 0;
+        for (int j = 0; j < n; j++) {
+            if (j != i && p[j] < p[i]){
+                perm[i]++;
+            }
+        }
+    }
+
+    return perm_to_fact(perm, n);
+}
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial co index for n corners. */
+uint64_t cube_to_partial_co_index(cube_t* cube, axes ax, int* corners, int n) {
+    int pos_to_corner[NCORNERS];
+    build_pos_to_corner(cube, pos_to_corner, ax);
+
+    uint64_t     orien = 0;
+    unsigned int pow   = 1;
+    for (int i = 0; i < NCORNERS; i++) {
+        int c = pos_to_corner[i];
+        for (int j = 0; j < n; j++){
+            if (corners[j] == c) {
+                orien += pow * (uint64_t) extract_corner_orien(cube->corners[c], ax);
+                pow *= 3;
+                break;
+            }
+        }
+    }
+
+    return orien;
+}
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the combinatorial partial ep index for n edges. */
+uint64_t cube_to_partial_epc_index(cube_t* cube, axes ax, int* edges, int n) {
+    int pos[NEDGES];
+    int count = 0;
+
+    for (int i = 0; i < NEDGES; i++) {
+        for (int j = 0; j < n; j++) {
+            if (edges[j] == i) {
+                pos[count++] = i_transform_axes_e[ax][extract_edge_perm(cube->edges[i])];
+                break;
+            }
+        }
+    }
+
+    /* insertion sort */
+    for (int i = 1; i < n; i++) {
+        int key = pos[i], j = i - 1;
+        while (j >= 0 && pos[j] > key) { pos[j + 1] = pos[j]; j--; }
+        pos[j + 1] = key;
+    }
+
+    /* combinatorial number system index */
+    uint64_t idx = 0;
+    for (int i = 0; i < n; i++) {
+        idx += (uint64_t)comb(pos[i], i + 1);
+    }
+
+    return idx;
+}
+
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the permutational partial ep index for n corners. */
+uint64_t cube_to_partial_epp_index(cube_t* cube, axes ax, int* edges, int n) {
+    // here I need to make a permutation of numbers {0, ..., 3} that gives the
+    // permutation of the edges in int* edges. Note that the int* edges can be in any order,
+    // so the permutation is how to permute the *ordered* list of int* edges in order to 
+    // obtain the permutation they are on the cube.
+
+    int p[4], idx = 0;
+    for (int i = 0; i < NEDGES; i++) {
+        for (int j = 0; j < n; j++){
+            if (edges[j] == i) {
+                p[idx++] = i_transform_axes_e[ax][extract_edge_perm(cube->edges[i])];
+                break;
+            }
+        }
+    }
+
+    int perm[4];
+    for (int i = 0; i < n; i++) {
+        perm[i] = 0;
+        for (int j = 0; j < n; j++) {
+            if (j != i && p[j] < p[i]) {
+                perm[i]++;
+            }
+        }
+    }
+
+    return perm_to_fact(perm, n);
+}
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial eo index for n edges. */
+uint64_t cube_to_partial_eo_index(cube_t* cube, axes ax, int* edges, int n) {
+    // build a "reverse" lookup
+    int pos_to_edge[NEDGES];
+    build_pos_to_edge(cube, pos_to_edge, ax);
+
+    uint64_t orien = 0;
+    uint64_t pow   = 1ULL;
+    for (int i = 0; i < NEDGES; i++) {
+        int e = pos_to_edge[i];
+        for (int j = 0; j < n; j++){
+            if (edges[j] == e) {
+                orien += pow * (uint64_t) extract_edge_orien(cube->edges[e], ax);
+                pow <<= 1;
+                break;
+            }
+        }
+    }
+
+    return orien;
+}
+
+inline uint64_t partial_eofb_epc_epp_to_partial_e_index(uint64_t partial_eo, uint64_t partial_epc, uint64_t partial_epp, uint64_t n){
+    return partial_eo
+        + pow(2, n) * (partial_epc
+        + comb(NEDGES, n) * (partial_epp
+    ));
+}
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial e index for n edges. */
+uint64_t cube_to_partial_e_index(cube_t* cube, axes ax, int* edges, int n) {
+    return partial_eofb_epc_epp_to_partial_e_index(
+        cube_to_partial_eo_index(cube, ax, edges, n),
+        cube_to_partial_epc_index(cube, ax, edges, n),
+        cube_to_partial_epp_index(cube, ax, edges, n),
+        n
+    );
+}
+
+
+inline uint64_t partial_coud_cpc_cpp_to_partial_c_index(uint64_t partial_co, uint64_t partial_cpc, uint64_t partial_cpp, uint64_t n){
+    return partial_co
+        + pow(3, n) * (partial_cpc
+        + comb(NCORNERS, n) * (partial_cpp
+    ));
+}
+
+/* 0, ..., ? - 1 = ? - 1 */
+/* compute the partial c index for n corners. */
+uint64_t cube_to_partial_c_index(cube_t* cube, axes ax, int* corners, int n) {
+    return partial_coud_cpc_cpp_to_partial_c_index(
+        cube_to_partial_co_index(cube, ax, corners, n),
+        cube_to_partial_cpc_index(cube, ax, corners, n),
+        cube_to_partial_cpp_index(cube, ax, corners, n),
+        n
+    );
+}
+
 
 
 /*

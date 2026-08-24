@@ -38,28 +38,28 @@ Test(dsl_eval, solved_cube_satisfies_all_prims) {
     size_t n = sizeof(prims) / sizeof(prims[0]);
     for (size_t i = 0; i < n; i++) {
         char expr[32];
-        snprintf(expr, sizeof expr, "%s:*", prims[i]);
+        snprintf(expr, sizeof expr, "%s", prims[i]);
         cr_assert(eval_on(expr, &cube), "\"%s\" should hold on the solved cube", expr);
     }
-    cr_assert_not(eval_on("!eofb:*", &cube));
-    cr_assert(eval_on("eofb:* & eolr:*", &cube));
-    cr_assert(eval_on("eofb:* | !eolr:*", &cube));
+    cr_assert_not(eval_on("!eofb", &cube));
+    cr_assert(eval_on("eofb & eolr", &cube));
+    cr_assert(eval_on("eofb | !eolr", &cube));
 }
 
 Test(dsl_eval, move_spot_checks) {
     cube_t cube = cube_after("R L");
-    cr_assert(eval_on("eofb:*", &cube));
-    cr_assert(eval_on("eoud:*", &cube));
-    cr_assert_not(eval_on("coud:*", &cube));
+    cr_assert(eval_on("eofb", &cube));
+    cr_assert(eval_on("eoud", &cube));
+    cr_assert_not(eval_on("coud", &cube));
 
     cube = cube_after("U D");
-    cr_assert(eval_on("eofb:*", &cube));
-    cr_assert_not(eval_on("eoud:*", &cube));
-    cr_assert(eval_on("coud:*", &cube));
+    cr_assert(eval_on("eofb", &cube));
+    cr_assert_not(eval_on("eoud", &cube));
+    cr_assert(eval_on("coud", &cube));
 
     cube = cube_after("F B");
-    cr_assert_not(eval_on("eofb:*", &cube));
-    cr_assert(eval_on("eoud:*", &cube));
+    cr_assert_not(eval_on("eofb", &cube));
+    cr_assert(eval_on("eoud", &cube));
 }
 
 Test(dsl_eval, layer_and_group_masks) {
@@ -68,20 +68,20 @@ Test(dsl_eval, layer_and_group_masks) {
     cr_assert(eval_on("solved:Dc", &cube));
     cr_assert(eval_on("cp:D", &cube));
     cr_assert_not(eval_on("solved:Uc", &cube));
-    cr_assert_not(eval_on("solved:*", &cube));
+    cr_assert_not(eval_on("solved", &cube));
 
     cube = cube_after("R");
     cr_assert_not(eval_on("solved:Dw", &cube), "R touches D-layer pieces");
 }
 
 Test(dsl_eval, is_fin) {
-    dsl_expr_t* e = parse_ok("solved:*");
+    dsl_expr_t* e = parse_ok("solved");
     cr_assert(dsl_is_maybe_fin(e));
     dsl_free_expression(e);
     e = parse_ok("solved");
     cr_assert(dsl_is_maybe_fin(e));
     dsl_free_expression(e);
-    e = parse_ok("eofb:*");
+    e = parse_ok("eofb");
     cr_assert_not(dsl_is_maybe_fin(e));
     dsl_free_expression(e);
     e = parse_ok("solved:UF");

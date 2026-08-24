@@ -12,11 +12,6 @@ enum solving_step_type {
     SOLVE_DR,
     SOLVE_EO,
     SOLVE_CUSTOM,
-    SOLVE_CROSS_D,
-    SOLVE_XCROSS_D,
-    SOLVE_XXCROSS_D,
-    SOLVE_XXXCROSS_D,
-    SOLVE_XXXXCROSS_D
 };
 
 typedef struct solving_step {
@@ -25,7 +20,7 @@ typedef struct solving_step {
     //bool (*cube_is_solved)(cube_t* c);
     bool (*cube_is_solved)(cube_t* c, void* data);
     ptable_data_t* p_data;
-    size_t (*heuristic_func)(cube_t* c, ptable_data_t* p_data);
+    size_t (*heuristic_func)(cube_t* c, struct solving_step* ss);
     uint32_t moveset_mask;
 
     /* do we want to restrict the pruning table options? */
@@ -39,19 +34,9 @@ typedef struct solving_step {
 
 } solving_step;
 
-
-
-
-
 extern solving_step fin;
 extern solving_step htr;
 extern solving_step dr;
 extern solving_step eo;
-
-extern solving_step cross_D;
-extern solving_step xcross_D;
-extern solving_step xxcross_D;
-extern solving_step xxxcross_D;
-extern solving_step xxxxcross_D;
 
 #endif /* SOLVER_STEPS_H */

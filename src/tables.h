@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "core/cube.h"
 #include "core/move.h"
@@ -14,6 +15,12 @@
 #define FACTORIAL8 40320
 #define INITIAL_MOVE_SEQUENCE_LENGTH 4
 #define NUMBER_OF_4_MOVE_SEQUENCES 43254
+
+
+typedef struct {
+    int n;
+    int* pieces;
+} custom_data_solved_pieces_t;
 
 /* type used to store information about each
  * type of pruning table. */
@@ -32,7 +39,12 @@ typedef struct {
     void*               ptable;
 
     uint32_t            moveset_mask;
-
+    
+    /* some custom pruning needs to also store info such as
+     * which (and how many) edges/corners the pruning is based on. */ 
+    bool                is_custom;
+    void*               custom_data;
+     
     /* prune function? */
 } ptable_data_t;
 
@@ -43,7 +55,7 @@ typedef struct ptable_gen_ctx_t {
     /* Table-specific behavior (4 function pointers): */
     bool     (*setup)(struct ptable_gen_ctx_t*);
     uint64_t (*init)(struct ptable_gen_ctx_t*, cube_t*, uint64_t*);
-    uint64_t (*apply_move)(struct ptable_gen_ctx_t*, uint64_t*, int);
+    uint64_t (*apply_move)(struct ptable_gen_ctx_t*, uint64_t*, int);           // if NULL, then we apply moves to a cube directly instead.
     void     (*decompose_index)(struct ptable_gen_ctx_t*, uint64_t, uint64_t*);
 
     /* Configuration: */
@@ -129,12 +141,11 @@ int cube_tables_load();
 /* Call after use of ptables and sym_table_e_index */
 void cube_tables_free();
 
-
 void free_ptable(ptable_data_t* ptable_data);
 
-// todo: WIP
 void gen_ptable_opt1();
 void gen_ptable_DR();
+void table_prune_gen(ptable_gen_ctx_t* ctx);
 
 /* runs through the ptable and counts the number of cosets for each p-value. */
 void analyze_ptable(ptable_data_t ptable_data);
@@ -146,6 +157,7 @@ int cube_tables_load_dr_subsets();
 
 bool parse_cp_to_dr_subset_file_and_save_dr_subset_table(char* filename);
 
+void tables_prune_print_ptable_data_t(ptable_data_t* pd, FILE* out);
 
 /* set and read value from ptable.
  * these are needed since we store 2 values per byte. */

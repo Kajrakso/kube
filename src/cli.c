@@ -4,6 +4,7 @@
 #include "moveset.h"
 #include "dsl.h"
 #include "dsl_compile.h"
+#include "dsl_prune.h"
 
 /* ------------------------------------ */
 /* global variables for the -D flag     */
@@ -267,8 +268,8 @@ bool parse_move_string(Solution* result, const char* move_string) {
     bool is_in_comment = false;
     
     size_t i = 0;
-    while(i < strlen(move_string)){
-    // for (size_t i = 0; i < strlen(move_string); i++){
+    size_t len_move_string = strlen(move_string);
+    while(i < len_move_string){
         char c = move_string[i];
         char c_next = move_string[i + 1];
 
@@ -561,9 +562,9 @@ void cli_gen(struct arguments arguments) {
 
 
     /* TODO: Should this be here? Do we want to save these to disk? */
-    if (dsl_compile_build_definitions(&custom_solved_definitions, &custom_solved_definitions_count, &arguments) == 0) {
-        // gen ptables and save to disk 
-    }
+    // if (dsl_compile_build_definitions(&custom_solved_definitions, &custom_solved_definitions_count, &arguments) == 0) {
+    //     // gen ptables and save to disk 
+    // }
     
 
 
@@ -572,10 +573,11 @@ void cli_gen(struct arguments arguments) {
     printf("Total time used for table gen (in seconds): %f\n", elapsed);
 }
 
+void cli_gen_custom_ptables(struct arguments* arguments, struct step* s, solving_step* ss);
 
 int cli_solver_prepare(struct arguments arguments, solving_step** steps){
     cube_tables_generate();  // generates tables for moves, symmetries, etc.
-    
+
 
     if (dsl_compile_build_definitions(&custom_solved_definitions, &custom_solved_definitions_count, &arguments) != 0) {
         return 1;
@@ -594,13 +596,12 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
         else if (strcmp(s.name, "htr")  == 0)    ss = &htr;
         else {
             int def_index = definition_index(&arguments, s.name);
-            printf("Definition index for %s is %i. custom_solved_definitions_count is %i\n", s.name, def_index, custom_solved_definitions_count);
-
             if (def_index < 0) {
                 // TODO: fins all available steps programatically
-                fprintf(stderr, "Unknown step '%s'. Available: fin, dr, eo, htr, eofb", s.name);
-                for (int k = 0; k < arguments.def_count; k++)
+                fprintf(stderr, "Unknown step '%s'. Available: fin, dr, eo, htr", s.name);
+                for (int k = 0; k < arguments.def_count; k++) {
                     fprintf(stderr, ", %s", arguments.defs[k].name);
+                }
                 fprintf(stderr, "\n");
                 return 1;
             }
@@ -608,30 +609,21 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
             ss = &custom_solved_definitions[def_index].step;
         }
 
-
         if (ss == NULL)
         {
             printf("Did not understand step. exiting...\n");
             return 1;
         }
 
+
         if (ss->custom_ptables != NULL && ss->n_custom_ptables > 0)
         {
-            bool all_loaded = true;
-            for (int k = 0; k < ss->n_custom_ptables; k++)
-                if (cube_tables_load_ptable(ss->custom_ptables[k]) == 1)
-                    all_loaded = false;
-            if (!all_loaded)
-            {
-                fprintf(stderr, "\tstep %s got ptables but ", s.name);
-                fprintf(stderr, "\tcould not load ptable! Trying to solve step: %i\n",
-                        ss->solving_type);
-            }
+            cli_gen_custom_ptables(&arguments, &s, ss);
         }
-        else if (ss->p_data == NULL)
-        {
-            if (arguments.verbose == 1)
+        else if (ss->p_data == NULL) {
+            if (arguments.verbose == 1) {
                 fprintf(stderr, "\tstep %s aint got ptable!\n", s.name);
+            }
         }
         else if (cube_tables_load_ptable(ss->p_data) == 1)
         {
@@ -641,9 +633,14 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
         }
 
         // load some special tables needed for some of the steps
-        if (ss->p_data == &ptable_data_opt1)
+        if (ss->p_data == &ptable_data_opt1 ||
+            (ss->p_data != NULL &&
+             ss->p_data->cube_to_index_func == ptable_data_opt1.cube_to_index_func))
         {
-            cube_tables_load_sym_table_e_index();
+            if (cube_tables_load_sym_table_e_index() != 0) {
+                fprintf(stderr, "\tstep %s needs sym_table_e_index but it could not be loaded!\n", s.name);
+                return 1;
+            }
         }
 
         if (ss->solving_type == SOLVE_HTR)
@@ -656,11 +653,12 @@ int cli_solver_prepare(struct arguments arguments, solving_step** steps){
 
 
     /* warn-and-ignore unreferenced definitions */
-    for (int i = 0; i < custom_solved_definitions_count; i++)
-        if (!custom_solved_definitions[i].referenced)
+    for (int i = 0; i < custom_solved_definitions_count; i++) {
+        if (!custom_solved_definitions[i].referenced) {
             fprintf(stderr, "note: definition '%s' is not used by any -s step (ignored)\n",
                     custom_solved_definitions[i].name);
-
+        }
+    }
 
 
     return 0;
@@ -678,15 +676,18 @@ void cli_solver_cleanup(struct arguments arguments, solving_step** steps){
     for (int i = 0; i < arguments.step_count; i++)
     {
         solving_step* ss = steps[i];
-        if (ss->custom_ptables != NULL && ss->n_custom_ptables > 0)
-        {
-            for (int k = 0; k < ss->n_custom_ptables; k++)
-                free_ptable(ss->custom_ptables[k]);
+
+        /* Custom step tables are freed by dsl_prune_free_tables
+         * via dsl_compile_free_definitions. Skip them here. */
+        if (ss->is_custom) {
+            continue;
         }
-        else if (ss->p_data != NULL) {
+
+        if (ss->p_data != NULL) {
             free_ptable(ss->p_data);
         }
     }   
+
     dsl_compile_free_definitions(custom_solved_definitions, &custom_solved_definitions_count);
 }
 
@@ -701,7 +702,7 @@ int solve(char* scr, struct arguments arguments, solving_step** steps){
     struct timespec start, end;
     timespec_get(&start, TIME_UTC);
 
-    if (arguments.step_count == 1/*  || arguments.number_of_solutions == 1 */)
+    if (arguments.step_count == 1)
     {
         // we invoke a simple pipeline solver:
         solver_pipeline(c, arguments, steps);
@@ -737,4 +738,94 @@ void cli_solver_solving_loop(struct arguments arguments, solving_step** steps){
 
     }
     free(buf);
+}
+
+
+
+// TOOD: move this to dsl_*.c?
+void cli_gen_custom_ptables(struct arguments* arguments, struct step* s, solving_step* ss){
+    bool all_loaded = true;
+
+    for (int k = 0; k < ss->n_custom_ptables; k++) {
+        ptable_data_t* table = ss->custom_ptables[k];
+        if (table->ptable_is_loaded) continue;
+
+        /* Check if ptable is loadable (from a previous generation maybe?) */
+        if (cube_tables_load_ptable(table) == 0) {
+            fprintf(stderr, "Load custom ptable '%s' from disk.\n",
+                    table->name);
+            continue;
+        }
+
+        custom_prune_table_ctx_t* ctx =
+            (custom_prune_table_ctx_t*)table->custom_data;
+        /* for table 0, custom_data is dsl_prune_step_ctx_t,
+         * not custom_prune_table_ctx_t. Read from table_ctxs instead. */
+        if (k == 0) {
+            dsl_prune_step_ctx_t* sc = (dsl_prune_step_ctx_t*)table->custom_data;
+            ctx = &sc->table_ctxs[0];
+        }
+
+        uint64_t (*init_fn)(ptable_gen_ctx_t*, cube_t*, uint64_t*) =
+            (ctx->kind == PRUNE_EDGES)
+            ? dsl_prune_init_edges
+            : dsl_prune_init_corners;
+        void (*decompose_fn)(ptable_gen_ctx_t*, uint64_t, uint64_t*) =
+            (ctx->kind == PRUNE_EDGES)
+            ? dsl_prune_decompose_edges
+            : dsl_prune_decompose_corners;
+
+        fprintf(stderr, "Generating custom ptable '%s' (%llu states)...\n",
+                table->name, (unsigned long long)table->number_of_elements);
+
+        /* Temporarily give table 0 a per-table ctx in custom_data
+         * so init/decompose see custom_prune_table_ctx_t*, not step_ctx. */
+        void* saved_custom_data = NULL;
+        if (k == 0) {
+            saved_custom_data = table->custom_data;
+            table->custom_data = ctx;
+        }
+
+        ptable_gen_ctx_t gen_ctx = {
+            .ptable_data = table,
+            .num_components = 3,
+            .dls_max_depth = 8,                /* USER DECIDES THIS */
+            .nbhr_min_depth = 8,               /* must == dls_max_depth */
+            .nbhr_max_depth_excl = 8,          /* must == dls_max_depth */
+            .apply_move = NULL,
+            .init = init_fn,
+            .setup = NULL,
+            .decompose_index = decompose_fn,
+        };
+
+        table->moveset_mask = moveset_eff(ss->moveset_mask);
+
+        /* Actually invoke the genner */
+        table_prune_gen(&gen_ctx);
+
+        if (k == 0) {
+            table->custom_data = saved_custom_data;
+        }
+
+        /* table_prune_gen saved to disk and freed the buffer.
+         * Load it back via mmap. */
+        if (cube_tables_load_ptable(table) != 0) {
+            fprintf(stderr, "Failed to load custom ptable '%s' after gen.\n",
+                    table->name);
+            all_loaded = false;
+        }
+       
+        if (arguments->verbose == 1){
+            tables_prune_print_ptable_data_t(table, stdout);
+            printf("Analyzing table content...\n");
+            analyze_ptable(*table);
+        }
+    }
+
+    if (!all_loaded)
+    {
+        fprintf(stderr, "\tstep %s got ptables but ", s->name);
+        fprintf(stderr, "\tcould not load ptable! Trying to solve step: %i\n",
+                ss->solving_type);
+    }
 }

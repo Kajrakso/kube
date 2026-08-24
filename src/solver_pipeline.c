@@ -3,7 +3,7 @@
 
 void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps) {
     if (arguments.number_of_threads > 1 && arguments.step_count > 1){
-        printf("NOTE: Number of threads = %i, but not all solvers takes advantage of that yet.\n\n", arguments.number_of_threads);
+        fprintf(stderr, "NOTE: Number of threads = %i, but not all solvers takes advantage of that yet.\n\n", arguments.number_of_threads);
     }
 
     for (int i = 0; i < arguments.step_count; i++)
@@ -47,8 +47,11 @@ void solver_pipeline(cube_t c, struct arguments arguments, solving_step** steps)
 
 
 void solver_beam_search(cube_t c, struct arguments arguments, solving_step** steps) {
+    /* Niss between steps? */
+    bool niss = false;
+
     if (arguments.number_of_threads > 1){
-        printf("NOTE: Number of threads = %i, but beam solver does not take advantage of that yet.\n\n", arguments.number_of_threads);
+        fprintf(stderr, "NOTE: Number of threads = %i, but beam solver does not take advantage of that yet.\n\n", arguments.number_of_threads);
     }
 
     /* Idea: For each step in steps, pick the arguments.numbers_of_solutions solutions with the lowest heuristic
@@ -105,7 +108,7 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
 
             // prepare a temp pipeline solution set
             PipelineSolutionSet expanded_pipeline;
-            pipelinesolutionset_init(&expanded_pipeline, beam_width * 2);
+            pipelinesolutionset_init(&expanded_pipeline, beam_width * (niss ? 2 : 1));
 
             if (current.count > 0)
             {
@@ -126,14 +129,16 @@ void solver_beam_search(cube_t c, struct arguments arguments, solving_step** ste
 
             SolutionSet expanded_inv;
             solutionset_init(&expanded_inv, beam_width);
-
-            cube_t cube_inv = cube_operation_inverse(cube);
-            cube_solvers_solve_cube(cube_inv, &expanded_inv, (int)beam_width,
-                                    arguments.steps[step_idx].max_depth,
-                                    arguments.verbose,
-                                    arguments.number_of_threads,
-                                    ss);
-            append_copy_solutionset_to_pipelinesolutionset(&expanded_pipeline, &expanded_inv, true);
+            
+            if (niss){
+                cube_t cube_inv = cube_operation_inverse(cube);
+                cube_solvers_solve_cube(cube_inv, &expanded_inv, (int)beam_width,
+                                        arguments.steps[step_idx].max_depth,
+                                        arguments.verbose,
+                                        arguments.number_of_threads,
+                                        ss);
+                append_copy_solutionset_to_pipelinesolutionset(&expanded_pipeline, &expanded_inv, true);
+            }
 
             // we need to merge the solutions for the next step
             // with the solution we have found so far (but skip this

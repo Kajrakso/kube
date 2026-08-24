@@ -1,6 +1,6 @@
 # Compiler and standard flags
 CC = cc
-CFLAGS_COMMON = -std=c2x -g -fPIC -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter
+CFLAGS_COMMON = -std=c2x -g -fPIC -pedantic -Wall -Wextra -Wconversion -Wno-unused-parameter -MMD -MP
 # -fsanitize=address,undefined # -fno-omit-frame-pointer
 CFLAGS_OPTIMIZED = -O3 -flto
 CFLAGS_DEBUG = -g -Wno-unused-function
@@ -48,6 +48,8 @@ $(TEST_EXEC): $(TEST_OBJ) $(OBJS)
 $(TEST_DIR)/%.o: $(TEST_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+-include $(OBJS:.o=.d) $(TEST_OBJ:.o=.d)
+
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f kube ${DESTDIR}${PREFIX}/bin/kube
@@ -63,6 +65,7 @@ uninstall:
 # Clean target
 clean:
 	rm -f $(OBJS) kube $(TEST_OBJ) $(TEST_EXEC) $(SRC_DIR)/main.o
+	find $(SRC_DIR) $(TEST_DIR) -name '*.d' -delete
 
 # Phony targets
 .PHONY: all debug clean install uninstall

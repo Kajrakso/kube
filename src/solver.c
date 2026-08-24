@@ -94,7 +94,7 @@ TreeSearch(cube_t* cube, solving_step* ss, struct search_data s_data, struct sol
 
     if (ss->p_data != NULL && ss->heuristic_func != NULL)
     {
-        if (ss->heuristic_func(cube, ss->p_data) > (size_t)remaining_moves)
+        if (ss->heuristic_func(cube, ss) > (size_t)remaining_moves)
         {
             stats->no_nodes_pruned++;
             return false;
@@ -243,6 +243,17 @@ bool cube_solvers_solve_cube(
             if (!_t)
             {
                 fprintf(stderr, "\tCould not load dr_subsets. Have you initialized it?\n");
+                return false;
+            }
+        }
+
+        if (ss->p_data != NULL &&
+            ss->p_data->cube_to_index_func == ptable_data_opt1.cube_to_index_func)
+        {
+            void* _t = get_sym_table_e_index();
+            if (!_t)
+            {
+                fprintf(stderr, "\tCould not load sym_table_e_index. Have you initialized it?\n");
                 return false;
             }
         }

@@ -89,7 +89,9 @@ int init_table(const char* path, size_t table_size, void** table_ptr) {
 
 void free_ptable(ptable_data_t* ptable_data) {
     if (ptable_data != NULL){
-        munmap(ptable_data->ptable, ptable_data->ptable_size);
+        if (ptable_data->ptable != NULL) {
+            munmap(ptable_data->ptable, ptable_data->ptable_size);
+        }
         ptable_data->ptable_is_loaded = false;
         ptable_data->ptable = NULL;
     }

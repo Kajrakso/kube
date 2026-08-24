@@ -7,6 +7,7 @@
 /* runs before each test */
 void setup(void) {
     srand((unsigned int) time(NULL));
+    init_env();
     cube_tables_generate();
 }
 
@@ -49,6 +50,15 @@ void teardown_index(void) {
     cube_tables_free();
 }
 
+void setup_dsl_ptable(void) {
+    srand((unsigned int) time(NULL));
+    init_env();
+    cube_tables_generate();
+}
+
+void teardown_dsl_ptable(void) {
+}
+
 /* =====================
  * SUITS
  * ====================== */
@@ -69,11 +79,16 @@ TestSuite(cclass, .disabled=false, .init=setup, .fini=teardown);
 
 TestSuite(sha1, .disabled=false);
 TestSuite(dsl_parse, .disabled=false);
-TestSuite(dsl_eval, .disabled=false, .init=setup, .fini=teardown);
-TestSuite(dsl_equiv, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(dsl_eval, .disabled=false, .init=setup_dsl_ptable, .fini=teardown_dsl_ptable);
+TestSuite(dsl_equiv, .disabled=false, .init=setup_dsl_ptable, .fini=teardown_dsl_ptable);
 
 TestSuite(dsl_debug, .disabled=false);
-// TestSuite(dsl_ptable, .disabled=false, .init=setup, .fini=teardown);
+
+TestSuite(moveset, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(dsl_set, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(dsl_prod, .disabled=false, .init=setup, .fini=teardown);
+TestSuite(dsl_ptable, .disabled=false, .init=setup_dsl_ptable, .fini=teardown_dsl_ptable);
+TestSuite(dsl_compile, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
 
 TestSuite(solver_fin, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);
 TestSuite(solver_multiple_solutions, .disabled=false, .init=setup_solver_fin, .fini=teardown_solver_fin);

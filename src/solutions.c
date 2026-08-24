@@ -353,7 +353,7 @@ void pipelinesolutionset_compute_scores(cube_t               c,
         size_t heur = 0;
         if (next_ss != NULL && next_ss->heuristic_func != NULL && next_ss->p_data->ptable_is_loaded)
         {
-            heur = next_ss->heuristic_func(&c, next_ss->p_data);
+            heur = next_ss->heuristic_func(&c, next_ss);
         }
 
         ps->heuristic_score = length + heur;
