@@ -6,30 +6,64 @@
 <script src="https://cdn.cubing.net/v0/js/scramble-display" type="module"></script>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #111827;
-    --accent: #38bdf8;
-    --accent2: #22c55e;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --danger: #ef4444;
-    --border: #1f2933;
+    --bg: #070c18;
+    --panel: #151d30;
+    --card: #0d1220;
+    --tree-bg: #0b1018;
+    --input-bg: #0d1220;
+    --accent: #60a5fa;
+    --accent2: #34d399;
+    --text: #f1f5f9;
+    --text-on-accent: #020617;
+    --muted: #94a3b8;
+    --danger: #f87171;
+    --border: #1e293b;
+    --border-light: #2d3a52;
+    --scrollbar: #2d3a52;
+    --scrollbar-hover: #3d4f6f;
+    --toggle-bg: #2d3a52;
+    --toggle-circle: #f1f5f9;
     --and-color: #facc15;
     --or-color: #f472b6;
     --not-color: #fb923c;
     --mod-color: #06b6d4;
+    --prod-color: #a78bfa;
+  }
+  .light {
+    --bg: #f0f4f8;
+    --panel: #ffffff;
+    --card: #f8fafc;
+    --tree-bg: #f1f5f9;
+    --input-bg: #ffffff;
+    --accent: #2563eb;
+    --accent2: #059669;
+    --text: #1e293b;
+    --text-on-accent: #ffffff;
+    --muted: #64748b;
+    --danger: #dc2626;
+    --border: #e2e8f0;
+    --border-light: #cbd5e1;
+    --scrollbar: #cbd5e1;
+    --scrollbar-hover: #94a3b8;
+    --toggle-bg: #cbd5e1;
+    --toggle-circle: #1e293b;
+    --and-color: #ca8a04;
+    --or-color: #db2777;
+    --not-color: #ea580c;
+    --mod-color: #0891b2;
+    --prod-color: #7c3aed;
   }
   * { box-sizing: border-box; }
-  * { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+  * { scrollbar-width: thin; scrollbar-color: var(--scrollbar) transparent; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
   ::-webkit-scrollbar-button, ::-webkit-scrollbar-corner { display: none; }
   body {
     margin: 0;
     font-family: ui-sans-serif, system-ui, sans-serif;
-    background: #020617;
+    background: var(--bg);
     color: var(--text);
     display: flex;
     justify-content: center;
@@ -41,15 +75,53 @@
     background: var(--panel);
     border-radius: 18px;
     border: 1px solid var(--border);
-    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
     padding: 28px;
   }
   h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: .5px; }
   .subtitle { color: var(--muted); margin-bottom: 24px; }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .header-row h1 { margin: 0; }
+  #theme-toggle { display: none; }
+  .theme-switch {
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+    background: var(--toggle-bg, var(--border-light));
+    border-radius: 26px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .theme-switch::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: var(--toggle-circle, var(--text));
+    border-radius: 50%;
+    transition: transform 0.3s, background 0.3s;
+  }
+  #theme-toggle:checked + .theme-switch::before {
+    transform: translateX(26px);
+  }
+  .theme-switch-icons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    height: 100%;
+    font-size: 12px;
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
+  }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
   @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
   .card {
-    background: #020617;
+    background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 16px;
@@ -66,7 +138,7 @@
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: #020617;
+    background: var(--input-bg);
     color: var(--text);
     outline: none;
     font-size: 14px;
@@ -115,7 +187,7 @@
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: #020617;
+    background: var(--input-bg);
   }
   .custom-state-item .name { font-weight: 600; color: var(--accent); }
   .custom-state-item .expr {
@@ -145,7 +217,7 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px 10px;
-    background: #0a0f1a;
+    background: var(--tree-bg);
     margin: 3px 0;
   }
   .tree-children {
@@ -162,6 +234,7 @@
   }
   .tree-connector.and-conn { color: var(--and-color); font-weight: 700; }
   .tree-connector.or-conn { color: var(--or-color); font-weight: 700; }
+  .tree-connector.prod-conn { color: var(--prod-color); font-weight: 700; }
   .tree-fields {
     display: flex;
     align-items: flex-start;
@@ -196,6 +269,8 @@
   .tree-btn.not-active { border-color: var(--not-color); color: var(--not-color); background: rgba(251,146,60,.1); }
   .tree-btn.mod-btn:hover { border-color: var(--mod-color); color: var(--mod-color); }
   .tree-btn.mod-active { border-color: var(--mod-color); color: var(--mod-color); background: rgba(6,182,212,.1); }
+  .tree-btn.prod-btn:hover { border-color: var(--prod-color); color: var(--prod-color); }
+  .tree-btn.prod-active { border-color: var(--prod-color); color: var(--prod-color); background: rgba(167,139,250,.1); }
   .tree-btn.del-btn:hover { border-color: var(--danger); color: var(--danger); }
   .builder-footer { display: flex; gap: 8px; margin-top: 12px; }
   .btn-primary {
@@ -208,7 +283,7 @@
     cursor: pointer;
     transition: .15s;
   }
-  .btn-confirm { background: var(--accent2); color: #020617; }
+  .btn-confirm { background: var(--accent2); color: var(--text-on-accent); }
   .btn-cancel { background: var(--border); color: var(--text); }
   .btn-confirm:hover { opacity: .9; }
   .btn-cancel:hover { opacity: .8; }
@@ -223,7 +298,7 @@
   .step {
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: #020617;
+    background: var(--input-bg);
     transition: .2s;
     overflow: hidden;
     cursor: grab;
@@ -287,7 +362,7 @@
     inset: 0;
     border-radius: 9px;
     border: 1px solid var(--border);
-    background: #020617;
+    background: var(--input-bg);
     transition: .2s;
   }
   .toggle .slider::before {
@@ -301,7 +376,7 @@
     background: var(--muted);
     transition: .2s;
   }
-  .toggle input:checked + .slider { border-color: #334155; background: #1e293b; }
+  .toggle input:checked + .slider { border-color: var(--border-light); background: var(--panel); }
   .toggle input:checked + .slider::before { transform: translateX(14px); background: var(--text); }
   .step-adv.open { display: flex; flex-wrap: wrap; }
   .solve-btn {
@@ -312,15 +387,59 @@
     padding: 14px;
     font-size: 16px;
     font-weight: 600;
-    background: linear-gradient(135deg, var(--accent), #6366f1);
-    color: #020617;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    color: var(--text-on-accent);
     cursor: pointer;
     transition: .15s;
   }
   .solve-btn:hover { transform: translateY(-1px); }
+  .solve-btn.running {
+    background: var(--danger);
+    cursor: wait;
+  }
+  .solve-btn.running::after {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0,0,0,.3);
+    border-top-color: var(--text-on-accent);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .scramble-row { display: flex; gap: 6px; }
+  .scramble-row input { flex: 1; }
+  .clear-btn {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    transition: .15s;
+  }
+  .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .btn-reset {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: .15s;
+  }
+  .btn-reset:hover { border-color: var(--text); color: var(--text); }
   .output {
     margin-top: 14px;
-    background: #020617;
+    background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 12px;
@@ -339,54 +458,106 @@
     font-family: ui-monospace, monospace;
     word-break: break-all;
   }
+  .cmd-row { display: flex; align-items: start; gap: 6px; margin-top: 10px; }
+  .cmd-row .cmd { flex: 1; margin: 0; }
+  .copy-btn {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    transition: .15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent2); color: var(--accent2); }
+  .output-header { display: flex; align-items: center; justify-content: space-between; }
+  .output-header h3 { margin: 0; }
+  .preset-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .preset-btn {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+    transition: .15s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
   .error { color: var(--danger); }
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>Kube Solver</h1>
-  <div class="subtitle">Interactive Rubik's Cube solving pipeline</div>
-  <div class="grid">
+  <div class="header-row">
     <div>
-      <div class="card" style="margin-bottom:16px;">
-        <h3>Scramble</h3>
-        <input id="scramble" placeholder="R U R' U' F2 D ..." oninput="renderCommand();updateScrambleDisplay()" />
-        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-          <scramble-display id="scrambleViz" scramble="" visualization="3D" style="display:block;flex:1;max-width:384px;height:256px;"></scramble-display>
-          <div style="display:flex;flex-direction:column;gap:2px;align-self:start;margin-top:2px;">
-            <label class="toggle" title="Toggle 2D / 3D visualization">
-              <input type="checkbox" id="viz3dToggle" checked onchange="updateScrambleDisplay()" />
-              <span class="slider"></span>
-            </label>
-            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);padding:0 1px;">
-              <span>2D</span><span>3D</span>
-            </div>
-          </div>
+      <h1>Kube Solver</h1>
+      <div class="subtitle">Interactive Rubik's Cube solving pipeline</div>
+    </div>
+    <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" />
+    <label class="theme-switch" for="theme-toggle" title="Toggle light/dark theme">
+      <span class="theme-switch-icons"><span>&#9788;</span><span>&#9790;</span></span>
+    </label>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <h3>Scramble</h3>
+    <div class="scramble-row">
+      <input id="scramble" placeholder="R U R' U' F2 D ..." oninput="renderCommand();updateScrambleDisplay()" />
+      <button class="clear-btn" onclick="document.getElementById('scramble').value='';renderCommand();updateScrambleDisplay()" title="Clear">&times;</button>
+    </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;">
+        <scramble-display id="scrambleViz" scramble="" visualization="3D" style="display:block;max-width:384px;height:256px;"></scramble-display>
+        <label class="toggle" title="Toggle 2D / 3D visualization">
+          <input type="checkbox" id="viz3dToggle" checked onchange="updateScrambleDisplay()" />
+          <span class="slider"></span>
+        </label>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);padding:0 1px;width:32px;">
+          <span>2D</span><span>3D</span>
         </div>
       </div>
-      <div class="card" style="margin-bottom:16px;">
-        <h3>Custom States</h3>
-        <div class="custom-states-list" id="customStatesList"></div>
-        <div id="builderSlot"></div>
-        <button class="add-btn" id="addStateBtn" onclick="openBuilder()">+ Add Custom State</button>
+  </div>
+  <div class="grid" style="margin-bottom:16px;">
+    <div class="card">
+      <h3>Solving Pipeline</h3>
+      <div class="preset-row">
+        <button class="preset-btn" onclick="applyPreset(['eo','dr','htr','fin'])">eo &rarr; dr &rarr; htr &rarr; fin</button>
+        <button class="preset-btn" onclick="applyPreset(['dr','fin'])">dr &rarr; fin</button>
+        <button class="preset-btn" onclick="applyPreset(['htr','fin'])">htr &rarr; fin</button>
+        <button class="preset-btn" onclick="applyPreset(['fin'])">fin</button>
       </div>
-      <div class="card">
-        <h3>Solving Pipeline</h3>
-        <div class="steps" id="steps"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--muted);white-space:nowrap;">
-            <input type="checkbox" id="verboseToggle" onchange="renderCommand()" />
-            Verbose (-v)
-          </label>
-        </div>
-        <button class="solve-btn" id="solveBtn" onclick="solve()">Solve Cube</button>
+      <div class="steps" id="steps"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--muted);white-space:nowrap;">
+          <input type="checkbox" id="verboseToggle" onchange="renderCommand()" />
+          Verbose (-v)
+        </label>
+      </div>
+      <button class="solve-btn" id="solveBtn" onclick="solve()">Solve Cube</button>
+      <div class="cmd-row">
         <div class="cmd" id="cmdPreview"></div>
+        <button class="copy-btn" id="copyCmdBtn" onclick="copyCommand()" title="Copy command">Copy</button>
       </div>
     </div>
-    <div class="card" style="height:fit-content;">
-      <h3>Output</h3>
-      <div class="output" id="output"></div>
+    <div class="card">
+      <h3>Custom States</h3>
+      <div class="custom-states-list" id="customStatesList"></div>
+      <div id="builderSlot"></div>
+      <button class="add-btn" id="addStateBtn" onclick="openBuilder()">+ Add Custom State</button>
     </div>
+  </div>
+  <div class="card">
+    <div class="output-header">
+      <h3>Output</h3>
+      <button class="copy-btn" id="copyOutputBtn" onclick="copyOutput()" title="Copy output">Copy</button>
+    </div>
+    <div class="output" id="output"></div>
+  </div>
   </div>
 </div>
 <script>
@@ -429,12 +600,16 @@
       var base = (n.pieces && n.pieces !== "*") ? n.prim + ":" + n.pieces : n.prim;
       return (n.not ? "!" : "") + base;
     }
+    if (n.type === "set") {
+      var inner = getModExpr(n);
+      if (n.not) inner = "!(" + inner + ")";
+      return inner;
+    }
     if (n.type === "mod") {
-      /* sets are atoms now: solved:* mod H == the set atom itself */
       var cn = getNode(n.child);
       var trivialChild = cn && cn.type === "atom" && cn.prim === "solved" &&
                          cn.pieces === "*" && !cn.not;
-      if (!trivialChild) return null; /* product (*) not supported yet */
+      if (!trivialChild) return null;
       var inner = getModExpr(n);
       if (n.not) inner = "!(" + inner + ")";
       return inner;
@@ -479,6 +654,11 @@
 
   function collapseNode(id) {
     var n = getNode(id);
+    if (n.type === "set") {
+      if (rootId === id) { rootId = mkAtom(); return; }
+      findAndReplaceUp(rootId, id, mkAtom());
+      return;
+    }
     if (n.type === "mod") {
       if (rootId === id) { rootId = n.child; return; }
       findAndReplaceUp(rootId, id, n.child);
@@ -487,14 +667,19 @@
     if (n.type === "op") {
       if (rootId === id) { rootId = n.left; return; }
       findAndReplaceUp(rootId, id, n.left);
-    } else {
-      var pid = findParentId(rootId, id);
-      if (pid === null) return;
-      var p = getNode(pid);
-      var sibling = (p.left === id) ? p.right : p.left;
-      if (rootId === pid) { rootId = sibling; return; }
-      findAndReplaceUp(rootId, pid, sibling);
+      return;
     }
+    var pid = findParentId(rootId, id);
+    if (pid === null) return;
+    var p = getNode(pid);
+    if (p.type === "mod") {
+      if (rootId === pid) { rootId = mkAtom(); return; }
+      findAndReplaceUp(rootId, pid, mkAtom());
+      return;
+    }
+    var sibling = (p.left === id) ? p.right : p.left;
+    if (rootId === pid) { rootId = sibling; return; }
+    findAndReplaceUp(rootId, pid, sibling);
   }
 
   function findAndReplaceUp(fromId, targetId, newId) {
@@ -519,6 +704,7 @@
       if (r !== null) return r;
       return null;
     }
+    if (n.type === "set" || n.type === "atom") return null;
     if (n.type !== "op") return null;
     if (n.left === childId || n.right === childId) return fromId;
     var r = findParentId(n.left, childId);
@@ -527,15 +713,19 @@
   }
 
   /* ---- mod helpers ---- */
-  function wrapMod(atId) {
-    var n = getNode(atId);
-    var modId = nextId++;
-    nodes[modId] = {
-      id: modId, type: "mod", child: atId, not: false,
-      subgroup: { mode: "explicit", moves: [] }
+  function mkSet(mode, moves, generators) {
+    var id = nextId++;
+    nodes[id] = {
+      id: id, type: "set", not: false,
+      subgroup: { mode: mode || "explicit", moves: moves || [], generators: generators || [] }
     };
-    if (rootId === atId) { rootId = modId; return; }
-    findAndReplace(rootId, atId, modId);
+    return id;
+  }
+
+  function wrapMod(atId) {
+    var id = mkSet();
+    if (rootId === atId) { rootId = id; return; }
+    findAndReplace(rootId, atId, id);
   }
 
   function setModMode(nid, mode) {
@@ -567,8 +757,57 @@
     renderBuilder();
   }
 
+  function setSetMode(nid, mode) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === mode) return;
+    var input = document.querySelector('.set-text-input[data-nid="' + nid + '"]');
+    var txt = input ? input.value : "";
+    if (n.subgroup.mode === "explicit") {
+      n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+    } else {
+      n.subgroup.generators = txt.split(",").map(function(s) {
+        return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+      }).filter(function(g) { return g.length > 0; });
+    }
+    if (mode === "generators") {
+      var gen = n.subgroup.moves.length ? [n.subgroup.moves.slice()] : [];
+      n.subgroup = { mode: "generators", generators: gen };
+    } else {
+      var moves = [];
+      if (n.subgroup.generators) {
+        n.subgroup.generators.forEach(function(g) {
+          g.forEach(function(m) { if (moves.indexOf(m) < 0) moves.push(m); });
+        });
+      }
+      n.subgroup = { mode: "explicit", moves: moves };
+    }
+    renderBuilder();
+  }
+
   function renderTree(id, depth) {
     var n = getNode(id);
+    if (n.type === "set") {
+      var h = '<div class="tree-card" style="border-color:var(--mod-color);">';
+      h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">';
+      h += '<span style="color:var(--mod-color);font-weight:700;font-size:13px;">SET</span>';
+      h += '<select data-nid="' + id + '" data-f="set-mode" style="width:auto;padding:3px 24px 3px 6px;font-size:12px;">';
+      h += '<option value="explicit"' + (n.subgroup.mode === "explicit" ? " selected" : "") + '>Explicit {…}</option>';
+      h += '<option value="generators"' + (n.subgroup.mode === "generators" ? " selected" : "") + '>Generators &lt;…&gt;</option>';
+      h += '</select>';
+      if (depth > 0) {
+        h += '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>';
+      }
+      h += '</div>';
+      h += renderSetEditor(id);
+      h += '</div>';
+      h += '<div style="display:flex;gap:4px;margin-top:6px;padding-left:12px;flex-wrap:wrap;">';
+      h += '<button class="tree-btn not-btn' + (n.not ? ' not-active' : '') + '" data-nid="' + id + '" data-act="not">NOT</button>';
+      h += '<button class="tree-btn insert-and" data-nid="' + id + '" data-act="and">+AND</button>';
+      h += '<button class="tree-btn insert-or" data-nid="' + id + '" data-act="or">+OR</button>';
+      h += '<button class="tree-btn prod-btn" data-nid="' + id + '" data-act="prod">+PROD</button>';
+      h += '</div>';
+      return '<div class="tree-node">' + h + '</div>';
+    }
     if (n.type === "atom") {
       var selectedPieces = !n.pieces ? []
         : (n.pieces === "*" ? ALL_PIECES.slice() : n.pieces.split(","));
@@ -585,10 +824,11 @@
       h += '<div class="tree-field"><label>Piece(s)</label>';
       h += '<select class="pieces-sel" multiple size="4" data-nid="' + id + '" data-f="pieces">' + pieceOpts + '</select></div>';
       h += '</div>';
-      h += '<div style="display:flex;gap:4px;margin-top:6px;">';
+      h += '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">';
       h += '<button class="tree-btn not-btn' + (n.not ? ' not-active' : '') + '" data-nid="' + id + '" data-act="not">NOT</button>';
       h += '<button class="tree-btn insert-and" data-nid="' + id + '" data-act="and">+AND</button>';
       h += '<button class="tree-btn insert-or" data-nid="' + id + '" data-act="or">+OR</button>';
+      h += '<button class="tree-btn prod-btn" data-nid="' + id + '" data-act="prod">+PROD</button>';
       h += '<button class="tree-btn mod-btn" data-nid="' + id + '" data-act="mod">+SET</button>';
       if (depth > 0) {
         h += '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>';
@@ -596,29 +836,12 @@
       h += '</div></div>';
       return '<div class="tree-node">' + h + '</div>';
     }
-    if (n.type === "mod") {
-      var childHtml = renderTree(n.child, depth + 1);
-      return '<div class="tree-node"><div class="tree-card" style="border-color:var(--mod-color);">' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
-          '<span style="color:var(--mod-color);font-weight:700;font-size:13px;">SET</span>' +
-          '<select data-nid="' + id + '" data-f="mod-mode" style="width:auto;padding:3px 24px 3px 6px;font-size:12px;">' +
-            '<option value="explicit"' + (n.subgroup.mode === "explicit" ? " selected" : "") + '>Explicit {…}</option>' +
-            '<option value="generators"' + (n.subgroup.mode === "generators" ? " selected" : "") + '>Generators &lt;…&gt;</option>' +
-          '</select>' +
-          (depth > 0 ? '<button class="tree-btn del-btn" data-nid="' + id + '" data-act="del">&times;</button>' : '') +
-        '</div>' +
-        renderModEditor(id) +
-      '</div>' +
-      '<div class="tree-children" style="border-color:var(--mod-color);">' +
-        '<div class="tree-connector" style="color:var(--mod-color);font-weight:700;">inner</div>' +
-        childHtml +
-      '</div></div>';
-    }
     var left = renderTree(n.left, depth + 1);
     var right = renderTree(n.right, depth + 1);
-    var cls = n.op === "&" ? "and-conn" : "or-conn";
+    var cls = n.op === "&" ? "and-conn" : (n.op === "|" ? "or-conn" : "prod-conn");
+    var label = n.op === "&" ? "AND" : (n.op === "|" ? "OR" : "PROD");
     return '<div class="tree-node"><div class="tree-children">' +
-      '<div class="tree-connector ' + cls + '">' + (n.op === "&" ? "AND" : "OR") + '</div>' +
+      '<div class="tree-connector ' + cls + '">' + label + '</div>' +
       left + right + '</div></div>';
   }
 
@@ -646,9 +869,23 @@
       'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
   }
 
+  function renderSetEditor(nid) {
+    var n = getNode(nid);
+    if (n.subgroup.mode === "explicit") {
+      var val = n.subgroup.moves.join(", ");
+      return '<input class="set-text-input" data-nid="' + nid + '" data-f="set-text" ' +
+        'value="' + esc(val) + '" placeholder="R, U\', U2, e" ' +
+        'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+    }
+    var val = n.subgroup.generators.map(function(g) { return g.join(" "); }).join(", ");
+    return '<input class="set-text-input" data-nid="' + nid + '" data-f="set-text" ' +
+      'value="' + esc(val) + '" placeholder="R U, F2" ' +
+      'style="width:100%;font-family:ui-monospace,monospace;font-size:12px;" />';
+  }
+
   function exprPreviewText(id) {
     var e = toExpr(id);
-    if (e === null) return "(not supported yet: SET over non-solved state)";
+    if (e === null) return "(SET over non-solved state not supported)";
     return e;
   }
 
@@ -692,6 +929,12 @@
     document.getElementById("addStateBtn").style.display = "";
   }
 
+  function resetBuilder() {
+    nodes = []; nextId = 0;
+    rootId = mkAtom("solved", "*", false);
+    renderBuilder();
+  }
+
   function confirmBuilder() {
     var f = getBuilderFields();
     var name = f.name.trim();
@@ -726,6 +969,18 @@
       n.pieces = sel.join(",");
     } else if (field === "prim" && n.type === "atom") {
       n[field] = t.value;
+    } else if (field === "set-mode" && n.type === "set") {
+      setSetMode(nid, t.value);
+      return;
+    } else if (field === "set-text" && n.type === "set") {
+      var txt = t.value;
+      if (n.subgroup.mode === "explicit") {
+        n.subgroup.moves = txt.split(",").map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+      } else {
+        n.subgroup.generators = txt.split(",").map(function(s) {
+          return s.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+        }).filter(function(g) { return g.length > 0; });
+      }
     } else if (field === "mod-mode" && n.type === "mod") {
       setModMode(nid, t.value);
       return;
@@ -760,6 +1015,9 @@
       renderBuilder();
     } else if (act === "or") {
       insertOp(nid, "|");
+      renderBuilder();
+    } else if (act === "prod") {
+      insertOp(nid, "*");
       renderBuilder();
     } else if (act === "mod") {
       wrapMod(nid);
@@ -992,15 +1250,70 @@
   function setSolveBtn(running) {
     var btn = document.getElementById("solveBtn");
     if (running) {
-      btn.textContent = "Cancel";
-      btn.style.background = "var(--danger)";
+      btn.textContent = "Solving";
+      btn.classList.add("running");
     } else {
       btn.textContent = "Solve Cube";
-      btn.style.background = "";
+      btn.classList.remove("running");
     }
   }
 
   function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function copyCommand() {
+    var text = document.getElementById("cmdPreview").textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById("copyCmdBtn");
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(function() { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    });
+  }
+
+  function copyOutput() {
+    var el = document.getElementById("output");
+    var text = "";
+    for (var i = 0; i < el.childNodes.length; i++) {
+      var node = el.childNodes[i];
+      if (node.nodeType === 1 && node.style.fontSize === "12px") continue;
+      text += node.textContent;
+    }
+    navigator.clipboard.writeText(text.trim()).then(function() {
+      var btn = document.getElementById("copyOutputBtn");
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(function() { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    });
+  }
+
+  function applyPreset(preset) {
+    stepOrder = BUILT_IN.slice();
+    BUILT_IN.forEach(function(s) { stepState[s] = { enabled: preset.indexOf(s) >= 0, max: "", num: "", advOpen: false }; });
+    renderSteps();
+    renderCommand();
+  }
+
+  document.addEventListener("keydown", function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      solve();
+    }
+  });
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle("light");
+    var isLight = document.documentElement.classList.contains("light");
+    document.getElementById("theme-toggle").checked = isLight;
+    localStorage.setItem("kube-theme", isLight ? "light" : "dark");
+  }
+
+  (function() {
+    var saved = localStorage.getItem("kube-theme");
+    if (saved === "light") {
+      document.documentElement.classList.add("light");
+      document.getElementById("theme-toggle").checked = true;
+    }
+  })();
 
   function updateScrambleDisplay() {
     var v = document.getElementById("scrambleViz");
