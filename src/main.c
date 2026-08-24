@@ -18,7 +18,7 @@ static struct argp_option options[] = {
         "Define a custom solved state as a DSL expression (repeatable). "
         "NAME=EXPR@MOVESET. "
         "Example:    -D f2l=solved:Dw -s f2l -s fin "
-        "See `man kube` for the DSL reference.", 0},
+        "See `doc/custom_solved_states.md` for the DSL reference.", 0},
     {"verbose", 'v', 0, 0, "Produce verbose output.", 0},
     {"stdin", 'i', 0, 0, "Read scrambles from standard input.", 0},
     {"threads", 't', "NUM", 0, "Specify number of threads to use during search. defaults to number of cpus on the system.", 0},

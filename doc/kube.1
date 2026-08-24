@@ -5,6 +5,7 @@ kube \- an optimal solver for the 3x3x3 Rubik's cube
 
 .SH SYNOPSIS
 .B kube
+[\fB\-D\fR]
 [\fB\-f\fR \fIFORMAT\fR]
 [\fB\-g\fR]
 [\fB\-i\fR]
@@ -34,6 +35,17 @@ Multiple scrambles can by provided via stdin if the \fI-i\fR flag is set. They a
 The scrambles format is specified by \fIFORMAT\fR.
 
 .SH OPTIONS
+
+.TP
+.BR \-D ", " \-\-define
+Define custom solved states using a Domain Specific Language (DSL).
+Check `doc/custom_solveds_states.md` for documentation. Example usage:
+.RS
+kube --define "my_custom_step=solved:Dw & coud" --step my_custom_step
+.RE
+.RS
+kube -D "s1=solved:DF,DR,DB,DL" -D "s2=solved:D" -s s1 -s s2
+.RE
 
 .TP
 .BR \-f " " \fIFORMAT\fR ", " \-\-format=FORMAT
