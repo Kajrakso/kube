@@ -7,7 +7,6 @@
 #include "utils/utils.h"
 #include "utils/sha1.h"
 
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -37,22 +36,22 @@ static int extract_set_bits_u8(uint8_t mask, int* bits) {
 /* create individual tables                                            */
 /* ------------------------------------------------------------------ */
 
-ptable_data_t* dsl_prune_make_edge_table(int* edges, int n) {
+ptable_data_t* dsl_prune_make_edge_table(int* edges, uint64_t n) {
     if (n < 1 || n > 4) return NULL;
 
     custom_prune_table_ctx_t* ctx = calloc(1, sizeof(*ctx));
     ctx->kind = PRUNE_EDGES;
     ctx->n = n;
-    for (int i = 0; i < n; i++) {
+    for (uint64_t i = 0; i < n; i++) {
         ctx->pieces[i] = edges[i];
         ctx->edge_mask |= (uint16_t)(1u << edges[i]);
     }
     ctx->corner_mask = 0;
 
     ptable_data_t* p = calloc(1, sizeof(*p));
-    p->number_of_elements = (uint64_t)comb(NEDGES, n)
-                          * (1ULL << (unsigned)n)
-                          * factorial(n);
+    p->number_of_elements = comb_u64(NEDGES, n)
+                          * ipow64(2, n)
+                          * factorial_u64(n);
     p->ptable_size = (p->number_of_elements + 1) / 2;
     p->cube_to_index_func = NULL; // this should be partial_e_index somehow
     p->read_value_ptable_func = ptable_read_val_2_values_per_byte;
@@ -67,32 +66,32 @@ ptable_data_t* dsl_prune_make_edge_table(int* edges, int n) {
     /* generate a filename from the piece list */
     char key[128] = {0};
     int pos = 0;
-    for (int i = 0; i < n; i++)
+    for (uint64_t i = 0; i < n; i++)
         pos += snprintf(key + pos, sizeof(key) - (size_t)pos, "%d,", edges[i]);
     char hex[41];
     sha1_hex(key, hex);
     snprintf(p->filename, sizeof(p->filename), "cust-e-%s.dat", hex);
-    snprintf(p->name, sizeof(p->name), "custom_edges_n%d", n);
+    snprintf(p->name, sizeof(p->name), "custom_edges_n%llu", (unsigned long long)n);
 
     return p;
 }
 
-ptable_data_t* dsl_prune_make_corner_table(int* corners, int n) {
+ptable_data_t* dsl_prune_make_corner_table(int* corners, uint64_t n) {
     if (n < 1 || n > 4) return NULL;
 
     custom_prune_table_ctx_t* ctx = calloc(1, sizeof(*ctx));
     ctx->kind = PRUNE_CORNERS;
     ctx->n = n;
-    for (int i = 0; i < n; i++) {
+    for (uint64_t i = 0; i < n; i++) {
         ctx->pieces[i] = corners[i];
         ctx->corner_mask |= (uint8_t)(1u << corners[i]);
     }
     ctx->edge_mask = 0;
 
     ptable_data_t* p = calloc(1, sizeof(*p));
-    p->number_of_elements = (uint64_t)comb(NCORNERS, n)
-                          * (uint64_t)pow(3, n)
-                          * factorial(n);
+    p->number_of_elements = comb_u64(NCORNERS, n)
+                          * ipow64(3, n)
+                          * factorial_u64(n);
     p->ptable_size = (p->number_of_elements + 1) / 2;
     
     p->cube_to_index_func = NULL;  // This should be cube_to_partial_c_index somehow
@@ -107,12 +106,12 @@ ptable_data_t* dsl_prune_make_corner_table(int* corners, int n) {
 
     char key[128] = {0};
     int pos = 0;
-    for (int i = 0; i < n; i++)
+    for (uint64_t i = 0; i < n; i++)
         pos += snprintf(key + pos, sizeof(key) - (size_t)pos, "%d,", corners[i]);
     char hex[41];
     sha1_hex(key, hex);
     snprintf(p->filename, sizeof(p->filename), "cust-c-%s.dat", hex);
-    snprintf(p->name, sizeof(p->name), "custom_corners_n%d", n);
+    snprintf(p->name, sizeof(p->name), "custom_corners_n%llu", (unsigned long long)n);
 
     return p;
 }
@@ -152,8 +151,8 @@ void dsl_prune_decompose_edges(ptable_gen_ctx_t* ctx, uint64_t index,
                                uint64_t* components) {
     custom_prune_table_ctx_t* ct =
         (custom_prune_table_ctx_t*)ctx->ptable_data->custom_data;
-    uint64_t two_n = 1ULL << (unsigned)ct->n;
-    uint64_t cn    = (uint64_t)comb(NEDGES, ct->n);
+    uint64_t two_n = ipow64(2, ct->n);
+    uint64_t cn    = comb_u64(NEDGES, ct->n);
     components[0] = index % two_n;
     components[1] = (index / two_n) % cn;
     components[2] = (index / two_n) / cn;
@@ -163,8 +162,8 @@ void dsl_prune_decompose_corners(ptable_gen_ctx_t* ctx, uint64_t index,
                                  uint64_t* components) {
     custom_prune_table_ctx_t* ct =
         (custom_prune_table_ctx_t*)ctx->ptable_data->custom_data;
-    uint64_t three_n = (uint64_t)pow(3, ct->n);
-    uint64_t cn      = (uint64_t)comb(NCORNERS, ct->n);
+    uint64_t three_n = ipow64(3, ct->n);
+    uint64_t cn      = comb_u64(NCORNERS, ct->n);
     components[0] = index % three_n;
     components[1] = (index / three_n) % cn;
     components[2] = (index / three_n) / cn;
@@ -190,7 +189,7 @@ static void collect_from_atom(const dsl_expr_t* a,
     int ne = extract_set_bits_u16(a->edge_mask, ebits);
 
     for (int i = 0; i < ne; i += edge_group_size) {
-        int chunk = (ne - i) < edge_group_size ? (ne - i) : edge_group_size;
+        uint64_t chunk = (ne - i) < edge_group_size ? (uint64_t)(ne - i) : (uint64_t)edge_group_size;
         ptable_data_t* t = dsl_prune_make_edge_table(ebits + i, chunk);
         if (*n == *cap) {
             *cap = *cap ? (uint8_t)(*cap * 2) : edge_group_size;
@@ -204,7 +203,7 @@ static void collect_from_atom(const dsl_expr_t* a,
     int nc = extract_set_bits_u8(a->corner_mask, cbits);
 
     for (int i = 0; i < nc; i += corner_group_size) {
-        int chunk = (nc - i) < corner_group_size ? (nc - i) : corner_group_size;
+        uint64_t chunk = (nc - i) < corner_group_size ? (uint64_t)(nc - i) : (uint64_t)corner_group_size;
         ptable_data_t* t = dsl_prune_make_corner_table(cbits + i, chunk);
         if (*n == *cap) {
             *cap = *cap ? (uint8_t)(*cap * 2) : corner_group_size;

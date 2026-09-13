@@ -493,17 +493,17 @@ void tables_prune_print_ptable_data_t(ptable_data_t* pd, FILE* out){
     fprintf(out, "\tpd->number_of_elements = %llu\n", pd->number_of_elements);
     fprintf(out, "\tpd->filename = %s\n", pd->filename);
     fprintf(out, "\n");
-    fprintf(out, "\tpd->cube_to_index_func = %llu\n", pd->cube_to_index_func);
-    fprintf(out, "\tpd->gen_ptable_funx = %llu\n", pd->gen_ptable_func);
-    fprintf(out, "\tpd->read_value_ptable_func = %llu\n", pd->read_value_ptable_func);
-    fprintf(out, "\tpd->set_value_ptable_func = %llu\n", pd->set_value_ptable_func);
+    // fprintf(out, "\tpd->cube_to_index_func = %llu\n", pd->cube_to_index_func);
+    // fprintf(out, "\tpd->gen_ptable_funx = %llu\n", pd->gen_ptable_func);
+    // fprintf(out, "\tpd->read_value_ptable_func = %llu\n", pd->read_value_ptable_func);
+    // fprintf(out, "\tpd->set_value_ptable_func = %llu\n", pd->set_value_ptable_func);
     fprintf(out, "\n");
     fprintf(out, "\tpd->ptable_is_loaded = %i\n", pd->ptable_is_loaded);
-    fprintf(out, "\tpd->ptable = %llu\n", pd->ptable);
+    // fprintf(out, "\tpd->ptable = %llu\n", pd->ptable);
     fprintf(out, "\tpd->moveset_mask = %i\n", pd->moveset_mask);
     fprintf(out, "\n");
     fprintf(out, "\tpd->is_custom = %i\n", pd->is_custom);
-    fprintf(out, "\tpd->custom_data = %llu\n", pd->custom_data);
+    // fprintf(out, "\tpd->custom_data = %llu\n", pd->custom_data);
     fprintf(out, "}\n");
 }
 

@@ -14,7 +14,7 @@ enum {
 
 typedef struct {
     int         kind;       /* PRUNE_EDGES or PRUNE_CORNERS */
-    int         n;          /* number of tracked pieces (<= 4) */
+    uint64_t    n;          /* number of tracked pieces (<= 4) */
     int         pieces[4];  /* piece IDs (edge or corner indices), ascending */
     uint16_t    edge_mask;  /* bitmask of tracked edges (for matching to atoms) */
     uint8_t     corner_mask;/* bitmask of tracked corners (for matching to atoms) */
@@ -29,10 +29,10 @@ typedef struct {
 
 /* Create a ptable_data_t for n solved edges.
  * The table is NOT generated — call table_prune_gen separately. */
-ptable_data_t* dsl_prune_make_edge_table(int* edges, int n);
+ptable_data_t* dsl_prune_make_edge_table(int* edges, uint64_t n);
 
 /* Create a ptable_data_t for n solved corners. */
-ptable_data_t* dsl_prune_make_corner_table(int* corners, int n);
+ptable_data_t* dsl_prune_make_corner_table(int* corners, uint64_t n);
 
 /* Walk a DSL expression, extract solved: atoms, split into groups of <= 4,
  * create one ptable_data_t per group. Returns the array and count.

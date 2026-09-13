@@ -7,7 +7,6 @@ static bool is_solved_wrap(cube_t* c, void* data) { (void)data; return cube_stat
 static bool is_htr_wrap    (cube_t* c, void* data) { (void)data; return cube_state_is_htr(c); }
 static bool is_dr_wrap     (cube_t* c, void* data) { (void)data; return cube_state_is_dr(c); }
 static bool is_eo_wrap     (cube_t* c, void* data) { (void)data; return cube_state_is_eo(c); }
-static bool is_eofb_wrap   (cube_t* c, void* data) { (void)data; return cube_state_is_eo_FB(c); }
 
 
 solving_step fin = {

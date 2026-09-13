@@ -17,6 +17,8 @@ void arr_shuffle(uint16_t* arr, int n);
 
 /* */
 int factorial(int n);
+uint64_t factorial_u64(uint64_t n);
+uint64_t ipow64(uint64_t base, uint64_t exp);
 
 /* Swaps two uint16_t values. */
 void swap_uint16(uint16_t* a, uint16_t* b);
@@ -29,6 +31,7 @@ void fact_to_perm(int p, int n, int* r);
 
 /* this should be precomputed if used */
 int comb(int n, int k);
+uint64_t comb_u64(uint64_t n, uint64_t k);
 
 /* */
 void precompute_combinatorials();

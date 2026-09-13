@@ -49,11 +49,34 @@ int factorial(int n) {
   return ret;
 }
 
+
+uint64_t factorial_u64(uint64_t n) {
+  uint64_t i, ret = 1;
+
+  for (i = 1; i <= n; i++) ret *= i;
+
+  return ret;
+}
+
+uint64_t ipow64(uint64_t base, uint64_t exp) {
+  uint64_t result = 1;
+  for (uint64_t i = 0; i < exp; i++)
+    result *= base;
+  return result;
+}
+
 int comb(int n, int k) {
   if (k > n)
     return 0;
   else
     return factorial(n) / (factorial(n - k) * factorial(k));
+}
+
+uint64_t comb_u64(uint64_t n, uint64_t k){
+  if (k > n)
+    return 0;
+  else
+    return factorial_u64(n) / (factorial_u64(n - k) * factorial_u64(k));
 }
 
 uint64_t perm_to_fact(int* p, int n) {
