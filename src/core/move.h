@@ -45,6 +45,11 @@ Example usage:
 ```C
 const char* moves = "R U R' U' R' F R2 U' R' U' R U R' F'";
 cube_move_apply_move_string(&cube, moves);
+
+Also supports wide moves (ex. Rw or r), slice moves (E, M, S) and rotations (x, y, z)
+The resulting cube will by conjugated by the appropriate symmetry.
+This means that the move L does not necessarily move the orange face,
+but moves the left one relative to the orientation.
 ```*/
 bool cube_move_apply_move_string(cube_t* cube, const char* moves);
 

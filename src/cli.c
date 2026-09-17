@@ -692,6 +692,21 @@ void cli_solver_cleanup(struct arguments arguments, solving_step** steps){
 }
 
 int solve(char* scr, struct arguments arguments, solving_step** steps){
+    // The scrambler also supports rotations, wide moves and slice moves,
+    // which means that the cube is not necessarily in its "default" orientation after scrambling.
+
+    // The scrambler just conjugates the cube with the appropriate symmetry when scrambling.
+    // The solvers only support the default moveset though, so the resulting solution wont have
+    // rotations, wide moves nor slice moves in it.
+
+    // Example:
+    // scramble: Rw Uw
+    // solution: D' B'
+
+    // The solution is D' B', held with the orientation after applying Rw Uw to the cube.
+    // From the "standard" White up, Green front orientation the solution would be
+    // B' L'.
+
     cube_t c = cube_create_new_cube();
     if (cube_scrambler_scramble_cube(&c, scr, arguments.format) != 0){
         fprintf(stderr, "Error reading scramble.\n");
