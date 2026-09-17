@@ -3,7 +3,7 @@
 #include "cli.h"
 #include "env.h"
 
-const char* argp_program_version     = "kube 1.0.0"; /* "major version"."minor version"."bugfixes" */
+const char* argp_program_version     = "kube 1.0.1"; /* "major version"."minor version"."bugfixes" */
 const char* argp_program_bug_address = "<oskarfj@oskarfj.no>";
 
 /* Program documentation. */

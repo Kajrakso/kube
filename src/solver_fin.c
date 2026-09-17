@@ -132,19 +132,13 @@ static bool TreeSearch_fin(cube_t*              cube,
          bool done = solution_submit(&sol, &s_data, shared_data, stats, max_num_sols);
          return done;
     }
-    
-    uint8_t pval_UD, pval_LR, pval_FB;
-    if (try_prune(cube, ptable_data, UD, remaining_moves, stats, &pval_UD)) return false;
-    if (try_prune(cube, ptable_data, LR, remaining_moves, stats, &pval_LR)) return false;
-    if (try_prune(cube, ptable_data, FB, remaining_moves, stats, &pval_FB)) return false;
 
-    if ((pval_UD == remaining_moves) && (pval_UD == pval_LR) && (pval_LR == pval_FB))
-    {
-        stats->no_nodes_pruned++;
-        return false;
-    }
+    // cs post on the fmc discord:
+    // "In nxopt, it will first use the current state to look up the table, and then use the inverse state to look up the table. If the inverse state is used to look up the table at first, the average number of accesses should be reduced by about 5%~10%.
+    // This is because, for the forward state, the query result is related to the current pruning result (must be only 1 step away). For the inverse state, it can be simply understood as a random query (for the state that should be pruned), and its average query result is actually larger.
+    // "
 
-    // we only look up inverse if we did not prune on normal
+    // try to prune on inverse
     cube_t cube_inv = cube_operation_inverse(*cube);
     stats->no_inverse_computations++;
 
@@ -158,6 +152,18 @@ static bool TreeSearch_fin(cube_t*              cube,
     {
         stats->no_nodes_pruned++;
         stats->no_nodes_pruned_inv++;
+        return false;
+    }
+    
+    // and then on normal
+    uint8_t pval_UD, pval_LR, pval_FB;
+    if (try_prune(cube, ptable_data, UD, remaining_moves, stats, &pval_UD)) return false;
+    if (try_prune(cube, ptable_data, LR, remaining_moves, stats, &pval_LR)) return false;
+    if (try_prune(cube, ptable_data, FB, remaining_moves, stats, &pval_FB)) return false;
+
+    if ((pval_UD == remaining_moves) && (pval_UD == pval_LR) && (pval_LR == pval_FB))
+    {
+        stats->no_nodes_pruned++;
         return false;
     }
     
