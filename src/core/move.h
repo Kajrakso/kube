@@ -51,7 +51,7 @@ The resulting cube will by conjugated by the appropriate symmetry.
 This means that the move L does not necessarily move the orange face,
 but moves the left one relative to the orientation.
 ```*/
-bool cube_move_apply_move_string(cube_t* cube, const char* moves);
+bool cube_move_apply_move_string(cube_t* cube, char* moves);
 
 int get_inv_move(int m);
 

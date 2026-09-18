@@ -1,5 +1,30 @@
 #include "../tables.h"
 
+/* Symmetries are numbered 0, ..., 47.
+
+Split the number like this:
+
+    24 * x4 + 12 * x3 + 4 * x2 + x1
+
+where the tuple (x1, x2, x3, x4) maps to a symmetry like this:
+
+    (x1, x2, x3, x4) => (m)^x4 (y)^x1 (y z)^x2 (y y z z z)^x3
+
+with
+
+    0 <= x1 < 4
+    0 <= x2 < 3
+    0 <= x3 < 2
+    0 <= x4 < 2
+
+So the three basic rotations would be:
+
+    x <-> 22
+    y <-> 1
+    z <-> 7
+
+*/
+
 /* the symmetry at index i is i^(-1). */
 static const uint8_t sym_inv[NSYMS] = {0,  3,  2,  1,  8,  5,  23, 14, 4,  22, 13, 11, 12, 10, 7,  21,
                                    16, 17, 18, 19, 20, 15, 9,  6,  24, 27, 26, 25, 32, 29, 47, 38,
@@ -77,6 +102,14 @@ void do_z_rot(cube_t* cube) {
     update_edge_orien(&(cube_z.edges[DL]), 1, 1, 1);
 
     *cube = cube_operation_compose(*cube, cube_z);
+}
+
+void do_x_rot(cube_t* cube) {
+    do_y_rot(cube);
+    do_z_rot(cube);
+    do_y_rot(cube);
+    do_y_rot(cube);
+    do_y_rot(cube);
 }
 
 void do_inversion(cube_t* cube) {

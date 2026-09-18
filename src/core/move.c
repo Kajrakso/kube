@@ -38,24 +38,302 @@ void cube_move_apply_multiple_moves(cube_t* cube, int* moves_arr, size_t number_
     }
 }
 
-bool cube_move_apply_move_string(cube_t* cube, const char* moves) {
-    // allocate a Solution to hold the moves
-    Solution s;
-    solution_init(&s);
-    if (parse_move_string(&s, moves))
-    {
-        // cube_move_apply_multiple_moves(cube, parsed_moves, length);
-        for (size_t i = 0; i < s.length; i++){
-            cube_move_apply_move(cube, s.moves[i]);
+// bool cube_move_apply_move_string_old(cube_t* cube, const char* moves) {
+//     // allocate a Solution to hold the moves
+//     Solution s;
+//     solution_init(&s);
+
+//     if (parse_move_string(&s, moves))
+//     {
+//         // cube_move_apply_multiple_moves(cube, parsed_moves, length);
+//         for (size_t i = 0; i < s.length; i++){
+//             cube_move_apply_move(cube, s.moves[i]);
+//         }
+//         solution_free(&s);
+//         return 0;
+//     }
+//     else
+//     {
+//         return 1;
+//     }
+// }
+
+bool cube_move_apply_move_string(cube_t* cube, char* move_string) {
+    const struct {const char move; enum move value;} valid_base_moves[6] = {
+      {'U', U1}, {'D', D1}, {'L', L1}, {'R', R1}, {'F', F1}, {'B', B1},
+    };
+
+    const struct {char rot; uint8_t sym;} valid_rotations[3] = {
+        {'x', SYM_fd}, {'y', SYM_ur}, {'z', SYM_lf}
+    };
+
+    const struct {char move; int moves[2]; uint8_t sym;} valid_slice_moves[3] = {
+        {'M', {R1, L3}, SYM_bu}, {'S', {F3, B1}, SYM_lf}, {'E', {U1, D3}, SYM_ul}
+    };
+
+    const struct {
+        char upper;         // 'R', 'L', 'U', 'D', 'F', 'B'
+        char lower;         // 'r', 'l', 'u', 'd', 'f', 'b'
+        enum move face;     // base face move
+        int slice_idx;      // index into valid_slice_moves (0=M, 1=S, 2=E)
+        bool invert_slice;  // whether slice goes opposite to face
         }
-        solution_free(&s);
-        return 0;
+     wide_move_map[6] = {
+        {'R', 'r', R1, 0, true},   // Rw = R + M'
+        {'L', 'l', L1, 0, false},  // Lw = L + M
+        {'U', 'u', U1, 2, true},   // Uw = U + E'
+        {'D', 'd', D1, 2, false},  // Dw = D + E
+        {'F', 'f', F1, 1, false},  // Fw = F + S
+        {'B', 'b', B1, 1, true},   // Bw = B + S'
+    };
+
+    // keep track of moves both on nomal and inverse,
+    // and flags we use during parsing.
+    bool is_on_inv = false;
+    bool is_in_comment = false;
+    int inv_moves[256];
+    size_t inv_count = 0;
+
+    
+    size_t i = 0;
+    size_t len_move_string = strlen(move_string);
+    while(i < len_move_string){
+        char c = move_string[i];
+        char c_next = move_string[i + 1];
+
+        if (c == '\n') {
+            is_in_comment = false;
+        }
+
+        if (is_in_comment || c == ' ' || c == '\n' || c == '\t' || c == '\r'){
+            i += 1;
+            continue;
+        }
+
+        if (c == '(') {
+            if (is_on_inv) {
+                fprintf(stderr, "Parsing error: Found ( following a (\n");
+                return 1;
+            }
+            is_on_inv = true;
+            i += 1;
+            continue;
+        }
+
+        if (c == ')') {
+            if (!is_on_inv) {
+                fprintf(stderr, "Parsing error: Found ) without matching (\n");
+                return 1;
+            }
+            is_on_inv = false;
+            i += 1;
+            continue;
+        }
+
+        if (c == '/') {
+            is_in_comment = true;
+            i += 1;
+            continue;
+        }
+        bool found = false;
+
+        for (size_t j = 0; j < 3; j++) {
+            if (c == valid_rotations[j].rot) {
+                if (is_on_inv) {
+                    fprintf(stderr, "Parsing error: Rotations are not supported on inverse.\n");
+                    return 1;
+                }
+                uint8_t sym = valid_rotations[j].sym;
+                uint8_t inv_sym = get_inv_sym(sym);
+
+                if (c_next == '\'' || c_next == '3') {
+                    *cube = cube_operation_sym_conjugate(*cube, sym);
+                    i += 1;
+                } else if (c_next == '2') {
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                    i += 1;
+                }
+                else {
+                    if (c_next == '1') i += 1;
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                }
+
+                found = true;
+                i += 1;
+                break;
+            }
+        }
+
+        if (found) {
+            continue;
+        }
+        for (size_t j = 0; j < 3; j++) {
+            if (c == valid_slice_moves[j].move) {
+                if (is_on_inv) {
+                    fprintf(stderr, "Parsing error: Slice moves are not supported on inverse.\n");
+                    return 1;
+                }
+                uint8_t sym = valid_slice_moves[j].sym;
+                uint8_t inv_sym = get_inv_sym(sym);
+
+                if (c_next == '\'' || c_next == '3') {
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[j].moves, 2);
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[j].moves, 2);
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[j].moves, 2);
+                    *cube = cube_operation_sym_conjugate(*cube, sym);
+                    i += 1;
+                } else if (c_next == '2') {
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[j].moves, 2);
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[j].moves, 2);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                    i += 1;
+                }
+                else {
+                    if (c_next == '1') i += 1;
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[j].moves, 2);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                }
+
+                found = true;
+                i += 1;
+                break;
+            }
+        }
+        if (found) {
+            continue;
+        }
+
+        for (size_t j = 0; j < 6; j++) {
+            bool is_upper_wide = (c == wide_move_map[j].upper && c_next == 'w');
+            bool is_lower_wide = (c == wide_move_map[j].lower);
+
+            if (is_upper_wide || is_lower_wide) {
+                if (is_on_inv) {
+                    fprintf(stderr, "Parsing error: Wide moves are not supported on inverse.\n");
+                    return 1;
+                }
+
+                char mod_char;
+                if (is_upper_wide){
+                    mod_char = move_string[i + 2];
+                    i += 1;
+                } else {
+                    mod_char = move_string[i + 1];
+                }
+
+                uint8_t mod = 0;
+                if (mod_char == '2') {
+                    mod = 1;
+                    i += 1;
+                } else if (mod_char == '\'' || mod_char == '3') {
+                    mod = 2;
+                    i += 1;
+                } else if (mod_char == '1') {
+                    i += 1;
+                }
+
+                cube_move_apply_move(cube, (int)(wide_move_map[j].face + mod));
+
+                // Compute effective slice modifier (invert if needed)
+                int slice_mod = mod;
+                if (wide_move_map[j].invert_slice) {
+                    // none<->inverse, double stays double
+                    if (slice_mod == 0) slice_mod = 2;
+                    else if (slice_mod == 2) slice_mod = 0;
+                }
+
+                // Apply slice move with effective modifier
+                uint8_t sym = valid_slice_moves[wide_move_map[j].slice_idx].sym;
+                uint8_t inv_sym = get_inv_sym(sym);
+
+                if (slice_mod == 0) {
+                    // Normal quarter turn
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[wide_move_map[j].slice_idx].moves, 2);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                } else if (slice_mod == 1) {
+                    // Double
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[wide_move_map[j].slice_idx].moves, 2);
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[wide_move_map[j].slice_idx].moves, 2);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                    *cube = cube_operation_sym_conjugate(*cube, inv_sym);
+                } else {
+                    // Inverse quarter turn
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[wide_move_map[j].slice_idx].moves, 2);
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[wide_move_map[j].slice_idx].moves, 2);
+                    cube_move_apply_multiple_moves(cube, (int*)valid_slice_moves[wide_move_map[j].slice_idx].moves, 2);
+                    *cube = cube_operation_sym_conjugate(*cube, sym);
+                }
+
+                found = true;
+                i += 1;
+                break;
+            }
+        }
+
+        if (found) {
+            continue;
+        }
+        for (size_t j = 0; j < 6; j++) {
+            if (c == valid_base_moves[j].move) {
+                int move = valid_base_moves[j].value;
+
+                // check next char also!
+                if (c_next == '1'){
+                    move += 0;
+                    i += 1;
+                }
+                if (c_next == '2'){
+                    move += 1;
+                    i += 1;
+                }
+                if (c_next == '\'' || c_next == '3'){
+                    move += 2;
+                    i += 1;
+                }
+                if (c_next == 'w'){
+                    // TODO: Wide move!
+                }
+
+                if (is_on_inv) {
+                    if (inv_count < 256) {
+                        inv_moves[inv_count++] = move;
+                    }
+                }
+                else {
+                    cube_move_apply_move(cube, move);
+                }
+
+                found = true;
+                i += 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            fprintf(stderr, "Parsing error: Invalid move: %c\n", c);
+            return 1;
+        }
     }
-    else
-    {
+
+    if (is_on_inv) {
+        // then ( was not closed, raise!
+        fprintf(stderr, "Parsing error: ( was not closed\n");
         return 1;
     }
+
+    // do moves on inverse as premoves
+    cube_t cube_inv = cube_create_new_cube();
+    for (size_t k = inv_count; k > 0; k--) {
+        cube_move_apply_move(&cube_inv, get_inv_move(inv_moves[k-1]));
+    }
+    *cube = cube_operation_compose(cube_inv, *cube);
+
+    return 0;
 }
+
+
 
 /* private */
 
